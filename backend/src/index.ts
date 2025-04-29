@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import mysql, { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,40 +14,19 @@ app.use(cors());
 app.use(express.json());
 
 // Database connection
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'mysql',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'password',
-  database: process.env.DB_NAME || 'rsvp_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+let db: any;
 
-interface Event extends RowDataPacket {
-  id: number;
-  title: string;
-  description: string;
-  date: string;
-  location: string;
-  slug: string;
-}
-
-interface RSVP extends RowDataPacket {
-  id: number;
-  event_id: number;
-  name: string;
-  attending: string;
-  bringing_guests: string;
-  guest_count: number;
-  guest_names: string;
-  items_bringing: string;
+async function connectToDatabase() {
+  db = await open({
+    filename: './database.sqlite',
+    driver: sqlite3.Database
+  });
 }
 
 // Routes
 app.get('/api/events', async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query<Event[]>('SELECT * FROM events');
+    const rows = await db.all('SELECT * FROM events');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -57,7 +37,7 @@ app.get('/api/events', async (req: Request, res: Response) => {
 app.get('/api/events/:slug', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const [rows] = await pool.query<Event[]>('SELECT * FROM events WHERE slug = ?', [slug]);
+    const rows = await db.all('SELECT * FROM events WHERE slug = ?', [slug]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -74,7 +54,7 @@ app.post('/api/events', async (req: Request, res: Response) => {
     // Generate a slug from the title
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     
-    const [result] = await pool.query<ResultSetHeader>(
+    const result = await db.run(
       'INSERT INTO events (title, description, date, location, slug) VALUES (?, ?, ?, ?, ?)',
       [title, description, date, location, slug]
     );
@@ -89,14 +69,14 @@ app.post('/api/events', async (req: Request, res: Response) => {
 app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const [eventRows] = await pool.query<Event[]>('SELECT id FROM events WHERE slug = ?', [slug]);
+    const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
     
     if (eventRows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     const eventId = eventRows[0].id;
-    const [rows] = await pool.query<RSVP[]>('SELECT * FROM rsvps WHERE event_id = ?', [eventId]);
+    const rows = await db.all('SELECT * FROM rsvps WHERE event_id = ?', [eventId]);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching RSVPs:', error);
@@ -109,14 +89,14 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     const { slug } = req.params;
     const { name, attending, bringing_guests, guest_count, guest_names, items_bringing } = req.body;
     
-    const [eventRows] = await pool.query<Event[]>('SELECT id FROM events WHERE slug = ?', [slug]);
+    const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
     
     if (eventRows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     const eventId = eventRows[0].id;
-    const [result] = await pool.query<ResultSetHeader>(
+    const result = await db.run(
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [eventId, name, attending, bringing_guests, guest_count, guest_names, items_bringing]
     );
@@ -132,14 +112,14 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
     const { slug, id } = req.params;
     
     // Verify the RSVP belongs to the correct event
-    const [eventRows] = await pool.query<Event[]>('SELECT id FROM events WHERE slug = ?', [slug]);
+    const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
     
     if (eventRows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     const eventId = eventRows[0].id;
-    await pool.query('DELETE FROM rsvps WHERE id = ? AND event_id = ?', [id, eventId]);
+    await db.run('DELETE FROM rsvps WHERE id = ? AND event_id = ?', [id, eventId]);
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting RSVP:', error);
@@ -150,26 +130,26 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
 // Initialize database tables
 async function initializeDatabase() {
   try {
-    await pool.query(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS events (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
         description TEXT,
-        date DATETIME NOT NULL,
-        location VARCHAR(255),
-        slug VARCHAR(255) NOT NULL UNIQUE,
+        date TEXT NOT NULL,
+        location TEXT,
+        slug TEXT NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    await pool.query(`
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS rsvps (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        event_id INT NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        attending VARCHAR(10) NOT NULL,
-        bringing_guests VARCHAR(10) NOT NULL,
-        guest_count INT DEFAULT 0,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        attending TEXT NOT NULL,
+        bringing_guests TEXT NOT NULL,
+        guest_count INTEGER DEFAULT 0,
         guest_names TEXT,
         items_bringing TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -183,7 +163,8 @@ async function initializeDatabase() {
 }
 
 // Start server
-app.listen(port, () => {
+app.listen(port, async () => {
   console.log(`Server running on port ${port}`);
-  initializeDatabase();
+  await connectToDatabase();
+  await initializeDatabase();
 }); 
