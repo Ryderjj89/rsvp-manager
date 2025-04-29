@@ -75,7 +75,7 @@ const RSVPForm: React.FC = () => {
     const { value } = e.target;
     setFormData(prev => ({
       ...prev,
-      items_bringing: typeof value === 'string' ? value.split(',') : value,
+      items_bringing: Array.isArray(value) ? value : value.split(',').filter(Boolean),
     }));
   };
 
