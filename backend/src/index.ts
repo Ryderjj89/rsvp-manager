@@ -3,6 +3,7 @@ import cors from 'cors';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -12,6 +13,9 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the frontend build directory
+app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // Database connection
 let db: any;
@@ -161,6 +165,11 @@ async function initializeDatabase() {
     console.error('Error initializing database:', error);
   }
 }
+
+// Handle client-side routing
+app.get('*', (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+});
 
 // Start server
 app.listen(port, async () => {
