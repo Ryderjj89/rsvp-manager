@@ -10,8 +10,8 @@ COPY frontend/package*.json ./frontend/
 COPY backend/package*.json ./backend/
 
 # Install dependencies
-RUN cd backend && npm install && \
-    cd ../frontend && npm install
+RUN npm install
+RUN cd frontend && npm install --save-dev @types/react @types/react-dom @types/react-router-dom @types/axios
 
 # Copy source files
 COPY . .

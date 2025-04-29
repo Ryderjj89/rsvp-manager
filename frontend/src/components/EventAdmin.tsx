@@ -24,6 +24,7 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
+  SelectChangeEvent,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -97,7 +98,7 @@ const EventAdmin: React.FC = () => {
     
     try {
       await axios.delete(`/api/events/${slug}/rsvps/${rsvpToDelete.id}`);
-      setRsvps(rsvps.filter(r => r.id !== rsvpToDelete.id));
+      setRsvps(rsvps.filter((r: RSVP) => r.id !== rsvpToDelete.id));
       setDeleteDialogOpen(false);
       setRsvpToDelete(null);
     } catch (error) {
@@ -118,9 +119,17 @@ const EventAdmin: React.FC = () => {
     setEditDialogOpen(true);
   };
 
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+  const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditForm(prev => ({
+    setEditForm((prev: typeof editForm) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
+    const { name, value } = e.target;
+    setEditForm((prev: typeof editForm) => ({
       ...prev,
       [name as string]: value,
     }));
@@ -131,7 +140,7 @@ const EventAdmin: React.FC = () => {
     
     try {
       await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, editForm);
-      setRsvps(rsvps.map(r => r.id === rsvpToEdit.id ? { ...r, ...editForm } : r));
+      setRsvps(rsvps.map((r: RSVP) => r.id === rsvpToEdit.id ? { ...r, ...editForm } : r));
       setEditDialogOpen(false);
       setRsvpToEdit(null);
     } catch (error) {
@@ -186,7 +195,7 @@ const EventAdmin: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {rsvps.map((rsvp) => (
+              {rsvps.map((rsvp: RSVP) => (
                 <TableRow key={rsvp.id}>
                   <TableCell>{rsvp.name}</TableCell>
                   <TableCell>{rsvp.attending}</TableCell>
@@ -249,7 +258,7 @@ const EventAdmin: React.FC = () => {
               label="Name"
               name="name"
               value={editForm.name}
-              onChange={handleEditFormChange}
+              onChange={handleTextInputChange}
               fullWidth
             />
             <FormControl fullWidth>
@@ -257,7 +266,7 @@ const EventAdmin: React.FC = () => {
               <Select
                 name="attending"
                 value={editForm.attending}
-                onChange={handleEditFormChange}
+                onChange={handleSelectChange}
                 label="Attending"
               >
                 <MenuItem value="yes">Yes</MenuItem>
@@ -270,7 +279,7 @@ const EventAdmin: React.FC = () => {
               <Select
                 name="bringing_guests"
                 value={editForm.bringing_guests}
-                onChange={handleEditFormChange}
+                onChange={handleSelectChange}
                 label="Bringing Guests"
               >
                 <MenuItem value="yes">Yes</MenuItem>
@@ -284,14 +293,14 @@ const EventAdmin: React.FC = () => {
                   name="guest_count"
                   type="number"
                   value={editForm.guest_count}
-                  onChange={handleEditFormChange}
+                  onChange={handleTextInputChange}
                   fullWidth
                 />
                 <TextField
                   label="Guest Names"
                   name="guest_names"
                   value={editForm.guest_names}
-                  onChange={handleEditFormChange}
+                  onChange={handleTextInputChange}
                   fullWidth
                   multiline
                   rows={2}
@@ -302,7 +311,7 @@ const EventAdmin: React.FC = () => {
               label="Items Bringing"
               name="items_bringing"
               value={editForm.items_bringing}
-              onChange={handleEditFormChange}
+              onChange={handleTextInputChange}
               fullWidth
               multiline
               rows={2}
