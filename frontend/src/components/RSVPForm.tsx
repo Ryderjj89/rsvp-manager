@@ -50,6 +50,7 @@ const RSVPForm: React.FC = () => {
         setNeededItems(response.data.needed_items || []);
       } catch (error) {
         setError('Failed to load event details');
+        setNeededItems([]);
       }
     };
     fetchEventDetails();
@@ -196,7 +197,7 @@ const RSVPForm: React.FC = () => {
                 </>
               )}
 
-              {neededItems && neededItems.length > 0 && (
+              {neededItems.length > 0 && (
                 <FormControl fullWidth>
                   <InputLabel>What items are you bringing?</InputLabel>
                   <Select
