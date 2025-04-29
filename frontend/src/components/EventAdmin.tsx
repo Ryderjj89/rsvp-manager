@@ -50,6 +50,7 @@ interface Event {
   date: string;
   location: string;
   slug: string;
+  needed_items?: string[];
 }
 
 const EventAdmin: React.FC = () => {
@@ -57,6 +58,7 @@ const EventAdmin: React.FC = () => {
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
+  const [neededItems, setNeededItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -83,6 +85,7 @@ const EventAdmin: React.FC = () => {
         axios.get(`/api/events/${slug}/rsvps`)
       ]);
       setEvent(eventResponse.data);
+      setNeededItems(eventResponse.data.needed_items || []);
       setRsvps(rsvpsResponse.data);
       setLoading(false);
     } catch (error) {
