@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { open, Database } from 'sqlite';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // Database connection
-let db;
+let db: Database<sqlite3.Database, sqlite3.Statement>;
 async function initializeDatabase() {
   try {
     db = await open({
