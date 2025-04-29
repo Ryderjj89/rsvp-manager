@@ -207,11 +207,15 @@ const RSVPForm: React.FC = () => {
                     input={<OutlinedInput label="What items are you bringing?" />}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => (
+                        {Array.isArray(selected) ? selected.map((value) => (
                           <Typography key={value} variant="body2">
                             {value}
                           </Typography>
-                        ))}
+                        )) : (
+                          <Typography variant="body2">
+                            {selected}
+                          </Typography>
+                        )}
                       </Box>
                     )}
                   >
