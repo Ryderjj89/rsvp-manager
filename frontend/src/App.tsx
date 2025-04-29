@@ -40,7 +40,7 @@ const App: React.FC = () => {
               <Routes>
                 <Route path="/" element={<EventList />} />
                 <Route path="/create" element={<EventForm />} />
-                <Route path="/events/:slug" element={<RSVPForm />} />
+                <Route path="/events/:slug/rsvp" element={<RSVPForm />} />
               </Routes>
             </div>
           </main>

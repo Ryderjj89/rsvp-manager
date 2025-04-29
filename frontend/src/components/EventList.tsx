@@ -16,6 +16,7 @@ interface Event {
   description: string;
   date: string;
   location: string;
+  slug: string;
 }
 
 const EventList: React.FC = () => {
@@ -33,6 +34,10 @@ const EventList: React.FC = () => {
     } catch (error) {
       console.error('Error fetching events:', error);
     }
+  };
+
+  const handleEventClick = (event: Event) => {
+    navigate(`/events/${event.slug}/rsvp`);
   };
 
   return (
@@ -53,7 +58,15 @@ const EventList: React.FC = () => {
       <Grid container spacing={3}>
         {events.map((event) => (
           <Grid item xs={12} key={event.id}>
-            <Card>
+            <Card 
+              onClick={() => handleEventClick(event)}
+              sx={{ 
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 6,
+                }
+              }}
+            >
               <CardContent>
                 <Typography variant="h5" component="h2">
                   {event.title}
