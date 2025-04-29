@@ -206,7 +206,7 @@ const EventAdmin: React.FC = () => {
                     }
                   </TableCell>
                   <TableCell>
-                    {rsvp.items_bringing.split(/[,\s]+/).filter(Boolean).join(', ')}
+                    {rsvp.items_bringing.split('\n').map(item => item.trim()).filter(Boolean).join(', ')}
                   </TableCell>
                   <TableCell>
                     <IconButton
