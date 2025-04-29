@@ -7,10 +7,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - rsvp_data:/app
+      - data:/app
     environment:
       - NODE_ENV=development
     restart: unless-stopped
 
 volumes:
-  rsvp_data: 
+  data: 
