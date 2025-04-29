@@ -2,7 +2,7 @@ import React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Container } from '@mui/material';
+import { Container, Box } from '@mui/material';
 import EventList from './components/EventList';
 import EventForm from './components/EventForm';
 import RSVPForm from './components/RSVPForm';
@@ -20,7 +20,17 @@ const darkTheme = createTheme({
     },
     background: {
       default: '#121212',
-      paper: '#1e1e1e',
+      paper: 'rgba(30, 30, 30, 0.9)',
+    },
+  },
+  components: {
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(30, 30, 30, 0.9)',
+        },
+      },
     },
   },
 });
@@ -30,23 +40,24 @@ const App: React.FC = () => {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Router>
-        <div className="min-h-screen bg-gray-100">
-          <header className="bg-white shadow">
-            <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-              <h1 className="text-3xl font-bold text-gray-900">RSVP Manager</h1>
-            </div>
-          </header>
-          <main>
-            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-              <Routes>
-                <Route path="/" element={<EventList />} />
-                <Route path="/create" element={<EventForm />} />
-                <Route path="/events/:slug/rsvp" element={<RSVPForm />} />
-                <Route path="/events/:slug/admin" element={<EventAdmin />} />
-              </Routes>
-            </div>
-          </main>
-        </div>
+        <Box
+          sx={{
+            minHeight: '100vh',
+            backgroundImage: 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundAttachment: 'fixed',
+          }}
+        >
+          <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Routes>
+              <Route path="/" element={<EventList />} />
+              <Route path="/create" element={<EventForm />} />
+              <Route path="/events/:slug/rsvp" element={<RSVPForm />} />
+              <Route path="/events/:slug/admin" element={<EventAdmin />} />
+            </Routes>
+          </Container>
+        </Box>
       </Router>
     </ThemeProvider>
   );
