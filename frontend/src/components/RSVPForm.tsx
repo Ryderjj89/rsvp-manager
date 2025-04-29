@@ -73,9 +73,10 @@ const RSVPForm: React.FC = () => {
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
     const { value } = e.target;
+    const newValue = typeof value === 'string' ? value.split(',') : value;
     setFormData(prev => ({
       ...prev,
-      items_bringing: Array.isArray(value) ? value : value.split(',').filter(Boolean),
+      items_bringing: Array.isArray(newValue) ? newValue : [],
     }));
   };
 
@@ -202,25 +203,25 @@ const RSVPForm: React.FC = () => {
                   <Select
                     multiple
                     name="items_bringing"
-                    value={formData.items_bringing || []}
+                    value={Array.isArray(formData.items_bringing) ? formData.items_bringing : []}
                     onChange={handleItemsChange}
                     input={<OutlinedInput label="What items are you bringing?" />}
-                    renderValue={(selected: string[]) => (
+                    renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {(selected || []).map((value) => (
+                        {Array.isArray(selected) ? selected.map((value) => (
                           <Typography key={value} variant="body2">
                             {value}
                           </Typography>
-                        ))}
+                        )) : null}
                       </Box>
                     )}
                   >
-                    {neededItems && neededItems.length > 0 ? neededItems.map((item) => (
+                    {neededItems.map((item) => (
                       <MenuItem key={item} value={item}>
-                        <Checkbox checked={formData.items_bringing.indexOf(item) > -1} />
+                        <Checkbox checked={Array.isArray(formData.items_bringing) && formData.items_bringing.indexOf(item) > -1} />
                         <ListItemText primary={item} />
                       </MenuItem>
-                    )) : null}
+                    ))}
                   </Select>
                 </FormControl>
               )}
