@@ -37,6 +37,7 @@ RUN npm install --production
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/frontend/build ./frontend/build
+COPY --from=builder /app/database.sqlite ./database.sqlite
 
 # Expose port
 EXPOSE 3000

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import mysql from 'mysql2/promise';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -14,26 +15,27 @@ app.use(cors());
 app.use(express.json());
 
 // Database connection
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'mysql',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'password',
-  database: process.env.DB_NAME || 'rsvp_db',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-
-// Test database connection
-async function testDatabaseConnection() {
+let db;
+async function initializeDatabase() {
   try {
-    const connection = await pool.getConnection();
-    console.log('Database connection successful');
-    connection.release();
-    return true;
+    db = await open({
+      filename: './database.sqlite',
+      driver: sqlite3.Database
+    });
+
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        date TEXT NOT NULL,
+        location TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('Database initialized successfully');
   } catch (error) {
-    console.error('Database connection failed:', error);
-    return false;
+    console.error('Error initializing database:', error);
   }
 }
 
@@ -43,11 +45,7 @@ app.use(express.static(path.join(__dirname, '../frontend/build')));
 // API Routes
 app.get('/api/events', async (req, res) => {
   try {
-    const isConnected = await testDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database connection failed');
-    }
-    const [rows] = await pool.query('SELECT * FROM events');
+    const rows = await db.all('SELECT * FROM events');
     console.log('Fetched events:', rows);
     res.json(rows);
   } catch (error) {
@@ -61,13 +59,9 @@ app.get('/api/events', async (req, res) => {
 
 app.post('/api/events', async (req, res) => {
   try {
-    const isConnected = await testDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database connection failed');
-    }
     const { title, description, date, location } = req.body;
     console.log('Creating event with data:', { title, description, date, location });
-    const [result] = await pool.query(
+    const result = await db.run(
       'INSERT INTO events (title, description, date, location) VALUES (?, ?, ?, ?)',
       [title, description, date, location]
     );
@@ -86,29 +80,6 @@ app.post('/api/events', async (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
 });
-
-// Initialize database tables
-async function initializeDatabase() {
-  try {
-    const isConnected = await testDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database connection failed');
-    }
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS events (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        description TEXT,
-        date DATETIME NOT NULL,
-        location VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log('Database initialized successfully');
-  } catch (error) {
-    console.error('Error initializing database:', error);
-  }
-}
 
 // Start server
 app.listen(port, () => {
