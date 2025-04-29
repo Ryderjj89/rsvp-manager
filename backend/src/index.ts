@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import mysql from 'mysql2/promise';
+import mysql, { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -23,10 +23,30 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+interface Event extends RowDataPacket {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  slug: string;
+}
+
+interface RSVP extends RowDataPacket {
+  id: number;
+  event_id: number;
+  name: string;
+  attending: string;
+  bringing_guests: string;
+  guest_count: number;
+  guest_names: string;
+  items_bringing: string;
+}
+
 // Routes
 app.get('/api/events', async (req: Request, res: Response) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM events');
+    const [rows] = await pool.query<Event[]>('SELECT * FROM events');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -37,7 +57,7 @@ app.get('/api/events', async (req: Request, res: Response) => {
 app.get('/api/events/:slug', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const [rows] = await pool.query('SELECT * FROM events WHERE slug = ?', [slug]);
+    const [rows] = await pool.query<Event[]>('SELECT * FROM events WHERE slug = ?', [slug]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -54,7 +74,7 @@ app.post('/api/events', async (req: Request, res: Response) => {
     // Generate a slug from the title
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     
-    const [result] = await pool.query(
+    const [result] = await pool.query<ResultSetHeader>(
       'INSERT INTO events (title, description, date, location, slug) VALUES (?, ?, ?, ?, ?)',
       [title, description, date, location, slug]
     );
@@ -69,14 +89,14 @@ app.post('/api/events', async (req: Request, res: Response) => {
 app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const [eventRows] = await pool.query('SELECT id FROM events WHERE slug = ?', [slug]);
+    const [eventRows] = await pool.query<Event[]>('SELECT id FROM events WHERE slug = ?', [slug]);
     
     if (eventRows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     const eventId = eventRows[0].id;
-    const [rows] = await pool.query('SELECT * FROM rsvps WHERE event_id = ?', [eventId]);
+    const [rows] = await pool.query<RSVP[]>('SELECT * FROM rsvps WHERE event_id = ?', [eventId]);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching RSVPs:', error);
@@ -89,14 +109,14 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     const { slug } = req.params;
     const { name, attending, bringing_guests, guest_count, guest_names, items_bringing } = req.body;
     
-    const [eventRows] = await pool.query('SELECT id FROM events WHERE slug = ?', [slug]);
+    const [eventRows] = await pool.query<Event[]>('SELECT id FROM events WHERE slug = ?', [slug]);
     
     if (eventRows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     const eventId = eventRows[0].id;
-    const [result] = await pool.query(
+    const [result] = await pool.query<ResultSetHeader>(
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [eventId, name, attending, bringing_guests, guest_count, guest_names, items_bringing]
     );
@@ -112,7 +132,7 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
     const { slug, id } = req.params;
     
     // Verify the RSVP belongs to the correct event
-    const [eventRows] = await pool.query('SELECT id FROM events WHERE slug = ?', [slug]);
+    const [eventRows] = await pool.query<Event[]>('SELECT id FROM events WHERE slug = ?', [slug]);
     
     if (eventRows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
