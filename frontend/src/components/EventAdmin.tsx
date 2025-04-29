@@ -17,6 +17,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -50,6 +57,16 @@ const EventAdmin: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rsvpToDelete, setRsvpToDelete] = useState<RSVP | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [rsvpToEdit, setRsvpToEdit] = useState<RSVP | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    attending: 'yes',
+    bringing_guests: 'no',
+    guest_count: 0,
+    guest_names: '',
+    items_bringing: '',
+  });
 
   useEffect(() => {
     fetchEventAndRsvps();
@@ -85,6 +102,40 @@ const EventAdmin: React.FC = () => {
       setRsvpToDelete(null);
     } catch (error) {
       setError('Failed to delete RSVP');
+    }
+  };
+
+  const handleEditRsvp = (rsvp: RSVP) => {
+    setRsvpToEdit(rsvp);
+    setEditForm({
+      name: rsvp.name,
+      attending: rsvp.attending,
+      bringing_guests: rsvp.bringing_guests,
+      guest_count: rsvp.guest_count,
+      guest_names: rsvp.guest_names,
+      items_bringing: rsvp.items_bringing,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name as string]: value,
+    }));
+  };
+
+  const handleEditSubmit = async () => {
+    if (!rsvpToEdit) return;
+    
+    try {
+      await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, editForm);
+      setRsvps(rsvps.map(r => r.id === rsvpToEdit.id ? { ...r, ...editForm } : r));
+      setEditDialogOpen(false);
+      setRsvpToEdit(null);
+    } catch (error) {
+      setError('Failed to update RSVP');
     }
   };
 
@@ -149,6 +200,13 @@ const EventAdmin: React.FC = () => {
                   <TableCell>{rsvp.items_bringing}</TableCell>
                   <TableCell>
                     <IconButton
+                      color="primary"
+                      onClick={() => handleEditRsvp(rsvp)}
+                      sx={{ mr: 1 }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
                       color="error"
                       onClick={() => handleDeleteRsvp(rsvp)}
                     >
@@ -175,6 +233,85 @@ const EventAdmin: React.FC = () => {
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button onClick={confirmDelete} color="error">Delete</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Edit RSVP</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Name"
+              name="name"
+              value={editForm.name}
+              onChange={handleEditFormChange}
+              fullWidth
+            />
+            <FormControl fullWidth>
+              <InputLabel>Attending</InputLabel>
+              <Select
+                name="attending"
+                value={editForm.attending}
+                onChange={handleEditFormChange}
+                label="Attending"
+              >
+                <MenuItem value="yes">Yes</MenuItem>
+                <MenuItem value="no">No</MenuItem>
+                <MenuItem value="maybe">Maybe</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>Bringing Guests</InputLabel>
+              <Select
+                name="bringing_guests"
+                value={editForm.bringing_guests}
+                onChange={handleEditFormChange}
+                label="Bringing Guests"
+              >
+                <MenuItem value="yes">Yes</MenuItem>
+                <MenuItem value="no">No</MenuItem>
+              </Select>
+            </FormControl>
+            {editForm.bringing_guests === 'yes' && (
+              <>
+                <TextField
+                  label="Number of Guests"
+                  name="guest_count"
+                  type="number"
+                  value={editForm.guest_count}
+                  onChange={handleEditFormChange}
+                  fullWidth
+                />
+                <TextField
+                  label="Guest Names"
+                  name="guest_names"
+                  value={editForm.guest_names}
+                  onChange={handleEditFormChange}
+                  fullWidth
+                  multiline
+                  rows={2}
+                />
+              </>
+            )}
+            <TextField
+              label="Items Bringing"
+              name="items_bringing"
+              value={editForm.items_bringing}
+              onChange={handleEditFormChange}
+              fullWidth
+              multiline
+              rows={2}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleEditSubmit} color="primary">Save Changes</Button>
         </DialogActions>
       </Dialog>
     </Container>

@@ -131,6 +131,31 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
   }
 });
 
+// Update RSVP
+app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
+  try {
+    const { slug, id } = req.params;
+    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing } = req.body;
+    
+    // Verify the RSVP belongs to the correct event
+    const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
+    
+    if (eventRows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    const eventId = eventRows[0].id;
+    await db.run(
+      'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ? WHERE id = ? AND event_id = ?',
+      [name, attending, bringing_guests, guest_count, guest_names, items_bringing, id, eventId]
+    );
+    res.status(200).json({ message: 'RSVP updated successfully' });
+  } catch (error) {
+    console.error('Error updating RSVP:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Initialize database tables
 async function initializeDatabase() {
   try {
