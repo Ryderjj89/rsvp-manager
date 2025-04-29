@@ -202,20 +202,16 @@ const RSVPForm: React.FC = () => {
                   <Select
                     multiple
                     name="items_bringing"
-                    value={formData.items_bringing}
+                    value={formData.items_bringing || []}
                     onChange={handleItemsChange}
                     input={<OutlinedInput label="What items are you bringing?" />}
-                    renderValue={(selected) => (
+                    renderValue={(selected: string[]) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {Array.isArray(selected) ? selected.map((value) => (
+                        {(selected || []).map((value) => (
                           <Typography key={value} variant="body2">
                             {value}
                           </Typography>
-                        )) : (
-                          <Typography variant="body2">
-                            {selected}
-                          </Typography>
-                        )}
+                        ))}
                       </Box>
                     )}
                   >
