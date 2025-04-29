@@ -24,31 +24,61 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Test database connection
+async function testDatabaseConnection() {
+  try {
+    const connection = await pool.getConnection();
+    console.log('Database connection successful');
+    connection.release();
+    return true;
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    return false;
+  }
+}
+
 // Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 
 // API Routes
 app.get('/api/events', async (req, res) => {
   try {
+    const isConnected = await testDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database connection failed');
+    }
     const [rows] = await pool.query('SELECT * FROM events');
+    console.log('Fetched events:', rows);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
 app.post('/api/events', async (req, res) => {
   try {
+    const isConnected = await testDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database connection failed');
+    }
     const { title, description, date, location } = req.body;
+    console.log('Creating event with data:', { title, description, date, location });
     const [result] = await pool.query(
       'INSERT INTO events (title, description, date, location) VALUES (?, ?, ?, ?)',
       [title, description, date, location]
     );
+    console.log('Event created:', result);
     res.status(201).json(result);
   } catch (error) {
     console.error('Error creating event:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
@@ -60,6 +90,10 @@ app.get('*', (req, res) => {
 // Initialize database tables
 async function initializeDatabase() {
   try {
+    const isConnected = await testDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database connection failed');
+    }
     await pool.query(`
       CREATE TABLE IF NOT EXISTS events (
         id INT AUTO_INCREMENT PRIMARY KEY,
