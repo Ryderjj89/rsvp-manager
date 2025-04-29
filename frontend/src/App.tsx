@@ -20,27 +20,32 @@ const darkTheme = createTheme({
     },
     background: {
       default: '#121212',
-      paper: 'rgba(30, 30, 30, 0.9)',
+      paper: 'rgba(30, 30, 30, 0.7)',
     },
   },
   components: {
     MuiPaper: {
+      defaultProps: {
+        elevation: 3,
+      },
       styleOverrides: {
         root: {
           backdropFilter: 'blur(10px)',
-          backgroundColor: 'rgba(30, 30, 30, 0.9) !important',
-          '&.MuiTableContainer-root': {
+          backgroundColor: 'rgba(30, 30, 30, 0.7) !important',
+          '& .MuiTableContainer-root, & .MuiTable-root, & .MuiTableCell-root': {
             backdropFilter: 'blur(10px)',
-            backgroundColor: 'rgba(30, 30, 30, 0.9) !important',
+            backgroundColor: 'transparent !important',
           },
         },
       },
     },
-    MuiTableCell: {
+    MuiContainer: {
       styleOverrides: {
         root: {
-          backdropFilter: 'blur(10px)',
-          backgroundColor: 'rgba(30, 30, 30, 0.9) !important',
+          '& .MuiPaper-root': {
+            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(30, 30, 30, 0.7) !important',
+          },
         },
       },
     },
