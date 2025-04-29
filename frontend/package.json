@@ -23,6 +23,8 @@
     "@types/react-dom": "^18.2.7",
     "@types/react-router-dom": "^5.3.3",
     "@types/axios": "^0.14.0",
+    "@mui/types": "^7.2.4",
+    "@types/mui": "^0.0.1",
     "typescript": "^4.9.5",
     "react-scripts": "5.0.1"
   },

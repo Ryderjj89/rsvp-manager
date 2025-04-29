@@ -11,7 +11,7 @@ COPY backend/package*.json ./backend/
 
 # Install dependencies
 RUN npm install
-RUN cd frontend && npm install --save-dev @types/react @types/react-dom @types/react-router-dom @types/axios
+RUN cd frontend && npm install --save-dev @types/react @types/react-dom @types/react-router-dom @types/axios @mui/types @types/mui
 
 # Copy source files
 COPY . .
