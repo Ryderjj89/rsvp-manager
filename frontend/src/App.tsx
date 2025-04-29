@@ -20,7 +20,7 @@ const darkTheme = createTheme({
     },
     background: {
       default: '#121212',
-      paper: 'rgba(30, 30, 30, 0.7)',
+      paper: 'rgba(0, 0, 0, 0.7)',
     },
   },
   components: {
@@ -31,7 +31,7 @@ const darkTheme = createTheme({
       styleOverrides: {
         root: {
           backdropFilter: 'blur(10px)',
-          backgroundColor: 'rgba(30, 30, 30, 0.7) !important',
+          backgroundColor: 'rgba(0, 0, 0, 0.7) !important',
           '& .MuiTableContainer-root, & .MuiTable-root, & .MuiTableCell-root': {
             backdropFilter: 'blur(10px)',
             backgroundColor: 'transparent !important',
@@ -44,7 +44,7 @@ const darkTheme = createTheme({
         root: {
           '& .MuiPaper-root': {
             backdropFilter: 'blur(10px)',
-            backgroundColor: 'rgba(30, 30, 30, 0.7) !important',
+            backgroundColor: 'rgba(0, 0, 0, 0.7) !important',
           },
         },
       },

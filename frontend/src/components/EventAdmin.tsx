@@ -201,12 +201,12 @@ const EventAdmin: React.FC = () => {
                   <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
                   <TableCell>
                     {rsvp.bringing_guests === 'yes' ? 
-                      `${rsvp.guest_count} (${rsvp.guest_names.split(' ').join(', ')})` : 
+                      `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
                       'No'
                     }
                   </TableCell>
                   <TableCell>
-                    {rsvp.items_bringing.split(' ').join(', ')}
+                    {rsvp.items_bringing.split(/[,\s]+/).filter(Boolean).join(', ')}
                   </TableCell>
                   <TableCell>
                     <IconButton
