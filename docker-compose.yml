@@ -10,7 +10,34 @@ services:
       - data:/app
     environment:
       - NODE_ENV=development
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=password
+      - DB_NAME=rsvp_db
+    depends_on:
+      - mysql
     restart: unless-stopped
+    networks:
+      - rsvp-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: rsvp_mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=rsvp_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    networks:
+      - rsvp-network
 
 volumes:
-  data: 
+  data:
+  mysql-data:
+
+networks:
+  rsvp-network:
+    driver: bridge 
