@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
+  Container,
+} from '@mui/material';
 
 interface RSVPFormData {
   name: string;
-  attending: boolean;
-  bringing_guests: boolean;
+  attending: string;
+  bringing_guests: string;
   guest_count: number;
   guest_names: string;
   items_bringing: string;
@@ -15,8 +28,8 @@ const RSVPForm: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [formData, setFormData] = useState<RSVPFormData>({
     name: '',
-    attending: false,
-    bringing_guests: false,
+    attending: '',
+    bringing_guests: '',
     guest_count: 0,
     guest_names: '',
     items_bringing: ''
@@ -26,10 +39,18 @@ const RSVPForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: value
+    }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
     }));
   };
 
@@ -50,108 +71,126 @@ const RSVPForm: React.FC = () => {
 
   if (success) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">Thank You!</h2>
-        <p>Your RSVP has been submitted successfully.</p>
-      </div>
+      <Container maxWidth="sm">
+        <Paper elevation={3} sx={{ p: 4, mt: 4, textAlign: 'center' }}>
+          <Typography variant="h4" component="h2" gutterBottom color="primary">
+            Thank You!
+          </Typography>
+          <Typography variant="body1">
+            Your RSVP has been submitted successfully.
+          </Typography>
+        </Paper>
+      </Container>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">RSVP Form</h2>
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Name</label>
-          <input
-            type="text"
+    <Container maxWidth="sm">
+      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+        <Typography variant="h4" component="h2" gutterBottom color="primary" align="center">
+          RSVP Form
+        </Typography>
+        
+        {error && (
+          <Typography color="error" align="center" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <TextField
+            label="Name"
             name="name"
             value={formData.name}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 border rounded-md"
+            fullWidth
+            variant="outlined"
           />
-        </div>
 
-        <div className="mb-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
+          <FormControl fullWidth>
+            <InputLabel>Are you attending?</InputLabel>
+            <Select
               name="attending"
-              checked={formData.attending}
-              onChange={handleChange}
-              className="mr-2"
-            />
-            Are you attending?
-          </label>
-        </div>
+              value={formData.attending}
+              onChange={handleSelectChange}
+              label="Are you attending?"
+              required
+            >
+              <MenuItem value="yes">Yes</MenuItem>
+              <MenuItem value="no">No</MenuItem>
+            </Select>
+          </FormControl>
 
-        {formData.attending && (
-          <>
-            <div className="mb-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
+          {formData.attending === 'yes' && (
+            <>
+              <FormControl fullWidth>
+                <InputLabel>Are you bringing any guests?</InputLabel>
+                <Select
                   name="bringing_guests"
-                  checked={formData.bringing_guests}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Are you bringing any guests?
-              </label>
-            </div>
+                  value={formData.bringing_guests}
+                  onChange={handleSelectChange}
+                  label="Are you bringing any guests?"
+                >
+                  <MenuItem value="yes">Yes</MenuItem>
+                  <MenuItem value="no">No</MenuItem>
+                </Select>
+              </FormControl>
 
-            {formData.bringing_guests && (
-              <>
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Number of Guests</label>
-                  <input
-                    type="number"
+              {formData.bringing_guests === 'yes' && (
+                <>
+                  <TextField
+                    label="Number of Guests"
                     name="guest_count"
+                    type="number"
                     value={formData.guest_count}
                     onChange={handleChange}
-                    min="1"
-                    className="w-full px-3 py-2 border rounded-md"
+                    fullWidth
+                    variant="outlined"
+                    inputProps={{ min: 1 }}
                   />
-                </div>
 
-                <div className="mb-4">
-                  <label className="block text-gray-700 mb-2">Guest Names</label>
-                  <textarea
+                  <TextField
+                    label="Guest Names"
                     name="guest_names"
                     value={formData.guest_names}
                     onChange={handleChange}
+                    multiline
+                    rows={3}
+                    fullWidth
+                    variant="outlined"
                     placeholder="Please list the names of your guests"
-                    className="w-full px-3 py-2 border rounded-md"
                   />
-                </div>
-              </>
-            )}
+                </>
+              )}
 
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">What items are you bringing?</label>
-              <textarea
+              <TextField
+                label="What items are you bringing?"
                 name="items_bringing"
                 value={formData.items_bringing}
                 onChange={handleChange}
+                multiline
+                rows={3}
+                fullWidth
+                variant="outlined"
                 placeholder="List any items you plan to bring to the event"
-                className="w-full px-3 py-2 border rounded-md"
               />
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
-        >
-          {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
-        </button>
-      </form>
-    </div>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            disabled={isSubmitting}
+            sx={{ mt: 2 }}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 
