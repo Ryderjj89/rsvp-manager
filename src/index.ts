@@ -30,13 +30,34 @@ async function initializeDatabase() {
         description TEXT,
         date TEXT NOT NULL,
         location TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        slug TEXT UNIQUE
+      );
+
+      CREATE TABLE IF NOT EXISTS rsvps (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_id INTEGER,
+        name TEXT NOT NULL,
+        attending BOOLEAN NOT NULL,
+        bringing_guests BOOLEAN,
+        guest_count INTEGER,
+        guest_names TEXT,
+        items_bringing TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (event_id) REFERENCES events(id)
       )
     `);
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
   }
+}
+
+// Helper function to create slug from title
+function createSlug(title: string): string {
+  return title.toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
 // Serve static files from the frontend build directory
@@ -60,15 +81,58 @@ app.get('/api/events', async (req, res) => {
 app.post('/api/events', async (req, res) => {
   try {
     const { title, description, date, location } = req.body;
-    console.log('Creating event with data:', { title, description, date, location });
+    const slug = createSlug(title);
+    console.log('Creating event with data:', { title, description, date, location, slug });
     const result = await db.run(
-      'INSERT INTO events (title, description, date, location) VALUES (?, ?, ?, ?)',
-      [title, description, date, location]
+      'INSERT INTO events (title, description, date, location, slug) VALUES (?, ?, ?, ?, ?)',
+      [title, description, date, location, slug]
     );
     console.log('Event created:', result);
-    res.status(201).json(result);
+    res.status(201).json({ ...result, slug });
   } catch (error) {
     console.error('Error creating event:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+app.get('/api/events/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const event = await db.get('SELECT * FROM events WHERE slug = ?', slug);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    res.json(event);
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+app.post('/api/events/:slug/rsvp', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing } = req.body;
+    
+    const event = await db.get('SELECT id FROM events WHERE slug = ?', slug);
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const result = await db.run(
+      'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [event.id, name, attending, bringing_guests, guest_count, guest_names, items_bringing]
+    );
+    
+    res.status(201).json(result);
+  } catch (error) {
+    console.error('Error creating RSVP:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
