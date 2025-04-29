@@ -219,12 +219,12 @@ const RSVPForm: React.FC = () => {
                       </Box>
                     )}
                   >
-                    {neededItems.map((item) => (
+                    {neededItems && neededItems.length > 0 ? neededItems.map((item) => (
                       <MenuItem key={item} value={item}>
                         <Checkbox checked={formData.items_bringing.indexOf(item) > -1} />
                         <ListItemText primary={item} />
                       </MenuItem>
-                    ))}
+                    )) : null}
                   </Select>
                 </FormControl>
               )}
