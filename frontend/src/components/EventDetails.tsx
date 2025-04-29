@@ -181,9 +181,9 @@ const EventDetails: React.FC = () => {
                         Bringing {rsvp.guest_count} guest{rsvp.guest_count !== 1 ? 's' : ''}: {rsvp.guest_names}
                       </Typography>
                     )}
-                    {rsvp.items_bringing && (
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Items:</strong> {rsvp.items_bringing}
+                    {rsvp.items_bringing && rsvp.items_bringing.length > 0 && (
+                      <Typography>
+                        <strong>Items:</strong> {Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing.join(', ') : rsvp.items_bringing}
                       </Typography>
                     )}
                   </Box>

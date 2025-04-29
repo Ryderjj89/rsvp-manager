@@ -73,10 +73,9 @@ const RSVPForm: React.FC = () => {
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
     const { value } = e.target;
-    const newValue = typeof value === 'string' ? value.split(',') : value;
     setFormData(prev => ({
       ...prev,
-      items_bringing: Array.isArray(newValue) ? newValue : [],
+      items_bringing: Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : [],
     }));
   };
 
@@ -203,18 +202,21 @@ const RSVPForm: React.FC = () => {
                   <Select
                     multiple
                     name="items_bringing"
-                    value={Array.isArray(formData.items_bringing) ? formData.items_bringing : []}
+                    value={formData.items_bringing || []}
                     onChange={handleItemsChange}
                     input={<OutlinedInput label="What items are you bringing?" />}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {Array.isArray(selected) ? selected.map((value) => (
-                          <Typography key={value} variant="body2">
-                            {value}
-                          </Typography>
-                        )) : null}
-                      </Box>
-                    )}
+                    renderValue={(selected) => {
+                      const selectedArray = Array.isArray(selected) ? selected : [];
+                      return (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {selectedArray.map((value) => (
+                            <Typography key={value} variant="body2">
+                              {value}
+                            </Typography>
+                          ))}
+                        </Box>
+                      );
+                    }}
                   >
                     {neededItems.map((item) => (
                       <MenuItem key={item} value={item}>
