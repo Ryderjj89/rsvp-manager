@@ -196,7 +196,7 @@ const RSVPForm: React.FC = () => {
                 </>
               )}
 
-              {neededItems.length > 0 && (
+              {neededItems && neededItems.length > 0 && (
                 <FormControl fullWidth>
                   <InputLabel>What items are you bringing?</InputLabel>
                   <Select
