@@ -6,15 +6,17 @@ export interface Event {
   location: string;
   slug: string;
   created_at: string;
-  updated_at: string;
+  needed_items: string[];
 }
 
 export interface Rsvp {
   id: number;
   event_id: number;
   name: string;
-  email: string;
-  status: 'attending' | 'not_attending' | 'maybe';
+  attending: string;
+  bringing_guests: string;
+  guest_count: number;
+  guest_names: string;
+  items_bringing: string[];
   created_at: string;
-  updated_at: string;
 } 

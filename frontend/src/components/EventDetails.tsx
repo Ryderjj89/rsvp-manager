@@ -2,7 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Event, Rsvp } from '../types';
-import { Button, Container, Typography, Box, Paper, List, ListItem, ListItemText, CircularProgress, Alert } from '@mui/material';
+import { 
+  Button, 
+  Container, 
+  Typography, 
+  Box, 
+  Paper, 
+  List, 
+  ListItem, 
+  ListItemText, 
+  CircularProgress, 
+  Alert,
+  Chip
+} from '@mui/material';
 
 const EventDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -30,6 +42,21 @@ const EventDetails: React.FC = () => {
 
     fetchEventDetails();
   }, [slug]);
+
+  const formatAttendingStatus = (attending: string) => {
+    return attending.charAt(0).toUpperCase() + attending.slice(1);
+  };
+
+  const getStatusColor = (attending: string): "success" | "error" | "warning" => {
+    switch (attending.toLowerCase()) {
+      case 'yes':
+        return 'success';
+      case 'no':
+        return 'error';
+      default:
+        return 'warning';
+    }
+  };
 
   if (loading) {
     return (
@@ -65,151 +92,119 @@ const EventDetails: React.FC = () => {
     );
   }
 
-  const formatStatus = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'attending':
-        return 'Yes';
-      case 'not_attending':
-        return 'No';
-      case 'maybe':
-        return 'Maybe';
-      default:
-        return status.charAt(0).toUpperCase() + status.slice(1);
-    }
-  };
-
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        backgroundImage: 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        py: 4,
-      }}
-    >
-      <Container maxWidth="md">
-        <Paper 
-          elevation={3} 
+    <Container maxWidth="md">
+      <Paper sx={{ p: 4, mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          {event.title}
+        </Typography>
+        <Typography variant="body1" paragraph>
+          {event.description}
+        </Typography>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle1" component="div" gutterBottom>
+            <strong>Date:</strong> {new Date(event.date).toLocaleDateString()}
+          </Typography>
+          <Typography variant="subtitle1" component="div">
+            <strong>Location:</strong> {event.location}
+          </Typography>
+          {event.needed_items && event.needed_items.length > 0 && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle1" component="div" gutterBottom>
+                <strong>Needed Items:</strong>
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {event.needed_items.map((item, index) => (
+                  <Chip key={index} label={item} color="primary" />
+                ))}
+              </Box>
+            </Box>
+          )}
+        </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate(`/events/${event.slug}/rsvp`)}
+        >
+          RSVP to Event
+        </Button>
+      </Paper>
+
+      <Paper sx={{ p: 4 }}>
+        <Typography 
+          variant="h5" 
+          gutterBottom 
           sx={{ 
-            p: 4, 
-            my: 4,
-            borderRadius: 2,
-            backdropFilter: 'blur(10px)',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            maxWidth: '800px',
-            mx: 'auto'
+            fontWeight: 500,
+            color: 'primary.main',
+            mb: 2,
+            borderBottom: '2px solid',
+            borderColor: 'primary.main',
+            pb: 1
           }}
         >
-          <Typography 
-            variant="h3" 
-            gutterBottom 
-            sx={{ 
-              fontWeight: 600,
-              color: 'primary.main',
-              mb: 3
-            }}
-          >
-            {event.title}
-          </Typography>
-          <Box sx={{ mb: 3 }}>
-            <Typography 
-              variant="h6" 
-              gutterBottom 
-              sx={{ 
-                color: 'text.secondary',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}
-            >
-              {event.date} at {event.location}
-            </Typography>
-          </Box>
-          <Typography 
-            variant="body1" 
-            paragraph 
-            sx={{ 
-              fontSize: '1.1rem',
-              lineHeight: 1.6,
-              color: 'text.primary',
-              mb: 4
-            }}
-          >
-            {event.description}
-          </Typography>
-
-          <Typography 
-            variant="h5" 
-            gutterBottom 
-            sx={{ 
-              fontWeight: 500,
-              color: 'primary.main',
-              mb: 2,
-              borderBottom: '2px solid',
-              borderColor: 'primary.main',
-              pb: 1
-            }}
-          >
-            RSVPs
-          </Typography>
-          <List sx={{ 
-            bgcolor: 'rgba(255, 255, 255, 0.7)',
-            borderRadius: 1,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-            maxWidth: '600px',
-            mx: 'auto'
-          }}>
-            {rsvps.map((rsvp) => (
-              <ListItem 
-                key={rsvp.id}
-                sx={{
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  '&:last-child': {
-                    borderBottom: 'none'
-                  }
-                }}
-              >
-                <ListItemText
-                  primary={
-                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
-                      {rsvp.name}
-                    </Typography>
-                  }
-                  secondary={
-                    <Typography variant="body2" color="text.secondary">
-                      {rsvp.email} - {formatStatus(rsvp.status)}
-                    </Typography>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-
-          <Box mt={4} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => navigate('/')}
+          RSVPs
+        </Typography>
+        <List sx={{ 
+          bgcolor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: 1,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+        }}>
+          {rsvps.map((rsvp) => (
+            <ListItem 
+              key={rsvp.id}
               sx={{
-                px: 4,
-                py: 1,
-                borderRadius: 2,
-                textTransform: 'none',
-                fontSize: '1rem',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                '&:hover': {
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                '&:last-child': {
+                  borderBottom: 'none'
                 }
               }}
             >
-              Back to Events
-            </Button>
-          </Box>
-        </Paper>
-      </Container>
-    </Box>
+              <ListItemText
+                primary={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                      {rsvp.name}
+                    </Typography>
+                    <Chip 
+                      label={formatAttendingStatus(rsvp.attending)}
+                      color={getStatusColor(rsvp.attending)}
+                      size="small"
+                    />
+                  </Box>
+                }
+                secondary={
+                  <Box sx={{ mt: 1 }}>
+                    {rsvp.bringing_guests === 'yes' && (
+                      <Typography variant="body2" color="text.secondary" paragraph>
+                        Bringing {rsvp.guest_count} guest{rsvp.guest_count !== 1 ? 's' : ''}: {rsvp.guest_names}
+                      </Typography>
+                    )}
+                    {rsvp.items_bringing && (
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Items:</strong> {rsvp.items_bringing}
+                      </Typography>
+                    )}
+                  </Box>
+                }
+              />
+            </ListItem>
+          ))}
+          {rsvps.length === 0 && (
+            <ListItem>
+              <ListItemText
+                primary={
+                  <Typography variant="body1" color="text.secondary" align="center">
+                    No RSVPs yet
+                  </Typography>
+                }
+              />
+            </ListItem>
+          )}
+        </List>
+      </Paper>
+    </Container>
   );
 };
 

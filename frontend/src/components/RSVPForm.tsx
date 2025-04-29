@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -13,6 +13,9 @@ import {
   MenuItem,
   SelectChangeEvent,
   Container,
+  Checkbox,
+  ListItemText,
+  OutlinedInput,
 } from '@mui/material';
 
 interface RSVPFormData {
@@ -21,7 +24,7 @@ interface RSVPFormData {
   bringing_guests: string;
   guest_count: number;
   guest_names: string;
-  items_bringing: string;
+  items_bringing: string[];
 }
 
 const RSVPForm: React.FC = () => {
@@ -32,12 +35,25 @@ const RSVPForm: React.FC = () => {
     bringing_guests: '',
     guest_count: 0,
     guest_names: '',
-    items_bringing: ''
+    items_bringing: []
   });
+  const [neededItems, setNeededItems] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchEventDetails = async () => {
+      try {
+        const response = await axios.get(`/api/events/${slug}`);
+        setNeededItems(response.data.needed_items || []);
+      } catch (error) {
+        setError('Failed to load event details');
+      }
+    };
+    fetchEventDetails();
+  }, [slug]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -52,6 +68,14 @@ const RSVPForm: React.FC = () => {
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      items_bringing: typeof value === 'string' ? value.split(',') : value,
     }));
   };
 
@@ -172,17 +196,34 @@ const RSVPForm: React.FC = () => {
                 </>
               )}
 
-              <TextField
-                label="What items are you bringing?"
-                name="items_bringing"
-                value={formData.items_bringing}
-                onChange={handleChange}
-                multiline
-                rows={3}
-                fullWidth
-                variant="outlined"
-                placeholder="List any items you plan to bring to the event"
-              />
+              {neededItems.length > 0 && (
+                <FormControl fullWidth>
+                  <InputLabel>What items are you bringing?</InputLabel>
+                  <Select
+                    multiple
+                    name="items_bringing"
+                    value={formData.items_bringing}
+                    onChange={handleItemsChange}
+                    input={<OutlinedInput label="What items are you bringing?" />}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Typography key={value} variant="body2">
+                            {value}
+                          </Typography>
+                        ))}
+                      </Box>
+                    )}
+                  >
+                    {neededItems.map((item) => (
+                      <MenuItem key={item} value={item}>
+                        <Checkbox checked={formData.items_bringing.indexOf(item) > -1} />
+                        <ListItemText primary={item} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
             </>
           )}
 

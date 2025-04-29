@@ -54,13 +54,13 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
 
 app.post('/api/events', async (req: Request, res: Response) => {
   try {
-    const { title, description, date, location } = req.body;
+    const { title, description, date, location, needed_items } = req.body;
     // Generate a slug from the title
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     
     const result = await db.run(
-      'INSERT INTO events (title, description, date, location, slug) VALUES (?, ?, ?, ?, ?)',
-      [title, description, date, location, slug]
+      'INSERT INTO events (title, description, date, location, slug, needed_items) VALUES (?, ?, ?, ?, ?, ?)',
+      [title, description, date, location, slug, JSON.stringify(needed_items || [])]
     );
     res.status(201).json({ ...result, slug });
   } catch (error) {
@@ -102,7 +102,7 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     const eventId = eventRows[0].id;
     const result = await db.run(
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [eventId, name, attending, bringing_guests, guest_count, guest_names, items_bringing]
+      [eventId, name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(items_bringing || [])]
     );
     res.status(201).json(result);
   } catch (error) {
@@ -147,7 +147,7 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
     const eventId = eventRows[0].id;
     await db.run(
       'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ? WHERE id = ? AND event_id = ?',
-      [name, attending, bringing_guests, guest_count, guest_names, items_bringing, id, eventId]
+      [name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(items_bringing || []), id, eventId]
     );
     res.status(200).json({ message: 'RSVP updated successfully' });
   } catch (error) {
@@ -167,6 +167,7 @@ async function initializeDatabase() {
         date TEXT NOT NULL,
         location TEXT,
         slug TEXT NOT NULL UNIQUE,
+        needed_items TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

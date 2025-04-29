@@ -7,6 +7,7 @@ import {
   Typography,
   Container,
   Paper,
+  Chip,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -17,7 +18,9 @@ const EventForm: React.FC = () => {
     description: '',
     date: '',
     location: '',
+    needed_items: [] as string[],
   });
+  const [currentItem, setCurrentItem] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,6 +28,27 @@ const EventForm: React.FC = () => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleItemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentItem(e.target.value);
+  };
+
+  const handleAddItem = () => {
+    if (currentItem.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        needed_items: [...prev.needed_items, currentItem.trim()],
+      }));
+      setCurrentItem('');
+    }
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      needed_items: prev.needed_items.filter((_, i) => i !== index),
     }));
   };
 
@@ -95,6 +119,36 @@ const EventForm: React.FC = () => {
             variant="outlined"
             required
           />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="subtitle1">Needed Items</Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                fullWidth
+                label="Add Item"
+                value={currentItem}
+                onChange={handleItemChange}
+                variant="outlined"
+                size="small"
+              />
+              <Button
+                variant="contained"
+                onClick={handleAddItem}
+                disabled={!currentItem.trim()}
+              >
+                Add
+              </Button>
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {formData.needed_items.map((item, index) => (
+                <Chip
+                  key={index}
+                  label={item}
+                  onDelete={() => handleRemoveItem(index)}
+                  color="primary"
+                />
+              ))}
+            </Box>
+          </Box>
           <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
             <Button
               variant="contained"

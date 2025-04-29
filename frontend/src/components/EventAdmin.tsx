@@ -37,7 +37,7 @@ interface RSVP {
   bringing_guests: string;
   guest_count: number;
   guest_names: string;
-  items_bringing: string;
+  items_bringing: string[];
 }
 
 interface Event {
@@ -206,7 +206,7 @@ const EventAdmin: React.FC = () => {
                     }
                   </TableCell>
                   <TableCell>
-                    {rsvp.items_bringing.split('\n').map(item => item.trim()).filter(Boolean).join(', ')}
+                    {rsvp.items_bringing.join(', ')}
                   </TableCell>
                   <TableCell>
                     <IconButton
