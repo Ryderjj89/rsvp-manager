@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   Box,
@@ -37,6 +37,7 @@ const RSVPForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -76,9 +77,16 @@ const RSVPForm: React.FC = () => {
           <Typography variant="h4" component="h2" gutterBottom color="primary">
             Thank You!
           </Typography>
-          <Typography variant="body1">
+          <Typography variant="body1" sx={{ mb: 3 }}>
             Your RSVP has been submitted successfully.
           </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate('/')}
+          >
+            Back to Events
+          </Button>
         </Paper>
       </Container>
     );

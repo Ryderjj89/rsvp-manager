@@ -6,6 +6,7 @@ import {
   TextField,
   Typography,
   Container,
+  Paper,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -17,6 +18,7 @@ const EventForm: React.FC = () => {
     date: '',
     location: '',
   });
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,28 +30,37 @@ const EventForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
       await axios.post('/api/events', formData);
       navigate('/');
     } catch (error) {
+      setError('Failed to create event. Please try again.');
       console.error('Error creating event:', error);
     }
   };
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+        <Typography variant="h4" component="h2" gutterBottom color="primary" align="center">
           Create New Event
         </Typography>
-        <form onSubmit={handleSubmit}>
+        
+        {error && (
+          <Typography color="error" align="center" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
             fullWidth
             label="Title"
             name="title"
             value={formData.title}
             onChange={handleChange}
-            margin="normal"
+            variant="outlined"
             required
           />
           <TextField
@@ -58,7 +69,7 @@ const EventForm: React.FC = () => {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            margin="normal"
+            variant="outlined"
             multiline
             rows={4}
           />
@@ -69,7 +80,7 @@ const EventForm: React.FC = () => {
             type="datetime-local"
             value={formData.date}
             onChange={handleChange}
-            margin="normal"
+            variant="outlined"
             required
             InputLabelProps={{
               shrink: true,
@@ -81,7 +92,7 @@ const EventForm: React.FC = () => {
             name="location"
             value={formData.location}
             onChange={handleChange}
-            margin="normal"
+            variant="outlined"
             required
           />
           <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
@@ -89,18 +100,20 @@ const EventForm: React.FC = () => {
               variant="contained"
               color="primary"
               type="submit"
+              size="large"
             >
               Create Event
             </Button>
             <Button
               variant="outlined"
               onClick={() => navigate('/')}
+              size="large"
             >
               Cancel
             </Button>
           </Box>
-        </form>
-      </Box>
+        </Box>
+      </Paper>
     </Container>
   );
 };

@@ -7,7 +7,10 @@ import {
   CardContent,
   Typography,
   Grid,
+  CardActions,
+  IconButton,
 } from '@mui/material';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import axios from 'axios';
 
 interface Event {
@@ -38,6 +41,10 @@ const EventList: React.FC = () => {
 
   const handleEventClick = (event: Event) => {
     navigate(`/events/${event.slug}/rsvp`);
+  };
+
+  const handleAdminClick = (event: Event) => {
+    navigate(`/events/${event.slug}/admin`);
   };
 
   return (
@@ -78,6 +85,18 @@ const EventList: React.FC = () => {
                   {event.description}
                 </Typography>
               </CardContent>
+              <CardActions>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAdminClick(event);
+                  }}
+                  color="primary"
+                  aria-label="admin"
+                >
+                  <AdminPanelSettingsIcon />
+                </IconButton>
+              </CardActions>
             </Card>
           </Grid>
         ))}
