@@ -198,13 +198,9 @@ const EventAdmin: React.FC = () => {
               {rsvps.map((rsvp: RSVP) => (
                 <TableRow key={rsvp.id}>
                   <TableCell>{rsvp.name}</TableCell>
-                  <TableCell>{rsvp.attending}</TableCell>
+                  <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
                   <TableCell>
-                    {rsvp.bringing_guests === 'yes' ? (
-                      `${rsvp.guest_count} - ${rsvp.guest_names}`
-                    ) : (
-                      'No'
-                    )}
+                    {rsvp.bringing_guests === 'yes' ? `${rsvp.guest_count} (${rsvp.guest_names})` : 'No'}
                   </TableCell>
                   <TableCell>{rsvp.items_bringing}</TableCell>
                   <TableCell>

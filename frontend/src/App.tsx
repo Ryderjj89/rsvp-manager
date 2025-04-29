@@ -28,7 +28,19 @@ const darkTheme = createTheme({
       styleOverrides: {
         root: {
           backdropFilter: 'blur(10px)',
-          backgroundColor: 'rgba(30, 30, 30, 0.9)',
+          backgroundColor: 'rgba(30, 30, 30, 0.9) !important',
+          '&.MuiTableContainer-root': {
+            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(30, 30, 30, 0.9) !important',
+          },
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(30, 30, 30, 0.9) !important',
         },
       },
     },
