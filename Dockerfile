@@ -7,20 +7,20 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
+COPY backend/package*.json ./backend/
 
 # Install dependencies
-RUN npm install
-RUN cd frontend && npm install
+RUN cd backend && npm install && \
+    cd ../frontend && npm install
 
 # Copy source files
 COPY . .
-COPY frontend ./frontend
 
 # Build frontend
 RUN cd frontend && npm run build
 
 # Build backend
-RUN npm run build
+RUN cd backend && npm run build
 
 # Create database file
 RUN touch database.sqlite
@@ -32,13 +32,13 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY backend/package*.json ./
 
 # Install production dependencies only
 RUN npm install --production
 
 # Copy built files from builder stage
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/frontend/build ./frontend/build
 COPY --from=builder /app/database.sqlite ./database.sqlite
 
