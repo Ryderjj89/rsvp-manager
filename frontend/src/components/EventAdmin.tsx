@@ -25,6 +25,9 @@ import {
   FormControlLabel,
   Switch,
   SelectChangeEvent,
+  OutlinedInput,
+  ListItemText,
+  Checkbox,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -66,7 +69,7 @@ const EventAdmin: React.FC = () => {
     bringing_guests: 'no',
     guest_count: 0,
     guest_names: '',
-    items_bringing: '',
+    items_bringing: [] as string[],
   });
 
   useEffect(() => {
@@ -114,7 +117,7 @@ const EventAdmin: React.FC = () => {
       bringing_guests: rsvp.bringing_guests,
       guest_count: rsvp.guest_count,
       guest_names: rsvp.guest_names,
-      items_bringing: rsvp.items_bringing,
+      items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing : [],
     });
     setEditDialogOpen(true);
   };
@@ -132,6 +135,14 @@ const EventAdmin: React.FC = () => {
     setEditForm((prev: typeof editForm) => ({
       ...prev,
       [name as string]: value,
+    }));
+  };
+
+  const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
+    const { value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      items_bringing: typeof value === 'string' ? value.split(',') : value,
     }));
   };
 
@@ -308,15 +319,34 @@ const EventAdmin: React.FC = () => {
                 />
               </>
             )}
-            <TextField
-              label="Items Bringing"
-              name="items_bringing"
-              value={editForm.items_bringing}
-              onChange={handleTextInputChange}
-              fullWidth
-              multiline
-              rows={2}
-            />
+            {neededItems.length > 0 && (
+              <FormControl fullWidth>
+                <InputLabel>What items are you bringing?</InputLabel>
+                <Select
+                  multiple
+                  name="items_bringing"
+                  value={editForm.items_bringing}
+                  onChange={handleItemsChange}
+                  input={<OutlinedInput label="What items are you bringing?" />}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => (
+                        <Typography key={value} variant="body2">
+                          {value}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
+                >
+                  {neededItems.map((item) => (
+                    <MenuItem key={item} value={item}>
+                      <Checkbox checked={editForm.items_bringing.indexOf(item) > -1} />
+                      <ListItemText primary={item} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
