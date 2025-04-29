@@ -22,6 +22,9 @@ RUN cd frontend && npm run build
 # Build backend
 RUN npm run build
 
+# Create database file
+RUN touch database.sqlite
+
 # Production stage
 FROM node:18-alpine
 
