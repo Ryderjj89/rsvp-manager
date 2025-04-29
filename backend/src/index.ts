@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
@@ -24,7 +24,7 @@ const pool = mysql.createPool({
 });
 
 // Routes
-app.get('/api/events', async (req, res) => {
+app.get('/api/events', async (req: Request, res: Response) => {
   try {
     const [rows] = await pool.query('SELECT * FROM events');
     res.json(rows);
@@ -34,10 +34,10 @@ app.get('/api/events', async (req, res) => {
   }
 });
 
-app.get('/api/events/:slug', async (req, res) => {
+app.get('/api/events/:slug', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const [rows] = await pool.query('SELECT * FROM events WHERE id = ?', [slug]);
+    const [rows] = await pool.query('SELECT * FROM events WHERE slug = ?', [slug]);
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
@@ -48,14 +48,17 @@ app.get('/api/events/:slug', async (req, res) => {
   }
 });
 
-app.post('/api/events', async (req, res) => {
+app.post('/api/events', async (req: Request, res: Response) => {
   try {
     const { title, description, date, location } = req.body;
+    // Generate a slug from the title
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    
     const [result] = await pool.query(
-      'INSERT INTO events (title, description, date, location) VALUES (?, ?, ?, ?)',
-      [title, description, date, location]
+      'INSERT INTO events (title, description, date, location, slug) VALUES (?, ?, ?, ?, ?)',
+      [title, description, date, location, slug]
     );
-    res.status(201).json(result);
+    res.status(201).json({ ...result, slug });
   } catch (error) {
     console.error('Error creating event:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -63,10 +66,17 @@ app.post('/api/events', async (req, res) => {
 });
 
 // RSVP routes
-app.get('/api/events/:slug/rsvps', async (req, res) => {
+app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const [rows] = await pool.query('SELECT * FROM rsvps WHERE event_id = ?', [slug]);
+    const [eventRows] = await pool.query('SELECT id FROM events WHERE slug = ?', [slug]);
+    
+    if (eventRows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    const eventId = eventRows[0].id;
+    const [rows] = await pool.query('SELECT * FROM rsvps WHERE event_id = ?', [eventId]);
     res.json(rows);
   } catch (error) {
     console.error('Error fetching RSVPs:', error);
@@ -74,14 +84,21 @@ app.get('/api/events/:slug/rsvps', async (req, res) => {
   }
 });
 
-app.post('/api/events/:slug/rsvp', async (req, res) => {
+app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
     const { name, attending, bringing_guests, guest_count, guest_names, items_bringing } = req.body;
     
+    const [eventRows] = await pool.query('SELECT id FROM events WHERE slug = ?', [slug]);
+    
+    if (eventRows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    const eventId = eventRows[0].id;
     const [result] = await pool.query(
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [slug, name, attending, bringing_guests, guest_count, guest_names, items_bringing]
+      [eventId, name, attending, bringing_guests, guest_count, guest_names, items_bringing]
     );
     res.status(201).json(result);
   } catch (error) {
@@ -90,10 +107,19 @@ app.post('/api/events/:slug/rsvp', async (req, res) => {
   }
 });
 
-app.delete('/api/events/:slug/rsvps/:id', async (req, res) => {
+app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    await pool.query('DELETE FROM rsvps WHERE id = ?', [id]);
+    const { slug, id } = req.params;
+    
+    // Verify the RSVP belongs to the correct event
+    const [eventRows] = await pool.query('SELECT id FROM events WHERE slug = ?', [slug]);
+    
+    if (eventRows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    const eventId = eventRows[0].id;
+    await pool.query('DELETE FROM rsvps WHERE id = ? AND event_id = ?', [id, eventId]);
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting RSVP:', error);
@@ -111,6 +137,7 @@ async function initializeDatabase() {
         description TEXT,
         date DATETIME NOT NULL,
         location VARCHAR(255),
+        slug VARCHAR(255) NOT NULL UNIQUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
