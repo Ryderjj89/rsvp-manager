@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     container_name: rsvp_manager
@@ -9,11 +7,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
-      - /app/node_modules
+      - rsvp_data:/app
     environment:
       - NODE_ENV=development
     restart: unless-stopped
 
 volumes:
-  mysql_data: 
+  rsvp_data: 
