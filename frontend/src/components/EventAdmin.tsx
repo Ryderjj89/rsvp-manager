@@ -41,7 +41,7 @@ interface RSVP {
   bringing_guests: string;
   guest_count: number;
   guest_names: string;
-  items_bringing: string[];
+  items_bringing: string[] | string;
 }
 
 interface Event {
@@ -51,7 +51,7 @@ interface Event {
   date: string;
   location: string;
   slug: string;
-  needed_items?: string[];
+  needed_items?: string[] | string;
 }
 
 const EventAdmin: React.FC = () => {
@@ -88,15 +88,16 @@ const EventAdmin: React.FC = () => {
       ]);
       setEvent(eventResponse.data);
       
-      // Parse needed_items
+      // Process needed items
       let items: string[] = [];
       if (eventResponse.data.needed_items) {
         try {
-          items = typeof eventResponse.data.needed_items === 'string'
-            ? JSON.parse(eventResponse.data.needed_items)
-            : Array.isArray(eventResponse.data.needed_items)
-              ? eventResponse.data.needed_items
-              : [];
+          if (typeof eventResponse.data.needed_items === 'string') {
+            const parsed = JSON.parse(eventResponse.data.needed_items);
+            items = Array.isArray(parsed) ? parsed : [];
+          } else if (Array.isArray(eventResponse.data.needed_items)) {
+            items = eventResponse.data.needed_items;
+          }
         } catch (e) {
           console.error('Error parsing needed_items:', e);
           items = [];
@@ -108,15 +109,22 @@ const EventAdmin: React.FC = () => {
       const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => {
         let itemsBringing: string[] = [];
         try {
-          itemsBringing = typeof rsvp.items_bringing === 'string'
-            ? JSON.parse(rsvp.items_bringing)
-            : Array.isArray(rsvp.items_bringing)
-              ? rsvp.items_bringing
-              : [];
-          itemsBringing.forEach(item => claimed.add(item));
+          if (typeof rsvp.items_bringing === 'string') {
+            try {
+              const parsed = JSON.parse(rsvp.items_bringing);
+              itemsBringing = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error('Error parsing items_bringing JSON:', e);
+            }
+          } else if (Array.isArray(rsvp.items_bringing)) {
+            itemsBringing = rsvp.items_bringing;
+          }
+          
+          if (itemsBringing.length > 0) {
+            itemsBringing.forEach(item => claimed.add(item));
+          }
         } catch (e) {
-          console.error('Error parsing items_bringing:', e);
-          itemsBringing = [];
+          console.error('Error processing items for RSVP:', e);
         }
         
         return {
@@ -374,25 +382,33 @@ const EventAdmin: React.FC = () => {
                       let items: string[] = [];
                       try {
                         if (typeof rsvp.items_bringing === 'string') {
-                          const parsed = JSON.parse(rsvp.items_bringing);
-                          items = Array.isArray(parsed) ? parsed : [];
+                          try {
+                            const parsed = JSON.parse(rsvp.items_bringing);
+                            items = Array.isArray(parsed) ? parsed : [];
+                          } catch (e) {
+                            console.error('Error parsing items_bringing JSON in table:', e);
+                          }
                         } else if (Array.isArray(rsvp.items_bringing)) {
                           items = rsvp.items_bringing;
                         }
                       } catch (e) {
-                        console.error('Error parsing items_bringing:', e);
+                        console.error('Error processing items in table:', e);
                       }
                       
                       return (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {items.map((item: string, index: number) => (
+                          {items.length > 0 ? items.map((item: string, index: number) => (
                             <Chip
-                              key={index}
+                              key={`${item}-${index}`}
                               label={item}
                               color="primary"
                               size="small"
                             />
-                          ))}
+                          )) : (
+                            <Typography variant="body2" color="text.secondary">
+                              No items
+                            </Typography>
+                          )}
                         </Box>
                       );
                     })()}
