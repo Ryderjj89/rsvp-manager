@@ -45,7 +45,7 @@ const EventList: React.FC = () => {
   };
 
   const handleAdminClick = (event: Event) => {
-    navigate(`/events/${event.slug}/admin`);
+    navigate(`/admin/events/${event.slug}`);
   };
 
   return (
@@ -90,7 +90,7 @@ const EventList: React.FC = () => {
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigate(`/events/${event.slug}/view`);
+                    navigate(`/view/events/${event.slug}`);
                   }}
                   color="primary"
                   aria-label="view rsvps"

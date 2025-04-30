@@ -72,8 +72,8 @@ const App: React.FC = () => {
               <Route path="/" element={<EventList />} />
               <Route path="/create" element={<EventForm />} />
               <Route path="/events/:slug/rsvp" element={<RSVPForm />} />
-              <Route path="/events/:slug/admin" element={<EventAdmin />} />
-              <Route path="/events/:slug/view" element={<EventView />} />
+              <Route path="/admin/events/:slug" element={<EventAdmin />} />
+              <Route path="/view/events/:slug" element={<EventView />} />
             </Routes>
           </Container>
         </Box>
