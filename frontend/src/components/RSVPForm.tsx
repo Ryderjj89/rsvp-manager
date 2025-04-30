@@ -55,7 +55,7 @@ const RSVPForm: React.FC = () => {
           items = Array.isArray(response.data.needed_items) 
             ? response.data.needed_items 
             : typeof response.data.needed_items === 'string'
-              ? response.data.needed_items.split(',').map(item => item.trim())
+              ? response.data.needed_items.split(',').map((item: string): string => item.trim())
               : [];
         }
         
@@ -93,7 +93,11 @@ const RSVPForm: React.FC = () => {
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
     const value = e.target.value;
     console.log('Select onChange value:', value);
-    const itemsArray = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',').map(item => item.trim()) : [];
+    const itemsArray = Array.isArray(value) 
+      ? value 
+      : typeof value === 'string' 
+        ? value.split(',').map((item: string): string => item.trim()) 
+        : [];
     console.log('Processed items array:', itemsArray);
     setFormData(prev => ({
       ...prev,
