@@ -316,7 +316,7 @@ const EventAdmin: React.FC = () => {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {neededItems.map((item: string, index: number) => (
                   <Chip
-                    key={index}
+                    key={`${item}-${index}`}
                     label={item}
                     color="primary"
                     variant="outlined"
@@ -336,7 +336,7 @@ const EventAdmin: React.FC = () => {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {claimedItems.map((item: string, index: number) => (
                   <Chip
-                    key={index}
+                    key={`${item}-${index}`}
                     label={item}
                     color="success"
                   />
@@ -401,7 +401,7 @@ const EventAdmin: React.FC = () => {
                             <Chip
                               key={`${item}-${index}`}
                               label={item}
-                              color="primary"
+                              color="success"
                               size="small"
                             />
                           )) : (

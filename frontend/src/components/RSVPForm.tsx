@@ -143,6 +143,58 @@ const RSVPForm: React.FC = () => {
         items_bringing: JSON.stringify(formData.items_bringing)
       };
       await axios.post(`/api/events/${slug}/rsvp`, submissionData);
+      
+      // Update the needed and claimed items
+      const [eventResponse, rsvpsResponse] = await Promise.all([
+        axios.get(`/api/events/${slug}`),
+        axios.get(`/api/events/${slug}/rsvps`)
+      ]);
+      
+      // Process needed items
+      let items: string[] = [];
+      if (eventResponse.data.needed_items) {
+        try {
+          if (typeof eventResponse.data.needed_items === 'string') {
+            const parsed = JSON.parse(eventResponse.data.needed_items);
+            items = Array.isArray(parsed) ? parsed : [];
+          } else if (Array.isArray(eventResponse.data.needed_items)) {
+            items = eventResponse.data.needed_items;
+          }
+        } catch (e) {
+          console.error('Error parsing needed_items:', e);
+          items = [];
+        }
+      }
+      
+      // Get all claimed items from existing RSVPs
+      const claimed = new Set<string>();
+      rsvpsResponse.data.forEach((rsvp: any) => {
+        try {
+          let rsvpItems: string[] = [];
+          if (typeof rsvp.items_bringing === 'string') {
+            try {
+              const parsed = JSON.parse(rsvp.items_bringing);
+              rsvpItems = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              console.error('Error parsing items_bringing JSON:', e);
+            }
+          } else if (Array.isArray(rsvp.items_bringing)) {
+            rsvpItems = rsvp.items_bringing;
+          }
+          
+          if (rsvpItems.length > 0) {
+            rsvpItems.forEach(item => claimed.add(item));
+          }
+        } catch (e) {
+          console.error('Error processing RSVP items:', e);
+        }
+      });
+      
+      // Filter out claimed items
+      const availableItems = items.filter(item => !claimed.has(item));
+      
+      setNeededItems(availableItems);
+      setClaimedItems(Array.from(claimed));
       setSuccess(true);
     } catch (err) {
       setError('Failed to submit RSVP. Please try again.');
