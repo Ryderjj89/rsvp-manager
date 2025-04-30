@@ -11,6 +11,7 @@ import {
   IconButton,
 } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import axios from 'axios';
 
 interface Event {
@@ -94,6 +95,7 @@ const EventList: React.FC = () => {
                   color="primary"
                   aria-label="view rsvps"
                   variant="text"
+                  startIcon={<VisibilityIcon />}
                   sx={{ ml: 1 }}
                 >
                   View RSVPs
