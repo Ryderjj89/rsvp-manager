@@ -168,8 +168,14 @@ const RSVPForm: React.FC = () => {
       
       // Get all claimed items from existing RSVPs including the new submission
       const claimed = new Set<string>();
-      const allRsvps = [...rsvpsResponse.data, response.data];
-      allRsvps.forEach((rsvp: any) => {
+      
+      // First add items from the new submission
+      if (Array.isArray(response.data.items_bringing)) {
+        response.data.items_bringing.forEach(item => claimed.add(item));
+      }
+      
+      // Then add items from existing RSVPs
+      rsvpsResponse.data.forEach((rsvp: any) => {
         try {
           let rsvpItems: string[] = [];
           if (typeof rsvp.items_bringing === 'string') {

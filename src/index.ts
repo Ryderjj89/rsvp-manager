@@ -131,9 +131,18 @@ app.post('/api/events/:slug/rsvp', async (req, res) => {
       [event.id, name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(items_bringing || [])]
     );
     
-    // Fetch the newly created RSVP to return in response
-    const newRsvp = await db.get('SELECT * FROM rsvps WHERE id = ?', result.lastID);
-    res.status(201).json(newRsvp);
+    // Return a complete response with the original items_bringing array
+    res.status(201).json({
+      id: result.lastID,
+      event_id: event.id,
+      name,
+      attending,
+      bringing_guests,
+      guest_count,
+      guest_names,
+      items_bringing: items_bringing || [],
+      created_at: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Error creating RSVP:', error);
     res.status(500).json({ 
