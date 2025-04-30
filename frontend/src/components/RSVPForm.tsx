@@ -72,14 +72,24 @@ const RSVPForm: React.FC = () => {
         const claimed = new Set<string>();
         rsvpsResponse.data.forEach((rsvp: any) => {
           try {
-            const rsvpItems = typeof rsvp.items_bringing === 'string'
-              ? JSON.parse(rsvp.items_bringing)
-              : Array.isArray(rsvp.items_bringing)
-                ? rsvp.items_bringing
-                : [];
-            rsvpItems.forEach((item: string) => claimed.add(item));
+            let rsvpItems: string[] = [];
+            if (typeof rsvp.items_bringing === 'string') {
+              try {
+                const parsed = JSON.parse(rsvp.items_bringing);
+                rsvpItems = Array.isArray(parsed) ? parsed : [];
+              } catch (e) {
+                console.error('Error parsing items_bringing JSON:', e);
+                rsvpItems = [];
+              }
+            } else if (Array.isArray(rsvp.items_bringing)) {
+              rsvpItems = rsvp.items_bringing;
+            }
+            
+            if (Array.isArray(rsvpItems)) {
+              rsvpItems.forEach((item: string) => claimed.add(item));
+            }
           } catch (e) {
-            console.error('Error parsing RSVP items:', e);
+            console.error('Error processing RSVP items:', e);
           }
         });
         

@@ -205,21 +205,32 @@ const EventAdmin: React.FC = () => {
       await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
       
       // Update the local state
-      const updatedRsvps = rsvps.map((r: RSVP) => 
-        r.id === rsvpToEdit.id 
-          ? { 
-              ...r, 
-              ...editForm,
-              items_bringing: editForm.items_bringing // Keep as array in local state
-            } 
-          : r
-      );
+      const updatedRsvps = rsvps.map((r: RSVP) => {
+        if (r.id === rsvpToEdit.id) {
+          return {
+            ...r,
+            ...editForm,
+            items_bringing: editForm.items_bringing // Keep as array in local state
+          };
+        }
+        return r;
+      });
       
       // Recalculate claimed items
       const claimed = new Set<string>();
       updatedRsvps.forEach((rsvp: RSVP) => {
-        if (Array.isArray(rsvp.items_bringing)) {
-          rsvp.items_bringing.forEach(item => claimed.add(item));
+        let rsvpItems: string[] = [];
+        try {
+          if (typeof rsvp.items_bringing === 'string') {
+            const parsed = JSON.parse(rsvp.items_bringing);
+            rsvpItems = Array.isArray(parsed) ? parsed : [];
+          } else if (Array.isArray(rsvp.items_bringing)) {
+            rsvpItems = rsvp.items_bringing;
+          }
+          
+          rsvpItems.forEach(item => claimed.add(item));
+        } catch (e) {
+          console.error('Error processing items for RSVP:', e);
         }
       });
 
@@ -227,11 +238,12 @@ const EventAdmin: React.FC = () => {
       let allItems: string[] = [];
       if (event?.needed_items) {
         try {
-          allItems = typeof event.needed_items === 'string'
-            ? JSON.parse(event.needed_items)
-            : Array.isArray(event.needed_items)
-              ? event.needed_items
-              : [];
+          if (typeof event.needed_items === 'string') {
+            const parsed = JSON.parse(event.needed_items);
+            allItems = Array.isArray(parsed) ? parsed : [];
+          } else if (Array.isArray(event.needed_items)) {
+            allItems = event.needed_items;
+          }
         } catch (e) {
           console.error('Error parsing event needed_items:', e);
           allItems = [];
@@ -359,11 +371,18 @@ const EventAdmin: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     {(() => {
-                      const items: string[] = Array.isArray(rsvp.items_bringing) 
-                        ? rsvp.items_bringing 
-                        : typeof rsvp.items_bringing === 'string'
-                          ? JSON.parse(rsvp.items_bringing)
-                          : [];
+                      let items: string[] = [];
+                      try {
+                        if (typeof rsvp.items_bringing === 'string') {
+                          const parsed = JSON.parse(rsvp.items_bringing);
+                          items = Array.isArray(parsed) ? parsed : [];
+                        } else if (Array.isArray(rsvp.items_bringing)) {
+                          items = rsvp.items_bringing;
+                        }
+                      } catch (e) {
+                        console.error('Error parsing items_bringing:', e);
+                      }
+                      
                       return (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                           {items.map((item: string, index: number) => (
