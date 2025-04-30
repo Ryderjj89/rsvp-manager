@@ -75,6 +75,7 @@ const EventAdmin: React.FC = () => {
     guest_names: '',
     items_bringing: [] as string[],
   });
+  const [deleteEventDialogOpen, setDeleteEventDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchEventAndRsvps();
@@ -272,6 +273,16 @@ const EventAdmin: React.FC = () => {
     }
   };
 
+  const handleDeleteEvent = async () => {
+    try {
+      await axios.delete(`/api/events/${slug}`);
+      navigate('/');
+    } catch (error) {
+      setError('Failed to delete event');
+      setDeleteEventDialogOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -434,6 +445,17 @@ const EventAdmin: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => setDeleteEventDialogOpen(true)}
+          >
+            Delete Event
+          </Button>
+        </Box>
       </Paper>
 
       <Dialog
@@ -550,6 +572,27 @@ const EventAdmin: React.FC = () => {
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleEditSubmit} color="primary">Save Changes</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={deleteEventDialogOpen}
+        onClose={() => setDeleteEventDialogOpen(false)}
+      >
+        <DialogTitle>Delete Event</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete "{event.title}"? This action cannot be undone.
+          </Typography>
+          <Typography color="error" sx={{ mt: 2 }}>
+            All RSVPs associated with this event will also be deleted.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteEventDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeleteEvent} color="error" variant="contained">
+            Delete Event
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>
