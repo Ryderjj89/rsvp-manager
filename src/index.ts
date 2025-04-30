@@ -125,12 +125,15 @@ app.post('/api/events/:slug/rsvp', async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
+    // Create a new RSVP with the submitted data
     const result = await db.run(
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [event.id, name, attending, bringing_guests, guest_count, guest_names, items_bringing]
+      [event.id, name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(items_bringing || [])]
     );
     
-    res.status(201).json(result);
+    // Fetch the newly created RSVP to return in response
+    const newRsvp = await db.get('SELECT * FROM rsvps WHERE id = ?', result.lastID);
+    res.status(201).json(newRsvp);
   } catch (error) {
     console.error('Error creating RSVP:', error);
     res.status(500).json({ 

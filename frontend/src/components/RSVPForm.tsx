@@ -140,7 +140,7 @@ const RSVPForm: React.FC = () => {
     try {
       const submissionData = {
         ...formData,
-        items_bringing: JSON.stringify(formData.items_bringing)
+        items_bringing: formData.items_bringing
       };
       const response = await axios.post(`/api/events/${slug}/rsvp`, submissionData);
       
@@ -198,6 +198,7 @@ const RSVPForm: React.FC = () => {
       setClaimedItems(Array.from(claimed));
       setSuccess(true);
     } catch (err) {
+      console.error('Error submitting RSVP:', err);
       setError('Failed to submit RSVP. Please try again.');
     } finally {
       setIsSubmitting(false);
