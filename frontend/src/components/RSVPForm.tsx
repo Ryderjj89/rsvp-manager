@@ -73,10 +73,11 @@ const RSVPForm: React.FC = () => {
   };
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
-    const { value } = e.target;
+    const value = e.target.value;
+    const itemsArray = Array.isArray(value) ? value : typeof value === 'string' ? [value] : [];
     setFormData(prev => ({
       ...prev,
-      items_bringing: Array.isArray(value) ? value : typeof value === 'string' ? value.split(',') : [],
+      items_bringing: itemsArray
     }));
   };
 
@@ -203,16 +204,15 @@ const RSVPForm: React.FC = () => {
                   <Select
                     multiple
                     name="items_bringing"
-                    value={formData.items_bringing || []}
+                    value={Array.isArray(formData.items_bringing) ? formData.items_bringing : []}
                     onChange={handleItemsChange}
                     input={<OutlinedInput label="What items are you bringing?" />}
-                    renderValue={(selected: unknown) => {
-                      if (!selected || !Array.isArray(selected) || selected.length === 0) {
-                        return null;
-                      }
+                    renderValue={(selected) => {
+                      const items = Array.isArray(selected) ? selected : [];
+                      if (items.length === 0) return null;
                       return (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {selected.map((value: string) => (
+                          {items.map((value) => (
                             <Typography key={value} variant="body2">
                               {value}
                             </Typography>
@@ -223,7 +223,7 @@ const RSVPForm: React.FC = () => {
                   >
                     {neededItems.map((item) => (
                       <MenuItem key={item} value={item}>
-                        <Checkbox checked={Array.isArray(formData.items_bringing) && formData.items_bringing.indexOf(item) > -1} />
+                        <Checkbox checked={Array.isArray(formData.items_bringing) && formData.items_bringing.includes(item)} />
                         <ListItemText primary={item} />
                       </MenuItem>
                     ))}
