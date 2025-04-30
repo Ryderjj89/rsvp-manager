@@ -232,17 +232,8 @@ const RSVPForm: React.FC = () => {
                     onChange={handleItemsChange}
                     input={<OutlinedInput label="What items are you bringing?" />}
                     renderValue={(selected) => {
-                      const items = Array.isArray(selected) ? selected : [];
-                      if (items.length === 0) return null;
-                      return (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {items.map((value) => (
-                            <Typography key={value} variant="body2">
-                              {value}
-                            </Typography>
-                          ))}
-                        </Box>
-                      );
+                      if (!Array.isArray(selected) || selected.length === 0) return '';
+                      return selected.join(', ');
                     }}
                   >
                     {neededItems.map((item) => (
