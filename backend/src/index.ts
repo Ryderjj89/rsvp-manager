@@ -69,6 +69,27 @@ app.post('/api/events', async (req: Request, res: Response) => {
   }
 });
 
+app.delete('/api/events/:slug', async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    
+    // First check if the event exists
+    const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
+    
+    if (eventRows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    // Delete the event (RSVPs will be automatically deleted due to ON DELETE CASCADE)
+    await db.run('DELETE FROM events WHERE slug = ?', [slug]);
+    
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // RSVP routes
 app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
   try {
