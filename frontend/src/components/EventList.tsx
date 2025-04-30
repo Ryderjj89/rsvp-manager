@@ -89,6 +89,18 @@ const EventList: React.FC = () => {
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
+                    navigate(`/events/${event.slug}/view`);
+                  }}
+                  color="primary"
+                  aria-label="view rsvps"
+                  variant="text"
+                  sx={{ ml: 1 }}
+                >
+                  View RSVPs
+                </Button>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
                     handleAdminClick(event);
                   }}
                   color="primary"

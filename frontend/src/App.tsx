@@ -7,6 +7,7 @@ import EventList from './components/EventList';
 import EventForm from './components/EventForm';
 import RSVPForm from './components/RSVPForm';
 import EventAdmin from './components/EventAdmin';
+import EventView from './components/EventView';
 import './App.css';
 
 const darkTheme = createTheme({
@@ -72,6 +73,7 @@ const App: React.FC = () => {
               <Route path="/create" element={<EventForm />} />
               <Route path="/events/:slug/rsvp" element={<RSVPForm />} />
               <Route path="/events/:slug/admin" element={<EventAdmin />} />
+              <Route path="/events/:slug/view" element={<EventView />} />
             </Routes>
           </Container>
         </Box>
