@@ -16,6 +16,7 @@ import {
   Checkbox,
   ListItemText,
   OutlinedInput,
+  Chip,
 } from '@mui/material';
 
 interface RSVPFormData {
@@ -51,7 +52,6 @@ const RSVPForm: React.FC = () => {
           axios.get(`/api/events/${slug}`),
           axios.get(`/api/events/${slug}/rsvps`)
         ]);
-        console.log('API Response:', eventResponse.data);
         
         // Process needed items
         let items: string[] = [];
@@ -86,7 +86,6 @@ const RSVPForm: React.FC = () => {
         // Filter out claimed items
         const availableItems = items.filter(item => !claimed.has(item));
         
-        console.log('Available items:', availableItems);
         setNeededItems(availableItems);
         setClaimedItems(Array.from(claimed));
       } catch (error) {
@@ -97,10 +96,6 @@ const RSVPForm: React.FC = () => {
     };
     fetchEventDetails();
   }, [slug]);
-
-  useEffect(() => {
-    console.log('Current neededItems state:', neededItems);
-  }, [neededItems]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -119,14 +114,8 @@ const RSVPForm: React.FC = () => {
   };
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
-    const value = e.target.value;
-    console.log('Select onChange value:', value);
-    const itemsArray = Array.isArray(value) 
-      ? value 
-      : typeof value === 'string' 
-        ? value.split(',').map((item: string): string => item.trim()) 
-        : [];
-    console.log('Processed items array:', itemsArray);
+    const { value } = e.target;
+    const itemsArray = Array.isArray(value) ? value : [];
     setFormData(prev => ({
       ...prev,
       items_bringing: itemsArray
@@ -139,7 +128,11 @@ const RSVPForm: React.FC = () => {
     setError(null);
 
     try {
-      await axios.post(`/api/events/${slug}/rsvp`, formData);
+      const submissionData = {
+        ...formData,
+        items_bringing: JSON.stringify(formData.items_bringing)
+      };
+      await axios.post(`/api/events/${slug}/rsvp`, submissionData);
       setSuccess(true);
     } catch (err) {
       setError('Failed to submit RSVP. Please try again.');
@@ -256,17 +249,20 @@ const RSVPForm: React.FC = () => {
                   <Select
                     multiple
                     name="items_bringing"
-                    value={Array.isArray(formData.items_bringing) ? formData.items_bringing : []}
+                    value={formData.items_bringing}
                     onChange={handleItemsChange}
                     input={<OutlinedInput label="What items are you bringing?" />}
-                    renderValue={(selected) => {
-                      if (!Array.isArray(selected) || selected.length === 0) return '';
-                      return selected.join(', ');
-                    }}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Chip key={value} label={value} />
+                        ))}
+                      </Box>
+                    )}
                   >
                     {neededItems.map((item) => (
                       <MenuItem key={item} value={item}>
-                        <Checkbox checked={Array.isArray(formData.items_bringing) && formData.items_bringing.includes(item)} />
+                        <Checkbox checked={formData.items_bringing.includes(item)} />
                         <ListItemText primary={item} />
                       </MenuItem>
                     ))}

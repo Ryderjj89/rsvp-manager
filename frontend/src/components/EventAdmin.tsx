@@ -198,10 +198,22 @@ const EventAdmin: React.FC = () => {
     if (!rsvpToEdit) return;
     
     try {
-      await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, editForm);
+      const submissionData = {
+        ...editForm,
+        items_bringing: JSON.stringify(editForm.items_bringing)
+      };
+      await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
       
       // Update the local state
-      const updatedRsvps = rsvps.map((r: RSVP) => r.id === rsvpToEdit.id ? { ...r, ...editForm } : r);
+      const updatedRsvps = rsvps.map((r: RSVP) => 
+        r.id === rsvpToEdit.id 
+          ? { 
+              ...r, 
+              ...editForm,
+              items_bringing: editForm.items_bringing // Keep as array in local state
+            } 
+          : r
+      );
       
       // Recalculate claimed items
       const claimed = new Set<string>();
@@ -222,6 +234,7 @@ const EventAdmin: React.FC = () => {
               : [];
         } catch (e) {
           console.error('Error parsing event needed_items:', e);
+          allItems = [];
         }
       }
 
@@ -346,12 +359,23 @@ const EventAdmin: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     {(() => {
-                      const items = typeof rsvp.items_bringing === 'string' 
-                        ? JSON.parse(rsvp.items_bringing) 
-                        : Array.isArray(rsvp.items_bringing) 
-                          ? rsvp.items_bringing 
+                      const items = Array.isArray(rsvp.items_bringing) 
+                        ? rsvp.items_bringing 
+                        : typeof rsvp.items_bringing === 'string'
+                          ? JSON.parse(rsvp.items_bringing)
                           : [];
-                      return items.join(', ');
+                      return (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {items.map((item, index) => (
+                            <Chip
+                              key={index}
+                              label={item}
+                              color="primary"
+                              size="small"
+                            />
+                          ))}
+                        </Box>
+                      );
                     })()}
                   </TableCell>
                   <TableCell>
@@ -474,7 +498,7 @@ const EventAdmin: React.FC = () => {
                   </Box>
                 )}
               >
-                {[...new Set([...neededItems, ...editForm.items_bringing])].map((item) => (
+                {Array.from(new Set([...neededItems, ...editForm.items_bringing])).map((item) => (
                   <MenuItem key={item} value={item}>
                     <Checkbox checked={editForm.items_bringing.includes(item)} />
                     <ListItemText 
