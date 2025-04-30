@@ -187,9 +187,10 @@ const EventAdmin: React.FC = () => {
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
     const { value } = e.target;
+    const newItems = Array.isArray(value) ? value : [];
     setEditForm(prev => ({
       ...prev,
-      items_bringing: Array.isArray(value) ? value : []
+      items_bringing: newItems
     }));
   };
 
@@ -198,7 +199,39 @@ const EventAdmin: React.FC = () => {
     
     try {
       await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, editForm);
-      setRsvps(rsvps.map((r: RSVP) => r.id === rsvpToEdit.id ? { ...r, ...editForm } : r));
+      
+      // Update the local state
+      const updatedRsvps = rsvps.map((r: RSVP) => r.id === rsvpToEdit.id ? { ...r, ...editForm } : r);
+      
+      // Recalculate claimed items
+      const claimed = new Set<string>();
+      updatedRsvps.forEach((rsvp: RSVP) => {
+        if (Array.isArray(rsvp.items_bringing)) {
+          rsvp.items_bringing.forEach(item => claimed.add(item));
+        }
+      });
+
+      // Get all items from the event
+      let allItems: string[] = [];
+      if (event?.needed_items) {
+        try {
+          allItems = typeof event.needed_items === 'string'
+            ? JSON.parse(event.needed_items)
+            : Array.isArray(event.needed_items)
+              ? event.needed_items
+              : [];
+        } catch (e) {
+          console.error('Error parsing event needed_items:', e);
+        }
+      }
+
+      // Update needed and claimed items
+      const claimedArray = Array.from(claimed);
+      const availableItems = allItems.filter(item => !claimed.has(item));
+
+      setRsvps(updatedRsvps);
+      setNeededItems(availableItems);
+      setClaimedItems(claimedArray);
       setEditDialogOpen(false);
       setRsvpToEdit(null);
     } catch (error) {
@@ -421,34 +454,37 @@ const EventAdmin: React.FC = () => {
                 />
               </>
             )}
-            {neededItems.length > 0 && (
-              <FormControl fullWidth>
-                <InputLabel>What items are you bringing?</InputLabel>
-                <Select
-                  multiple
-                  name="items_bringing"
-                  value={editForm.items_bringing}
-                  onChange={handleItemsChange}
-                  input={<OutlinedInput label="What items are you bringing?" />}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {Array.isArray(selected) ? selected.map((value) => (
-                        <Typography key={value} variant="body2">
-                          {value}
-                        </Typography>
-                      )) : null}
-                    </Box>
-                  )}
-                >
-                  {neededItems.map((item) => (
-                    <MenuItem key={item} value={item}>
-                      <Checkbox checked={editForm.items_bringing.indexOf(item) > -1} />
-                      <ListItemText primary={item} />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
+            <FormControl fullWidth>
+              <InputLabel>What items are you bringing?</InputLabel>
+              <Select
+                multiple
+                name="items_bringing"
+                value={editForm.items_bringing}
+                onChange={handleItemsChange}
+                input={<OutlinedInput label="What items are you bringing?" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {Array.isArray(selected) ? selected.map((value) => (
+                      <Chip
+                        key={value}
+                        label={value}
+                        color="primary"
+                      />
+                    )) : null}
+                  </Box>
+                )}
+              >
+                {[...new Set([...neededItems, ...editForm.items_bringing])].map((item) => (
+                  <MenuItem key={item} value={item}>
+                    <Checkbox checked={editForm.items_bringing.includes(item)} />
+                    <ListItemText 
+                      primary={item} 
+                      secondary={neededItems.includes(item) ? 'Available' : 'Currently assigned'}
+                    />
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </DialogContent>
         <DialogActions>
