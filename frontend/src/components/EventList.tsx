@@ -92,10 +92,10 @@ const EventList: React.FC = () => {
                     handleAdminClick(event);
                   }}
                   color="primary"
-                  aria-label="admin"
-                  variant="text"
+                  aria-label="manage rsvps"
+                  variant="outlined"
                   startIcon={<AdminPanelSettingsIcon />}
-                  size="small"
+                  sx={{ ml: 1 }}
                 >
                   Manage RSVPs
                 </Button>
