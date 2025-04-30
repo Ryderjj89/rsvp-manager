@@ -28,6 +28,7 @@ import {
   OutlinedInput,
   ListItemText,
   Checkbox,
+  Chip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -59,6 +60,7 @@ const EventAdmin: React.FC = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [neededItems, setNeededItems] = useState<string[]>([]);
+  const [claimedItems, setClaimedItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -100,9 +102,9 @@ const EventAdmin: React.FC = () => {
           items = [];
         }
       }
-      setNeededItems(items);
       
-      // Parse items_bringing for each RSVP
+      // Get all claimed items from existing RSVPs
+      const claimed = new Set<string>();
       const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => {
         let itemsBringing: string[] = [];
         try {
@@ -111,6 +113,7 @@ const EventAdmin: React.FC = () => {
             : Array.isArray(rsvp.items_bringing)
               ? rsvp.items_bringing
               : [];
+          itemsBringing.forEach(item => claimed.add(item));
         } catch (e) {
           console.error('Error parsing items_bringing:', e);
           itemsBringing = [];
@@ -122,6 +125,11 @@ const EventAdmin: React.FC = () => {
         };
       });
       
+      // Filter out claimed items from needed items
+      const availableItems = items.filter(item => !claimed.has(item));
+      
+      setNeededItems(availableItems);
+      setClaimedItems(Array.from(claimed));
       setRsvps(processedRsvps);
       setLoading(false);
     } catch (error) {
@@ -227,6 +235,54 @@ const EventAdmin: React.FC = () => {
           >
             Back to Events
           </Button>
+        </Box>
+
+        {/* Add items status section */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            Items Status
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 4 }}>
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Still Needed:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {neededItems.map((item, index) => (
+                  <Chip
+                    key={index}
+                    label={item}
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
+                {neededItems.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    All items have been claimed
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Claimed Items:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {claimedItems.map((item, index) => (
+                  <Chip
+                    key={index}
+                    label={item}
+                    color="success"
+                  />
+                ))}
+                {claimedItems.length === 0 && (
+                  <Typography variant="body2" color="text.secondary">
+                    No items have been claimed yet
+                  </Typography>
+                )}
+              </Box>
+            </Box>
+          </Box>
         </Box>
 
         <Typography variant="h6" gutterBottom>

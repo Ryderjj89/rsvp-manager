@@ -38,6 +38,7 @@ const RSVPForm: React.FC = () => {
     items_bringing: []
   });
   const [neededItems, setNeededItems] = useState<string[]>([]);
+  const [claimedItems, setClaimedItems] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -46,26 +47,48 @@ const RSVPForm: React.FC = () => {
   useEffect(() => {
     const fetchEventDetails = async () => {
       try {
-        const response = await axios.get(`/api/events/${slug}`);
-        console.log('API Response:', response.data);
+        const [eventResponse, rsvpsResponse] = await Promise.all([
+          axios.get(`/api/events/${slug}`),
+          axios.get(`/api/events/${slug}/rsvps`)
+        ]);
+        console.log('API Response:', eventResponse.data);
         
-        // Ensure needed_items is an array
+        // Process needed items
         let items: string[] = [];
-        if (response.data.needed_items) {
+        if (eventResponse.data.needed_items) {
           try {
-            items = typeof response.data.needed_items === 'string'
-              ? JSON.parse(response.data.needed_items)
-              : Array.isArray(response.data.needed_items)
-                ? response.data.needed_items
+            items = typeof eventResponse.data.needed_items === 'string'
+              ? JSON.parse(eventResponse.data.needed_items)
+              : Array.isArray(eventResponse.data.needed_items)
+                ? eventResponse.data.needed_items
                 : [];
           } catch (e) {
             console.error('Error parsing needed_items:', e);
             items = [];
           }
         }
+
+        // Get all claimed items from existing RSVPs
+        const claimed = new Set<string>();
+        rsvpsResponse.data.forEach((rsvp: any) => {
+          try {
+            const rsvpItems = typeof rsvp.items_bringing === 'string'
+              ? JSON.parse(rsvp.items_bringing)
+              : Array.isArray(rsvp.items_bringing)
+                ? rsvp.items_bringing
+                : [];
+            rsvpItems.forEach((item: string) => claimed.add(item));
+          } catch (e) {
+            console.error('Error parsing RSVP items:', e);
+          }
+        });
         
-        console.log('Processed needed items:', items);
-        setNeededItems(items);
+        // Filter out claimed items
+        const availableItems = items.filter(item => !claimed.has(item));
+        
+        console.log('Available items:', availableItems);
+        setNeededItems(availableItems);
+        setClaimedItems(Array.from(claimed));
       } catch (error) {
         console.error('Error fetching event details:', error);
         setError('Failed to load event details');
