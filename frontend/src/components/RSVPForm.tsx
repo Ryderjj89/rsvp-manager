@@ -52,11 +52,16 @@ const RSVPForm: React.FC = () => {
         // Ensure needed_items is an array
         let items: string[] = [];
         if (response.data.needed_items) {
-          items = Array.isArray(response.data.needed_items) 
-            ? response.data.needed_items 
-            : typeof response.data.needed_items === 'string'
-              ? response.data.needed_items.split(',').map((item: string): string => item.trim())
-              : [];
+          try {
+            items = typeof response.data.needed_items === 'string'
+              ? JSON.parse(response.data.needed_items)
+              : Array.isArray(response.data.needed_items)
+                ? response.data.needed_items
+                : [];
+          } catch (e) {
+            console.error('Error parsing needed_items:', e);
+            items = [];
+          }
         }
         
         console.log('Processed needed items:', items);

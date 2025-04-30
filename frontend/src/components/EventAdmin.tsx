@@ -85,17 +85,42 @@ const EventAdmin: React.FC = () => {
         axios.get(`/api/events/${slug}/rsvps`)
       ]);
       setEvent(eventResponse.data);
-      setNeededItems(eventResponse.data.needed_items || []);
+      
+      // Parse needed_items
+      let items: string[] = [];
+      if (eventResponse.data.needed_items) {
+        try {
+          items = typeof eventResponse.data.needed_items === 'string'
+            ? JSON.parse(eventResponse.data.needed_items)
+            : Array.isArray(eventResponse.data.needed_items)
+              ? eventResponse.data.needed_items
+              : [];
+        } catch (e) {
+          console.error('Error parsing needed_items:', e);
+          items = [];
+        }
+      }
+      setNeededItems(items);
       
       // Parse items_bringing for each RSVP
-      const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => ({
-        ...rsvp,
-        items_bringing: typeof rsvp.items_bringing === 'string'
-          ? JSON.parse(rsvp.items_bringing)
-          : Array.isArray(rsvp.items_bringing)
-            ? rsvp.items_bringing
-            : []
-      }));
+      const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => {
+        let itemsBringing: string[] = [];
+        try {
+          itemsBringing = typeof rsvp.items_bringing === 'string'
+            ? JSON.parse(rsvp.items_bringing)
+            : Array.isArray(rsvp.items_bringing)
+              ? rsvp.items_bringing
+              : [];
+        } catch (e) {
+          console.error('Error parsing items_bringing:', e);
+          itemsBringing = [];
+        }
+        
+        return {
+          ...rsvp,
+          items_bringing: itemsBringing
+        };
+      });
       
       setRsvps(processedRsvps);
       setLoading(false);
