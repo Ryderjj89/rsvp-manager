@@ -156,7 +156,7 @@ const EventAdmin: React.FC = () => {
     const { value } = e.target;
     setEditForm(prev => ({
       ...prev,
-      items_bringing: typeof value === 'string' ? value.split(',') : value,
+      items_bringing: Array.isArray(value) ? value : []
     }));
   };
 
@@ -351,11 +351,11 @@ const EventAdmin: React.FC = () => {
                   input={<OutlinedInput label="What items are you bringing?" />}
                   renderValue={(selected) => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
+                      {Array.isArray(selected) ? selected.map((value) => (
                         <Typography key={value} variant="body2">
                           {value}
                         </Typography>
-                      ))}
+                      )) : null}
                     </Box>
                   )}
                 >
