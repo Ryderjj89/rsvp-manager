@@ -47,14 +47,32 @@ const RSVPForm: React.FC = () => {
     const fetchEventDetails = async () => {
       try {
         const response = await axios.get(`/api/events/${slug}`);
-        setNeededItems(response.data.needed_items || []);
+        console.log('API Response:', response.data);
+        
+        // Ensure needed_items is an array
+        let items: string[] = [];
+        if (response.data.needed_items) {
+          items = Array.isArray(response.data.needed_items) 
+            ? response.data.needed_items 
+            : typeof response.data.needed_items === 'string'
+              ? response.data.needed_items.split(',').map(item => item.trim())
+              : [];
+        }
+        
+        console.log('Processed needed items:', items);
+        setNeededItems(items);
       } catch (error) {
+        console.error('Error fetching event details:', error);
         setError('Failed to load event details');
         setNeededItems([]);
       }
     };
     fetchEventDetails();
   }, [slug]);
+
+  useEffect(() => {
+    console.log('Current neededItems state:', neededItems);
+  }, [neededItems]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -74,7 +92,9 @@ const RSVPForm: React.FC = () => {
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
     const value = e.target.value;
-    const itemsArray = Array.isArray(value) ? value : typeof value === 'string' ? [value] : [];
+    console.log('Select onChange value:', value);
+    const itemsArray = Array.isArray(value) ? value : typeof value === 'string' ? value.split(',').map(item => item.trim()) : [];
+    console.log('Processed items array:', itemsArray);
     setFormData(prev => ({
       ...prev,
       items_bringing: itemsArray
