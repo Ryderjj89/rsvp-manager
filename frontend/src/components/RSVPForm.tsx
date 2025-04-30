@@ -142,7 +142,7 @@ const RSVPForm: React.FC = () => {
         ...formData,
         items_bringing: JSON.stringify(formData.items_bringing)
       };
-      await axios.post(`/api/events/${slug}/rsvp`, submissionData);
+      const response = await axios.post(`/api/events/${slug}/rsvp`, submissionData);
       
       // Update the needed and claimed items
       const [eventResponse, rsvpsResponse] = await Promise.all([
@@ -166,9 +166,10 @@ const RSVPForm: React.FC = () => {
         }
       }
       
-      // Get all claimed items from existing RSVPs
+      // Get all claimed items from existing RSVPs including the new submission
       const claimed = new Set<string>();
-      rsvpsResponse.data.forEach((rsvp: any) => {
+      const allRsvps = [...rsvpsResponse.data, response.data];
+      allRsvps.forEach((rsvp: any) => {
         try {
           let rsvpItems: string[] = [];
           if (typeof rsvp.items_bringing === 'string') {

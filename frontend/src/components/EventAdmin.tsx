@@ -403,6 +403,7 @@ const EventAdmin: React.FC = () => {
                               label={item}
                               color="success"
                               size="small"
+                              variant={claimedItems.includes(item) ? "filled" : "outlined"}
                             />
                           )) : (
                             <Typography variant="body2" color="text.secondary">
