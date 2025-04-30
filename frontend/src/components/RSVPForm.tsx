@@ -171,11 +171,11 @@ const RSVPForm: React.FC = () => {
       
       // First add items from the new submission
       if (Array.isArray(response.data.items_bringing)) {
-        response.data.items_bringing.forEach(item => claimed.add(item));
+        response.data.items_bringing.forEach((item: string) => claimed.add(item));
       }
       
       // Then add items from existing RSVPs
-      rsvpsResponse.data.forEach((rsvp: any) => {
+      rsvpsResponse.data.forEach((rsvp: { items_bringing: string | string[] }) => {
         try {
           let rsvpItems: string[] = [];
           if (typeof rsvp.items_bringing === 'string') {
@@ -190,7 +190,7 @@ const RSVPForm: React.FC = () => {
           }
           
           if (rsvpItems.length > 0) {
-            rsvpItems.forEach(item => claimed.add(item));
+            rsvpItems.forEach((item: string) => claimed.add(item));
           }
         } catch (e) {
           console.error('Error processing RSVP items:', e);
