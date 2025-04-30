@@ -86,7 +86,18 @@ const EventAdmin: React.FC = () => {
       ]);
       setEvent(eventResponse.data);
       setNeededItems(eventResponse.data.needed_items || []);
-      setRsvps(rsvpsResponse.data);
+      
+      // Parse items_bringing for each RSVP
+      const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => ({
+        ...rsvp,
+        items_bringing: typeof rsvp.items_bringing === 'string'
+          ? JSON.parse(rsvp.items_bringing)
+          : Array.isArray(rsvp.items_bringing)
+            ? rsvp.items_bringing
+            : []
+      }));
+      
+      setRsvps(processedRsvps);
       setLoading(false);
     } catch (error) {
       setError('Failed to load event data');
@@ -220,7 +231,14 @@ const EventAdmin: React.FC = () => {
                     }
                   </TableCell>
                   <TableCell>
-                    {rsvp.items_bringing.join(', ')}
+                    {(() => {
+                      const items = typeof rsvp.items_bringing === 'string' 
+                        ? JSON.parse(rsvp.items_bringing) 
+                        : Array.isArray(rsvp.items_bringing) 
+                          ? rsvp.items_bringing 
+                          : [];
+                      return items.join(', ');
+                    })()}
                   </TableCell>
                   <TableCell>
                     <IconButton
