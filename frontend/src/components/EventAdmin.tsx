@@ -294,7 +294,7 @@ const EventAdmin: React.FC = () => {
                 Still Needed:
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {neededItems.map((item, index) => (
+                {neededItems.map((item: string, index: number) => (
                   <Chip
                     key={index}
                     label={item}
@@ -314,7 +314,7 @@ const EventAdmin: React.FC = () => {
                 Claimed Items:
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {claimedItems.map((item, index) => (
+                {claimedItems.map((item: string, index: number) => (
                   <Chip
                     key={index}
                     label={item}
@@ -359,14 +359,14 @@ const EventAdmin: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     {(() => {
-                      const items = Array.isArray(rsvp.items_bringing) 
+                      const items: string[] = Array.isArray(rsvp.items_bringing) 
                         ? rsvp.items_bringing 
                         : typeof rsvp.items_bringing === 'string'
                           ? JSON.parse(rsvp.items_bringing)
                           : [];
                       return (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {items.map((item, index) => (
+                          {items.map((item: string, index: number) => (
                             <Chip
                               key={index}
                               label={item}
@@ -488,7 +488,7 @@ const EventAdmin: React.FC = () => {
                 input={<OutlinedInput label="What items are you bringing?" />}
                 renderValue={(selected) => (
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {Array.isArray(selected) ? selected.map((value) => (
+                    {Array.isArray(selected) ? selected.map((value: string) => (
                       <Chip
                         key={value}
                         label={value}
@@ -498,7 +498,7 @@ const EventAdmin: React.FC = () => {
                   </Box>
                 )}
               >
-                {Array.from(new Set([...neededItems, ...editForm.items_bringing])).map((item) => (
+                {Array.from(new Set([...neededItems, ...editForm.items_bringing])).map((item: string) => (
                   <MenuItem key={item} value={item}>
                     <Checkbox checked={editForm.items_bringing.includes(item)} />
                     <ListItemText 
