@@ -86,16 +86,19 @@ const EventList: React.FC = () => {
                 </Typography>
               </CardContent>
               <CardActions>
-                <IconButton
+                <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAdminClick(event);
                   }}
                   color="primary"
                   aria-label="admin"
+                  variant="text"
+                  startIcon={<AdminPanelSettingsIcon />}
+                  size="small"
                 >
-                  <AdminPanelSettingsIcon />
-                </IconButton>
+                  Manage RSVPs
+                </Button>
               </CardActions>
             </Card>
           </Grid>
