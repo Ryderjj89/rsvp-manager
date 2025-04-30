@@ -41,7 +41,7 @@ const EventList: React.FC = () => {
   };
 
   const handleEventClick = (event: Event) => {
-    navigate(`/events/${event.slug}/rsvp`);
+    navigate(`/rsvp/events/${event.slug}`);
   };
 
   const handleAdminClick = (event: Event) => {
