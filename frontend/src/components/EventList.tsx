@@ -94,7 +94,7 @@ const EventList: React.FC = () => {
                   }}
                   color="primary"
                   aria-label="view rsvps"
-                  variant="text"
+                  variant="outlined"
                   startIcon={<VisibilityIcon />}
                   sx={{ ml: 1 }}
                 >
