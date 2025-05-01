@@ -435,25 +435,30 @@ const EventAdmin: React.FC = () => {
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        position: 'relative',
         overflowY: 'auto',
         py: 4,
       }}
     >
       <Container maxWidth="lg">
-        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+        <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 4 }}>
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" component="h2" color="primary" gutterBottom>
               {event.title} - Admin
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexWrap: 'wrap',
+              gap: 2, 
+              mb: 3 
+            }}>
               <Button
                 variant="outlined"
                 onClick={() => navigate('/')}
+                sx={{ 
+                  minWidth: 'fit-content',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Back to Events
               </Button>
@@ -461,6 +466,10 @@ const EventAdmin: React.FC = () => {
                 variant="outlined"
                 onClick={handleUpdateInfoClick}
                 startIcon={<EditIcon />}
+                sx={{ 
+                  minWidth: 'fit-content',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Update Info
               </Button>
@@ -468,6 +477,10 @@ const EventAdmin: React.FC = () => {
                 variant="outlined"
                 startIcon={<AddIcon />}
                 onClick={() => setManageItemsDialogOpen(true)}
+                sx={{ 
+                  minWidth: 'fit-content',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Manage Items
               </Button>
@@ -476,6 +489,10 @@ const EventAdmin: React.FC = () => {
                 color="error"
                 startIcon={<DeleteIcon />}
                 onClick={() => setDeleteEventDialogOpen(true)}
+                sx={{ 
+                  minWidth: 'fit-content',
+                  whiteSpace: 'nowrap'
+                }}
               >
                 Delete Event
               </Button>
@@ -504,7 +521,12 @@ const EventAdmin: React.FC = () => {
             <Typography variant="h6">
               Items Status
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: '60%' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: 3, 
+              maxWidth: { xs: '100%', sm: '60%' }
+            }}>
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
                   Still Needed:
@@ -551,7 +573,12 @@ const EventAdmin: React.FC = () => {
             RSVPs ({rsvps.length})
           </Typography>
 
-          <TableContainer>
+          <TableContainer sx={{ 
+            overflowX: 'auto',
+            '& .MuiTable-root': {
+              minWidth: { xs: '100%', sm: 650 }
+            }
+          }}>
             <Table>
               <TableHead>
                 <TableRow>
