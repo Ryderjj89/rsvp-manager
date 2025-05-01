@@ -210,23 +210,51 @@ const RSVPForm: React.FC = () => {
 
   if (success) {
     return (
-      <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ p: 4, mt: 4, textAlign: 'center' }}>
-          <Typography variant="h4" component="h2" gutterBottom color="primary">
-            Thank You!
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3 }}>
-            Your RSVP has been submitted successfully.
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate('/')}
-          >
-            Back to Events
-          </Button>
-        </Paper>
-      </Container>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          width: '100%',
+          backgroundImage: event?.wallpaper ? `url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflowY: 'auto',
+          py: 4,
+        }}
+      >
+        <Container maxWidth="sm">
+          <Paper elevation={3} sx={{ p: 4, mt: 4, textAlign: 'center' }}>
+            <Typography variant="h4" component="h2" gutterBottom color="primary">
+              Thank You!
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3 }}>
+              Your RSVP has been submitted successfully.
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate('/')}
+              >
+                Back to Events
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate(`/events/${slug}/view`)}
+              >
+                View RSVPs
+              </Button>
+            </Box>
+          </Paper>
+        </Container>
+      </Box>
     );
   }
 
