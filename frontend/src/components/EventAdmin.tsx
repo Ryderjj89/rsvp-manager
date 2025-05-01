@@ -320,7 +320,7 @@ const EventAdmin: React.FC = () => {
 
       // Update RSVPs to remove the item from any that had claimed it
       const updatedRsvps = rsvps.map(rsvp => {
-        let currentItems = Array.isArray(rsvp.items_bringing) 
+        let currentItems: string[] = Array.isArray(rsvp.items_bringing) 
           ? rsvp.items_bringing 
           : typeof rsvp.items_bringing === 'string'
             ? JSON.parse(rsvp.items_bringing)
@@ -328,7 +328,7 @@ const EventAdmin: React.FC = () => {
         
         // Remove the item if it exists in this RSVP
         if (currentItems.includes(itemToRemove)) {
-          const updatedRsvpItems = currentItems.filter(item => item !== itemToRemove);
+          const updatedRsvpItems = currentItems.filter((item: string) => item !== itemToRemove);
           // Update the RSVP in the database
           axios.put(`/api/events/${slug}/rsvps/${rsvp.id}`, {
             ...rsvp,
@@ -345,17 +345,17 @@ const EventAdmin: React.FC = () => {
       // Recalculate claimed items
       const claimed = new Set<string>();
       updatedRsvps.forEach(rsvp => {
-        let rsvpItems = Array.isArray(rsvp.items_bringing) 
+        let rsvpItems: string[] = Array.isArray(rsvp.items_bringing) 
           ? rsvp.items_bringing 
           : typeof rsvp.items_bringing === 'string'
             ? JSON.parse(rsvp.items_bringing)
             : [];
-        rsvpItems.forEach(item => claimed.add(item));
+        rsvpItems.forEach((item: string) => claimed.add(item));
       });
       
       // Update all state
       setEvent(prev => prev ? { ...prev, needed_items: updatedItems } : null);
-      setNeededItems(prev => prev.filter(item => item !== itemToRemove));
+      setNeededItems(prev => prev.filter((item: string) => item !== itemToRemove));
       setRsvps(updatedRsvps);
       setClaimedItems(Array.from(claimed));
     } catch (error) {
