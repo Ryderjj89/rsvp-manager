@@ -32,11 +32,11 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY backend/package*.json ./
-
-# Install production dependencies only
+# Copy package files and install dependencies
+COPY package*.json ./
+COPY backend/package*.json ./backend/
 RUN npm install --production
+RUN cd backend && npm install --production
 
 # Copy built files from builder stage
 COPY --from=builder /app/backend/dist ./dist
@@ -50,4 +50,4 @@ RUN mkdir -p uploads/wallpapers
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["node", "dist/index.js"] 
