@@ -232,7 +232,7 @@ const RSVPForm: React.FC = () => {
         <Container maxWidth="sm">
           <Paper elevation={3} sx={{ p: 4, mt: 4, textAlign: 'center' }}>
             <Typography variant="h4" component="h2" gutterBottom color="primary">
-              Thank You!
+              Thank you!
             </Typography>
             <Typography variant="body1" sx={{ mb: 3 }}>
               Your RSVP has been submitted successfully.
