@@ -209,21 +209,34 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     }
     
     const eventId = eventRows[0].id;
+    
+    // Ensure items_bringing is properly formatted
+    let parsedItemsBringing: string[] = [];
+    try {
+      if (typeof items_bringing === 'string') {
+        parsedItemsBringing = JSON.parse(items_bringing);
+      } else if (Array.isArray(items_bringing)) {
+        parsedItemsBringing = items_bringing;
+      }
+    } catch (e) {
+      console.error('Error parsing items_bringing:', e);
+    }
+    
     const result = await db.run(
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [eventId, name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(items_bringing || [])]
+      [eventId, name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(parsedItemsBringing)]
     );
 
     // Return the complete RSVP data including the parsed items_bringing
     res.status(201).json({
-      ...result,
       id: result.lastID,
+      event_id: eventId,
       name,
       attending,
       bringing_guests,
       guest_count,
       guest_names,
-      items_bringing: items_bringing || []
+      items_bringing: parsedItemsBringing
     });
   } catch (error) {
     console.error('Error creating RSVP:', error);

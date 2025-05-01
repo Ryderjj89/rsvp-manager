@@ -163,7 +163,7 @@ const RSVPForm: React.FC = () => {
       const claimed = new Set<string>();
       
       // First add items from the new submission
-      const newRsvpItems = response.data.items_bringing || [];
+      const newRsvpItems = response.data.items_bringing;
       if (Array.isArray(newRsvpItems)) {
         newRsvpItems.forEach((item: string) => claimed.add(item));
       }
