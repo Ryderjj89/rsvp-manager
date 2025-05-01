@@ -24,7 +24,7 @@ let db: any;
 
 async function connectToDatabase() {
   try {
-    // Ensure database directory exists with proper permissions
+    // Database file will be in the app directory
     const dbPath = path.join(__dirname, '../database.sqlite');
     
     db = await open({

@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - data:/app/database.sqlite
+      - data:/app
       - uploads:/app/uploads
     environment:
       - NODE_ENV=development
