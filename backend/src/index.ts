@@ -23,10 +23,21 @@ app.use(express.static(path.join(__dirname, '../frontend/build')));
 let db: any;
 
 async function connectToDatabase() {
-  db = await open({
-    filename: './database.sqlite',
-    driver: sqlite3.Database
-  });
+  try {
+    // Ensure database directory exists with proper permissions
+    const dbPath = path.join(__dirname, '../database.sqlite');
+    
+    db = await open({
+      filename: dbPath,
+      driver: sqlite3.Database
+    });
+
+    // Initialize tables immediately after connection
+    await initializeDatabase();
+  } catch (error) {
+    console.error('Error connecting to database:', error);
+    process.exit(1); // Exit if we can't connect to the database
+  }
 }
 
 // Configure multer for file uploads
@@ -254,6 +265,7 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
 // Initialize database tables
 async function initializeDatabase() {
   try {
+    // Create events table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS events (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -268,6 +280,7 @@ async function initializeDatabase() {
       )
     `);
 
+    // Create RSVPs table
     await db.exec(`
       CREATE TABLE IF NOT EXISTS rsvps (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -285,6 +298,7 @@ async function initializeDatabase() {
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
+    throw error; // Re-throw to handle in the connection function
   }
 }
 
@@ -297,5 +311,4 @@ app.get('*', (req: Request, res: Response) => {
 app.listen(port, async () => {
   console.log(`Server running on port ${port}`);
   await connectToDatabase();
-  await initializeDatabase();
 }); 

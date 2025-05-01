@@ -23,18 +23,18 @@ RUN cd frontend && npm run build
 # Build backend
 RUN cd backend && npm run build
 
-# Create database file
-RUN touch database.sqlite
-
 # Production stage
 FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Create uploads directory and set permissions before switching user
+# Create necessary directories and set permissions
 RUN mkdir -p /app/uploads/wallpapers && \
-    chown -R node:node /app
+    touch /app/database.sqlite && \
+    chown -R node:node /app && \
+    chmod 755 /app/uploads && \
+    chmod 644 /app/database.sqlite
 
 # Copy package files and install dependencies
 COPY package*.json ./
@@ -45,7 +45,6 @@ RUN cd backend && npm install --production
 # Copy built files from builder stage
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/frontend/build ./frontend/build
-COPY --from=builder /app/database.sqlite ./database.sqlite
 
 # Switch to non-root user
 USER node
