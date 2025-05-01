@@ -90,9 +90,8 @@ const EventView: React.FC = () => {
             itemsBringing = rsvp.items_bringing;
           }
           
-          if (itemsBringing.length > 0) {
-            itemsBringing.forEach(item => claimed.add(item));
-          }
+          // Add items to claimed set
+          itemsBringing.forEach(item => claimed.add(item));
         } catch (e) {
           console.error('Error processing items for RSVP:', e);
         }
@@ -103,12 +102,11 @@ const EventView: React.FC = () => {
         };
       });
       
-      // Filter out claimed items from needed items
-      const availableItems = items.filter(item => !claimed.has(item));
-      
-      setNeededItems(availableItems);
-      setClaimedItems(Array.from(claimed));
+      // Update state with processed data
       setRsvps(processedRsvps);
+      setClaimedItems(Array.from(claimed));
+      // Filter needed items to only show unclaimed ones
+      setNeededItems(items.filter(item => !claimed.has(item)));
       setLoading(false);
     } catch (error) {
       setError('Failed to load event data');
