@@ -39,8 +39,8 @@ import axios from 'axios';
 interface RSVP {
   id: number;
   name: string;
-  attending: string;
-  bringing_guests: string;
+  attending: 'yes' | 'no' | 'maybe';
+  bringing_guests: 'yes' | 'no';
   guest_count: number;
   guest_names: string;
   items_bringing: string[] | string;
@@ -71,13 +71,13 @@ const EventAdmin: React.FC = () => {
   const [rsvpToDelete, setRsvpToDelete] = useState<RSVP | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [rsvpToEdit, setRsvpToEdit] = useState<RSVP | null>(null);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<Omit<RSVP, 'id'>>({
     name: '',
     attending: 'yes',
     bringing_guests: 'no',
     guest_count: 0,
     guest_names: '',
-    items_bringing: [] as string[],
+    items_bringing: []
   });
   const [deleteEventDialogOpen, setDeleteEventDialogOpen] = useState(false);
   const [manageItemsDialogOpen, setManageItemsDialogOpen] = useState(false);
@@ -182,11 +182,12 @@ const EventAdmin: React.FC = () => {
     setRsvpToEdit(rsvp);
     setEditForm({
       name: rsvp.name,
-      attending: rsvp.attending,
-      bringing_guests: rsvp.bringing_guests,
-      guest_count: rsvp.guest_count,
-      guest_names: rsvp.guest_names,
-      items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing : [],
+      attending: rsvp.attending || 'yes',
+      bringing_guests: rsvp.bringing_guests || 'no',
+      guest_count: typeof rsvp.guest_count === 'number' ? rsvp.guest_count : 0,
+      guest_names: rsvp.guest_names || '',
+      items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing :
+        typeof rsvp.items_bringing === 'string' ? JSON.parse(rsvp.items_bringing) : []
     });
     setEditDialogOpen(true);
   };
@@ -635,7 +636,12 @@ const EventAdmin: React.FC = () => {
                   {rsvps.map((rsvp: RSVP) => (
                     <TableRow key={rsvp.id}>
                       <TableCell>{rsvp.name}</TableCell>
-                      <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
+                      <TableCell>
+                        {rsvp.attending ? 
+                          rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1) : 
+                          'Unknown'
+                        }
+                      </TableCell>
                       <TableCell>
                         {rsvp.bringing_guests === 'yes' ? 
                           `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
