@@ -250,7 +250,7 @@ const EventAdmin: React.FC = () => {
       // When bringing guests is changed
       setEditForm(prev => ({
         ...prev,
-        [name]: value,
+        bringing_guests: value as 'yes' | 'no',
         // If changing to 'yes', set guest count to 1, otherwise reset to 0
         guest_count: value === 'yes' ? 1 : 0,
         // Clear guest names if changing to 'no'
