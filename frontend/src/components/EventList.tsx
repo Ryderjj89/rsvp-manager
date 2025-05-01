@@ -93,7 +93,7 @@ const EventList: React.FC = () => {
       <Container maxWidth="lg">
         <Grid container spacing={4}>
           {events.map((event) => (
-            <Grid item xs={12} sm={6} md={4} key={event.id}>
+            <Grid item xs={12} sm={6} md={6} key={event.id}>
               <Card 
                 sx={{ 
                   height: '100%', 
@@ -101,6 +101,9 @@ const EventList: React.FC = () => {
                   flexDirection: 'column',
                   cursor: isEventOpen(event) ? 'pointer' : 'default',
                   opacity: isEventOpen(event) ? 1 : 0.7,
+                  '& .MuiCardContent-root': {
+                    padding: 3
+                  }
                 }} 
                 onClick={() => handleEventClick(event)}
               >
