@@ -455,511 +455,516 @@ const EventAdmin: React.FC = () => {
       sx={{
         minHeight: '100vh',
         width: '100%',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         backgroundImage: event?.wallpaper ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
         backgroundColor: '#000',
-        position: 'relative',
         overflowY: 'auto',
-        py: 4,
       }}
     >
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 4 }}>
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" component="h2" color="primary" gutterBottom>
-              {event.title} - Admin
-            </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap',
-              gap: 2, 
-              mb: 3 
-            }}>
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/')}
-                sx={{ 
-                  minWidth: 'fit-content',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Back to Events
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={handleUpdateInfoClick}
-                startIcon={<EditIcon />}
-                sx={{ 
-                  minWidth: 'fit-content',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Update Info
-              </Button>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={() => setManageItemsDialogOpen(true)}
-                sx={{ 
-                  minWidth: 'fit-content',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Manage Items
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => setDeleteEventDialogOpen(true)}
-                sx={{ 
-                  minWidth: 'fit-content',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Delete Event
-              </Button>
-            </Box>
-          </Box>
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>Info:</strong> {event.description || 'None'}
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>Location:</strong> {event.location}
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>Date:</strong> {new Date(event.date).toLocaleString()}
-            </Typography>
-            {event.rsvp_cutoff_date && (
-              <Typography variant="subtitle1" gutterBottom>
-                <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+      <Box sx={{ py: 4 }}>
+        <Container maxWidth="lg">
+          <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 4 }}>
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h4" component="h2" color="primary" gutterBottom>
+                {event.title} - Admin
               </Typography>
-            )}
-          </Box>
-
-          {/* Add items status section */}
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6">
-              Items Status
-            </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: 3, 
-              maxWidth: { xs: '100%', sm: '60%' }
-            }}>
-              <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  Still Needed:
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {neededItems.map((item: string, index: number) => (
-                    <Chip
-                      key={`${item}-${index}`}
-                      label={item}
-                      color="primary"
-                      variant="outlined"
-                    />
-                  ))}
-                  {neededItems.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      All items have been claimed
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-              <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  Claimed Items:
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {claimedItems.map((item: string, index: number) => (
-                    <Chip
-                      key={`${item}-${index}`}
-                      label={item}
-                      color="success"
-                    />
-                  ))}
-                  {claimedItems.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No items have been claimed yet
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-
-          <Typography variant="h6" gutterBottom>
-            RSVPs ({rsvps.length})
-          </Typography>
-
-          <TableContainer sx={{ 
-            overflowX: 'auto',
-            '& .MuiTable-root': {
-              minWidth: { xs: '100%', sm: 650 }
-            }
-          }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Attending</TableCell>
-                  <TableCell>Guests</TableCell>
-                  <TableCell>Items Bringing</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rsvps.map((rsvp: RSVP) => (
-                  <TableRow key={rsvp.id}>
-                    <TableCell>{rsvp.name}</TableCell>
-                    <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
-                    <TableCell>
-                      {rsvp.bringing_guests === 'yes' ? 
-                        `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
-                        'No'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {(() => {
-                        let items: string[] = [];
-                        try {
-                          if (typeof rsvp.items_bringing === 'string') {
-                            try {
-                              const parsed = JSON.parse(rsvp.items_bringing);
-                              items = Array.isArray(parsed) ? parsed : [];
-                            } catch (e) {
-                              console.error('Error parsing items_bringing JSON in table:', e);
-                            }
-                          } else if (Array.isArray(rsvp.items_bringing)) {
-                            items = rsvp.items_bringing;
-                          }
-                        } catch (e) {
-                          console.error('Error processing items in table:', e);
-                        }
-                        
-                        return (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {items.length > 0 ? items.map((item: string, index: number) => (
-                              <Chip
-                                key={`${item}-${index}`}
-                                label={item}
-                                color="success"
-                                size="small"
-                                variant={claimedItems.includes(item) ? "filled" : "outlined"}
-                              />
-                            )) : (
-                              <Typography variant="body2" color="text.secondary">
-                                No items
-                              </Typography>
-                            )}
-                          </Box>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleEditRsvp(rsvp)}
-                        sx={{ mr: 1 }}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDeleteRsvp(rsvp)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-        >
-          <DialogTitle>Delete RSVP</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete {rsvpToDelete?.name}'s RSVP?
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button onClick={confirmDelete} color="error">Delete</Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog
-          open={editDialogOpen}
-          onClose={() => setEditDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Edit RSVP</DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                label="Name"
-                name="name"
-                value={editForm.name}
-                onChange={handleTextInputChange}
-                fullWidth
-              />
-              <FormControl fullWidth>
-                <InputLabel>Attending</InputLabel>
-                <Select
-                  name="attending"
-                  value={editForm.attending}
-                  onChange={handleSelectChange}
-                  label="Attending"
-                >
-                  <MenuItem value="yes">Yes</MenuItem>
-                  <MenuItem value="no">No</MenuItem>
-                  <MenuItem value="maybe">Maybe</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>Bringing Guests</InputLabel>
-                <Select
-                  name="bringing_guests"
-                  value={editForm.bringing_guests}
-                  onChange={handleSelectChange}
-                  label="Bringing Guests"
-                >
-                  <MenuItem value="yes">Yes</MenuItem>
-                  <MenuItem value="no">No</MenuItem>
-                </Select>
-              </FormControl>
-              {editForm.bringing_guests === 'yes' && (
-                <>
-                  <TextField
-                    label="Number of Guests"
-                    name="guest_count"
-                    type="number"
-                    value={editForm.guest_count}
-                    onChange={handleTextInputChange}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Guest Names"
-                    name="guest_names"
-                    value={editForm.guest_names}
-                    onChange={handleTextInputChange}
-                    fullWidth
-                    multiline
-                    rows={2}
-                  />
-                </>
-              )}
-              <FormControl fullWidth>
-                <InputLabel>What items are you bringing?</InputLabel>
-                <Select
-                  multiple
-                  name="items_bringing"
-                  value={editForm.items_bringing}
-                  onChange={handleItemsChange}
-                  input={<OutlinedInput label="What items are you bringing?" />}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {Array.isArray(selected) ? selected.map((value: string) => (
-                        <Chip
-                          key={value}
-                          label={value}
-                          color="primary"
-                        />
-                      )) : null}
-                    </Box>
-                  )}
-                >
-                  {Array.from(new Set([...neededItems, ...editForm.items_bringing])).map((item: string) => (
-                    <MenuItem key={item} value={item}>
-                      <Checkbox checked={editForm.items_bringing.includes(item)} />
-                      <ListItemText 
-                        primary={item} 
-                        secondary={neededItems.includes(item) ? 'Available' : 'Currently assigned'}
-                      />
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditSubmit} color="primary">Save Changes</Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog
-          open={deleteEventDialogOpen}
-          onClose={() => setDeleteEventDialogOpen(false)}
-        >
-          <DialogTitle>Delete Event</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete "{event.title}"? This action cannot be undone.
-            </Typography>
-            <Typography color="error" sx={{ mt: 2 }}>
-              All RSVPs associated with this event will also be deleted.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteEventDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleDeleteEvent} color="error" variant="contained">
-              Delete Event
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog
-          open={manageItemsDialogOpen}
-          onClose={() => setManageItemsDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Manage Needed Items</DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <TextField
-                  label="New Item"
-                  value={newItem}
-                  onChange={(e) => setNewItem(e.target.value)}
-                  fullWidth
-                />
-                <Button
-                  variant="contained"
-                  onClick={handleAddItem}
-                  disabled={!newItem.trim()}
-                >
-                  Add
-                </Button>
-              </Box>
-              <Typography variant="subtitle1" gutterBottom>
-                Current Items:
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {event?.needed_items && Array.isArray(event.needed_items) && event.needed_items.map((item, index) => (
-                  <Chip
-                    key={`${item}-${index}`}
-                    label={item}
-                    onDelete={() => handleRemoveItem(item)}
-                    color={claimedItems.includes(item) ? "success" : "primary"}
-                  />
-                ))}
-              </Box>
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setManageItemsDialogOpen(false)}>Close</Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog
-          open={updateInfoDialogOpen}
-          onClose={() => setUpdateInfoDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Update Event Information</DialogTitle>
-          <DialogContent>
-            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                label="Description"
-                value={updateForm.description}
-                onChange={(e) => setUpdateForm(prev => ({ ...prev, description: e.target.value }))}
-                fullWidth
-                multiline
-                rows={3}
-              />
-              <TextField
-                label="Location"
-                value={updateForm.location}
-                onChange={(e) => setUpdateForm(prev => ({ ...prev, location: e.target.value }))}
-                fullWidth
-              />
-              <TextField
-                label="Date and Time"
-                type="datetime-local"
-                value={updateForm.date}
-                onChange={(e) => setUpdateForm(prev => ({ ...prev, date: e.target.value }))}
-                fullWidth
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
-              <TextField
-                label="RSVP Cut-off Date"
-                type="datetime-local"
-                value={updateForm.rsvp_cutoff_date}
-                onChange={(e) => setUpdateForm(prev => ({ ...prev, rsvp_cutoff_date: e.target.value }))}
-                fullWidth
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Wallpaper
-                </Typography>
-                {event.wallpaper && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Current wallpaper:
-                    </Typography>
-                    <Box
-                      component="img"
-                      src={event.wallpaper}
-                      alt="Current wallpaper"
-                      sx={{
-                        width: '100%',
-                        height: 120,
-                        objectFit: 'cover',
-                        borderRadius: 1,
-                      }}
-                    />
-                  </Box>
-                )}
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap',
+                gap: 2, 
+                mb: 3 
+              }}>
                 <Button
                   variant="outlined"
-                  component="label"
-                  fullWidth
-                  sx={{ mt: 1 }}
+                  onClick={() => navigate('/')}
+                  sx={{ 
+                    minWidth: 'fit-content',
+                    whiteSpace: 'nowrap'
+                  }}
                 >
-                  {updateForm.wallpaper ? 'Change Wallpaper' : (event.wallpaper ? 'Replace Wallpaper' : 'Upload Wallpaper')}
-                  <input
-                    type="file"
-                    hidden
-                    accept="image/jpeg,image/png,image/gif"
-                    onChange={handleWallpaperChange}
-                  />
+                  Back to Events
                 </Button>
-                {updateForm.wallpaper && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Selected file: {updateForm.wallpaper.name}
-                  </Typography>
-                )}
+                <Button
+                  variant="outlined"
+                  onClick={handleUpdateInfoClick}
+                  startIcon={<EditIcon />}
+                  sx={{ 
+                    minWidth: 'fit-content',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Update Info
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<AddIcon />}
+                  onClick={() => setManageItemsDialogOpen(true)}
+                  sx={{ 
+                    minWidth: 'fit-content',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Manage Items
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setDeleteEventDialogOpen(true)}
+                  sx={{ 
+                    minWidth: 'fit-content',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Delete Event
+                </Button>
               </Box>
             </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setUpdateInfoDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleUpdateInfoSubmit} color="primary">Save Changes</Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
+
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Info:</strong> {event.description || 'None'}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Location:</strong> {event.location}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+              </Typography>
+              {event.rsvp_cutoff_date && (
+                <Typography variant="subtitle1" gutterBottom>
+                  <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Add items status section */}
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6">
+                Items Status
+              </Typography>
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: 3, 
+                maxWidth: { xs: '100%', sm: '60%' }
+              }}>
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Still Needed:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {neededItems.map((item: string, index: number) => (
+                      <Chip
+                        key={`${item}-${index}`}
+                        label={item}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                    {neededItems.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        All items have been claimed
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Claimed Items:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {claimedItems.map((item: string, index: number) => (
+                      <Chip
+                        key={`${item}-${index}`}
+                        label={item}
+                        color="success"
+                      />
+                    ))}
+                    {claimedItems.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        No items have been claimed yet
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+
+            <Typography variant="h6" gutterBottom>
+              RSVPs ({rsvps.length})
+            </Typography>
+
+            <TableContainer sx={{ 
+              overflowX: 'auto',
+              '& .MuiTable-root': {
+                minWidth: { xs: '100%', sm: 650 }
+              }
+            }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Attending</TableCell>
+                    <TableCell>Guests</TableCell>
+                    <TableCell>Items Bringing</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rsvps.map((rsvp: RSVP) => (
+                    <TableRow key={rsvp.id}>
+                      <TableCell>{rsvp.name}</TableCell>
+                      <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
+                      <TableCell>
+                        {rsvp.bringing_guests === 'yes' ? 
+                          `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
+                          'No'
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          let items: string[] = [];
+                          try {
+                            if (typeof rsvp.items_bringing === 'string') {
+                              try {
+                                const parsed = JSON.parse(rsvp.items_bringing);
+                                items = Array.isArray(parsed) ? parsed : [];
+                              } catch (e) {
+                                console.error('Error parsing items_bringing JSON in table:', e);
+                              }
+                            } else if (Array.isArray(rsvp.items_bringing)) {
+                              items = rsvp.items_bringing;
+                            }
+                          } catch (e) {
+                            console.error('Error processing items in table:', e);
+                          }
+                          
+                          return (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {items.length > 0 ? items.map((item: string, index: number) => (
+                                <Chip
+                                  key={`${item}-${index}`}
+                                  label={item}
+                                  color="success"
+                                  size="small"
+                                  variant={claimedItems.includes(item) ? "filled" : "outlined"}
+                                />
+                              )) : (
+                                <Typography variant="body2" color="text.secondary">
+                                  No items
+                                </Typography>
+                              )}
+                            </Box>
+                          );
+                        })()}
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleEditRsvp(rsvp)}
+                          sx={{ mr: 1 }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDeleteRsvp(rsvp)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+
+          <Dialog
+            open={deleteDialogOpen}
+            onClose={() => setDeleteDialogOpen(false)}
+          >
+            <DialogTitle>Delete RSVP</DialogTitle>
+            <DialogContent>
+              <Typography>
+                Are you sure you want to delete {rsvpToDelete?.name}'s RSVP?
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+              <Button onClick={confirmDelete} color="error">Delete</Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={editDialogOpen}
+            onClose={() => setEditDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Edit RSVP</DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  label="Name"
+                  name="name"
+                  value={editForm.name}
+                  onChange={handleTextInputChange}
+                  fullWidth
+                />
+                <FormControl fullWidth>
+                  <InputLabel>Attending</InputLabel>
+                  <Select
+                    name="attending"
+                    value={editForm.attending}
+                    onChange={handleSelectChange}
+                    label="Attending"
+                  >
+                    <MenuItem value="yes">Yes</MenuItem>
+                    <MenuItem value="no">No</MenuItem>
+                    <MenuItem value="maybe">Maybe</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth>
+                  <InputLabel>Bringing Guests</InputLabel>
+                  <Select
+                    name="bringing_guests"
+                    value={editForm.bringing_guests}
+                    onChange={handleSelectChange}
+                    label="Bringing Guests"
+                  >
+                    <MenuItem value="yes">Yes</MenuItem>
+                    <MenuItem value="no">No</MenuItem>
+                  </Select>
+                </FormControl>
+                {editForm.bringing_guests === 'yes' && (
+                  <>
+                    <TextField
+                      label="Number of Guests"
+                      name="guest_count"
+                      type="number"
+                      value={editForm.guest_count}
+                      onChange={handleTextInputChange}
+                      fullWidth
+                    />
+                    <TextField
+                      label="Guest Names"
+                      name="guest_names"
+                      value={editForm.guest_names}
+                      onChange={handleTextInputChange}
+                      fullWidth
+                      multiline
+                      rows={2}
+                    />
+                  </>
+                )}
+                <FormControl fullWidth>
+                  <InputLabel>What items are you bringing?</InputLabel>
+                  <Select
+                    multiple
+                    name="items_bringing"
+                    value={editForm.items_bringing}
+                    onChange={handleItemsChange}
+                    input={<OutlinedInput label="What items are you bringing?" />}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {Array.isArray(selected) ? selected.map((value: string) => (
+                          <Chip
+                            key={value}
+                            label={value}
+                            color="primary"
+                          />
+                        )) : null}
+                      </Box>
+                    )}
+                  >
+                    {Array.from(new Set([...neededItems, ...editForm.items_bringing])).map((item: string) => (
+                      <MenuItem key={item} value={item}>
+                        <Checkbox checked={editForm.items_bringing.includes(item)} />
+                        <ListItemText 
+                          primary={item} 
+                          secondary={neededItems.includes(item) ? 'Available' : 'Currently assigned'}
+                        />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleEditSubmit} color="primary">Save Changes</Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={deleteEventDialogOpen}
+            onClose={() => setDeleteEventDialogOpen(false)}
+          >
+            <DialogTitle>Delete Event</DialogTitle>
+            <DialogContent>
+              <Typography>
+                Are you sure you want to delete "{event.title}"? This action cannot be undone.
+              </Typography>
+              <Typography color="error" sx={{ mt: 2 }}>
+                All RSVPs associated with this event will also be deleted.
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDeleteEventDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleDeleteEvent} color="error" variant="contained">
+                Delete Event
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={manageItemsDialogOpen}
+            onClose={() => setManageItemsDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Manage Needed Items</DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    label="New Item"
+                    value={newItem}
+                    onChange={(e) => setNewItem(e.target.value)}
+                    fullWidth
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleAddItem}
+                    disabled={!newItem.trim()}
+                  >
+                    Add
+                  </Button>
+                </Box>
+                <Typography variant="subtitle1" gutterBottom>
+                  Current Items:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {event?.needed_items && Array.isArray(event.needed_items) && event.needed_items.map((item, index) => (
+                    <Chip
+                      key={`${item}-${index}`}
+                      label={item}
+                      onDelete={() => handleRemoveItem(item)}
+                      color={claimedItems.includes(item) ? "success" : "primary"}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setManageItemsDialogOpen(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog
+            open={updateInfoDialogOpen}
+            onClose={() => setUpdateInfoDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
+          >
+            <DialogTitle>Update Event Information</DialogTitle>
+            <DialogContent>
+              <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <TextField
+                  label="Description"
+                  value={updateForm.description}
+                  onChange={(e) => setUpdateForm(prev => ({ ...prev, description: e.target.value }))}
+                  fullWidth
+                  multiline
+                  rows={3}
+                />
+                <TextField
+                  label="Location"
+                  value={updateForm.location}
+                  onChange={(e) => setUpdateForm(prev => ({ ...prev, location: e.target.value }))}
+                  fullWidth
+                />
+                <TextField
+                  label="Date and Time"
+                  type="datetime-local"
+                  value={updateForm.date}
+                  onChange={(e) => setUpdateForm(prev => ({ ...prev, date: e.target.value }))}
+                  fullWidth
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+                <TextField
+                  label="RSVP Cut-off Date"
+                  type="datetime-local"
+                  value={updateForm.rsvp_cutoff_date}
+                  onChange={(e) => setUpdateForm(prev => ({ ...prev, rsvp_cutoff_date: e.target.value }))}
+                  fullWidth
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Wallpaper
+                  </Typography>
+                  {event.wallpaper && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Current wallpaper:
+                      </Typography>
+                      <Box
+                        component="img"
+                        src={event.wallpaper}
+                        alt="Current wallpaper"
+                        sx={{
+                          width: '100%',
+                          height: 120,
+                          objectFit: 'cover',
+                          borderRadius: 1,
+                        }}
+                      />
+                    </Box>
+                  )}
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    sx={{ mt: 1 }}
+                  >
+                    {updateForm.wallpaper ? 'Change Wallpaper' : (event.wallpaper ? 'Replace Wallpaper' : 'Upload Wallpaper')}
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/jpeg,image/png,image/gif"
+                      onChange={handleWallpaperChange}
+                    />
+                  </Button>
+                  {updateForm.wallpaper && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      Selected file: {updateForm.wallpaper.name}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setUpdateInfoDialogOpen(false)}>Cancel</Button>
+              <Button onClick={handleUpdateInfoSubmit} color="primary">Save Changes</Button>
+            </DialogActions>
+          </Dialog>
+        </Container>
+      </Box>
     </Box>
   );
 };

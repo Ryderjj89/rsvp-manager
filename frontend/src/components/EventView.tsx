@@ -137,178 +137,183 @@ const EventView: React.FC = () => {
       sx={{
         minHeight: '100vh',
         width: '100%',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         backgroundImage: event?.wallpaper ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
         backgroundColor: '#000',
-        position: 'relative',
         overflowY: 'auto',
-        py: 4,
       }}
     >
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
-        <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 4 }}>
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" component="h2" color="primary" gutterBottom>
-              {event.title} - RSVPs
-            </Typography>
-            <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap',
-              gap: 2, 
-              mb: 3 
-            }}>
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/')}
-                sx={{ 
-                  minWidth: 'fit-content',
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Back to Events
-              </Button>
-            </Box>
-          </Box>
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>Info:</strong> {event.description || 'None'}
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>Location:</strong> {event.location}
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              <strong>Date:</strong> {new Date(event.date).toLocaleString()}
-            </Typography>
-            {event.rsvp_cutoff_date && (
-              <Typography variant="subtitle1" gutterBottom>
-                <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+      <Box sx={{ py: 4 }}>
+        <Container maxWidth="lg">
+          <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 4 }}>
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h4" component="h2" color="primary" gutterBottom>
+                {event.title} - RSVPs
               </Typography>
-            )}
-          </Box>
-
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Items Status
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: '60%' }}>
-              <Box>
-                <Typography variant="subtitle1" gutterBottom>
-                  Still Needed:
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {neededItems.map((item: string, index: number) => (
-                    <Chip
-                      key={`${item}-${index}`}
-                      label={item}
-                      color="primary"
-                      variant="outlined"
-                    />
-                  ))}
-                  {neededItems.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      All items have been claimed
-                    </Typography>
-                  )}
-                </Box>
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap',
+                gap: 2, 
+                mb: 3 
+              }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/')}
+                  sx={{ 
+                    minWidth: 'fit-content',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Back to Events
+                </Button>
               </Box>
-              <Box>
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Info:</strong> {event.description || 'None'}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Location:</strong> {event.location}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+              </Typography>
+              {event.rsvp_cutoff_date && (
                 <Typography variant="subtitle1" gutterBottom>
-                  Claimed Items:
+                  <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
                 </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {claimedItems.map((item: string, index: number) => (
-                    <Chip
-                      key={`${item}-${index}`}
-                      label={item}
-                      color="success"
-                    />
-                  ))}
-                  {claimedItems.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">
-                      No items have been claimed yet
-                    </Typography>
-                  )}
+              )}
+            </Box>
+
+            <Box sx={{ mb: 4 }}>
+              <Typography variant="h6" gutterBottom>
+                Items Status
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: '60%' }}>
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Still Needed:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {neededItems.map((item: string, index: number) => (
+                      <Chip
+                        key={`${item}-${index}`}
+                        label={item}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                    {neededItems.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        All items have been claimed
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Claimed Items:
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {claimedItems.map((item: string, index: number) => (
+                      <Chip
+                        key={`${item}-${index}`}
+                        label={item}
+                        color="success"
+                      />
+                    ))}
+                    {claimedItems.length === 0 && (
+                      <Typography variant="body2" color="text.secondary">
+                        No items have been claimed yet
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
               </Box>
             </Box>
-          </Box>
 
-          <Typography variant="h6" gutterBottom>
-            RSVPs ({rsvps.length})
-          </Typography>
+            <Typography variant="h6" gutterBottom>
+              RSVPs ({rsvps.length})
+            </Typography>
 
-          <TableContainer sx={{ 
-            overflowX: 'auto',
-            '& .MuiTable-root': {
-              minWidth: { xs: '100%', sm: 650 }
-            }
-          }}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Attending</TableCell>
-                  <TableCell>Guests</TableCell>
-                  <TableCell>Items Bringing</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rsvps.map((rsvp: RSVP) => (
-                  <TableRow key={rsvp.id}>
-                    <TableCell>{rsvp.name}</TableCell>
-                    <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
-                    <TableCell>
-                      {rsvp.bringing_guests === 'yes' ? 
-                        `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
-                        'No'
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {(() => {
-                          let items: string[] = [];
-                          try {
-                            if (typeof rsvp.items_bringing === 'string') {
-                              try {
-                                const parsed = JSON.parse(rsvp.items_bringing);
-                                items = Array.isArray(parsed) ? parsed : [];
-                              } catch (e) {
-                                console.error('Error parsing items_bringing JSON in table:', e);
-                              }
-                            } else if (Array.isArray(rsvp.items_bringing)) {
-                              items = rsvp.items_bringing;
-                            }
-                          } catch (e) {
-                            console.error('Error processing items in table:', e);
-                          }
-                          
-                          return items.length > 0 ? items.map((item: string, index: number) => (
-                            <Chip
-                              key={`${item}-${index}`}
-                              label={item}
-                              color="success"
-                              size="small"
-                              variant={claimedItems.includes(item) ? "filled" : "outlined"}
-                            />
-                          )) : (
-                            <Typography variant="body2" color="text.secondary">
-                              No items
-                            </Typography>
-                          );
-                        })()}
-                      </Box>
-                    </TableCell>
+            <TableContainer sx={{ 
+              overflowX: 'auto',
+              '& .MuiTable-root': {
+                minWidth: { xs: '100%', sm: 650 }
+              }
+            }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Attending</TableCell>
+                    <TableCell>Guests</TableCell>
+                    <TableCell>Items Bringing</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-      </Container>
+                </TableHead>
+                <TableBody>
+                  {rsvps.map((rsvp: RSVP) => (
+                    <TableRow key={rsvp.id}>
+                      <TableCell>{rsvp.name}</TableCell>
+                      <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
+                      <TableCell>
+                        {rsvp.bringing_guests === 'yes' ? 
+                          `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
+                          'No'
+                        }
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {(() => {
+                            let items: string[] = [];
+                            try {
+                              if (typeof rsvp.items_bringing === 'string') {
+                                try {
+                                  const parsed = JSON.parse(rsvp.items_bringing);
+                                  items = Array.isArray(parsed) ? parsed : [];
+                                } catch (e) {
+                                  console.error('Error parsing items_bringing JSON in table:', e);
+                                }
+                              } else if (Array.isArray(rsvp.items_bringing)) {
+                                items = rsvp.items_bringing;
+                              }
+                            } catch (e) {
+                              console.error('Error processing items in table:', e);
+                            }
+                            
+                            return items.length > 0 ? items.map((item: string, index: number) => (
+                              <Chip
+                                key={`${item}-${index}`}
+                                label={item}
+                                color="success"
+                                size="small"
+                                variant={claimedItems.includes(item) ? "filled" : "outlined"}
+                              />
+                            )) : (
+                              <Typography variant="body2" color="text.secondary">
+                                No items
+                              </Typography>
+                            );
+                          })()}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        </Container>
+      </Box>
     </Box>
   );
 };
