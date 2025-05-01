@@ -8,6 +8,7 @@ A modern event RSVP management system with customizable backgrounds and item coo
 - Comprehensive event management
   - Create and manage events
   - Track RSVPs and guest counts
+  - Set RSVP cut-off dates to automatically close registrations
   - Coordinate needed items and track who's bringing what
   - Customizable event backgrounds/wallpapers
 - Real-time item status tracking
@@ -72,6 +73,7 @@ A modern event RSVP management system with customizable backgrounds and item coo
 
 #### Event Creation and Management
 - Create events with title, description, date, time, and location
+- Set optional RSVP cut-off dates to automatically close registrations
 - Upload custom wallpapers to personalize event pages
 - Manage RSVPs and track attendance
 
