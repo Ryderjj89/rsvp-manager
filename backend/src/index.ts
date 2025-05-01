@@ -30,7 +30,7 @@ async function connectToDatabase() {
 }
 
 // Configure multer for file uploads
-const uploadDir = path.join(__dirname, '../../uploads/wallpapers');
+const uploadDir = path.join(__dirname, '../uploads/wallpapers');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

@@ -32,6 +32,10 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
+# Create uploads directory and set permissions before switching user
+RUN mkdir -p /app/uploads/wallpapers && \
+    chown -R node:node /app
+
 # Copy package files and install dependencies
 COPY package*.json ./
 COPY backend/package*.json ./backend/
@@ -42,11 +46,6 @@ RUN cd backend && npm install --production
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/frontend/build ./frontend/build
 COPY --from=builder /app/database.sqlite ./database.sqlite
-
-# Create uploads directory with proper permissions
-RUN mkdir -p /app/uploads/wallpapers && \
-    chown -R node:node /app/uploads && \
-    chmod -R 755 /app/uploads
 
 # Switch to non-root user
 USER node
