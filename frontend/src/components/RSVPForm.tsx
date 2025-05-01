@@ -18,6 +18,7 @@ import {
   OutlinedInput,
   Chip,
 } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Event } from '../types';
 
 interface RSVPFormData {
@@ -247,7 +248,8 @@ const RSVPForm: React.FC = () => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={() => navigate(`/events/${slug}/view`)}
+                startIcon={<VisibilityIcon />}
+                onClick={() => navigate(`/view/events/${slug}`)}
               >
                 View RSVPs
               </Button>
