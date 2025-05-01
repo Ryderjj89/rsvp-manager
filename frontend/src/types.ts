@@ -18,8 +18,8 @@ export interface Rsvp {
   attending: string;
   bringing_guests: string;
   guest_count: number;
-  guest_names: string;
-  items_bringing: string[];
+  guest_names: string[] | string;
+  items_bringing: string[] | string;
   other_items?: string;
   created_at: string;
 } 

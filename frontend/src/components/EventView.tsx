@@ -319,16 +319,7 @@ const EventView: React.FC = () => {
                         </Box>
                       </TableCell>
                       <TableCell>
-                        {rsvp.other_items && rsvp.other_items.length > 0 ? 
-                          rsvp.other_items.map((item, index) => (
-                            <Chip 
-                              key={index} 
-                              label={item} 
-                              sx={{ m: 0.5 }} 
-                            />
-                          )) : 
-                          'None'
-                        }
+                        {rsvp.other_items || 'None'}
                       </TableCell>
                     </TableRow>
                   ))}

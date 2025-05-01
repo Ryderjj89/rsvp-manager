@@ -69,6 +69,7 @@ interface EditFormData {
   guest_count: number;
   guest_names: string[];
   items_bringing: string[];
+  other_items: string;
 }
 
 const EventAdmin: React.FC = () => {
@@ -90,7 +91,8 @@ const EventAdmin: React.FC = () => {
     bringing_guests: 'no',
     guest_count: 0,
     guest_names: [],
-    items_bringing: []
+    items_bringing: [],
+    other_items: ''
   });
   const [deleteEventDialogOpen, setDeleteEventDialogOpen] = useState(false);
   const [manageItemsDialogOpen, setManageItemsDialogOpen] = useState(false);
@@ -228,7 +230,8 @@ const EventAdmin: React.FC = () => {
       guest_names: processedGuestNames,
       items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing :
         typeof rsvp.items_bringing === 'string' ? 
-          (rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : []) : []
+          (rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : []) : [],
+      other_items: rsvp.other_items || ''
     });
     setEditDialogOpen(true);
   };
@@ -284,7 +287,8 @@ const EventAdmin: React.FC = () => {
         bringing_guests: 'no',
         guest_count: 0,
         guest_names: [],
-        items_bringing: [] // Clear items when not attending
+        items_bringing: [], // Clear items when not attending
+        other_items: ''
       }));
     } else if (name === 'bringing_guests') {
       // When bringing guests is changed
@@ -294,7 +298,8 @@ const EventAdmin: React.FC = () => {
         // If changing to 'yes', set guest count to 1 and initialize one empty name field
         guest_count: value === 'yes' ? 1 : 0,
         // Clear guest names if changing to 'no', otherwise initialize with empty string or keep existing
-        guest_names: value === 'no' ? [] : (value === 'yes' ? [''] : prev.guest_names)
+        guest_names: value === 'no' ? [] : (value === 'yes' ? [''] : prev.guest_names),
+        other_items: prev.other_items
       }));
     } else {
       setEditForm(prev => ({
@@ -330,6 +335,7 @@ const EventAdmin: React.FC = () => {
         guest_count: editForm.bringing_guests === 'yes' ? Math.max(1, parseInt(editForm.guest_count.toString(), 10)) : 0,
         guest_names: filteredGuestNames,
         items_bringing: JSON.stringify(editForm.items_bringing),
+        other_items: editForm.other_items,
         event_id: event.id
       };
 
@@ -363,7 +369,8 @@ const EventAdmin: React.FC = () => {
           ...rsvpToEdit,
           ...submissionData,
           guest_names: filteredGuestNames,
-          items_bringing: editForm.items_bringing // Keep as array in local state
+          items_bringing: editForm.items_bringing,
+          other_items: editForm.other_items
         };
         
         // Update the local state
@@ -960,6 +967,15 @@ const EventAdmin: React.FC = () => {
                     ))}
                   </Select>
                 </FormControl>
+                <TextField
+                  label="Other Items"
+                  name="other_items"
+                  value={editForm.other_items}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, other_items: e.target.value }))}
+                  fullWidth
+                  multiline
+                  rows={3}
+                />
               </Box>
             </DialogContent>
             <DialogActions>
