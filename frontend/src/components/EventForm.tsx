@@ -12,14 +12,22 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
+interface FormData {
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+  needed_items: string[];
+}
+
 const EventForm: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     date: '',
     location: '',
-    needed_items: [] as string[],
+    needed_items: [],
   });
   const [wallpaper, setWallpaper] = useState<File | null>(null);
   const [currentItem, setCurrentItem] = useState('');
@@ -71,7 +79,7 @@ const EventForm: React.FC = () => {
         if (key === 'needed_items') {
           submitData.append(key, JSON.stringify(value));
         } else {
-          submitData.append(key, value);
+          submitData.append(key, String(value));
         }
       });
 
