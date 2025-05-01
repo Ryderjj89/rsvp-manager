@@ -96,7 +96,14 @@ const EventList: React.FC = () => {
                       {event.title}
                     </Typography>
                     <Typography color="textSecondary" gutterBottom>
-                      {new Date(event.date).toLocaleString()} at {event.location}
+                      {new Date(event.date).toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      })} at {event.location}
                     </Typography>
                     <Typography variant="body2" component="p">
                       {event.description}
