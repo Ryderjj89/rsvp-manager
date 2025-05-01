@@ -302,10 +302,43 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
     }
     
     const eventId = eventRows[0].id;
-    await db.run('DELETE FROM rsvps WHERE id = ? AND event_id = ?', [id, eventId]);
-    res.status(204).send();
+    
+    // Parse items_bringing if it's a string
+    let parsedItemsBringing: string[] = [];
+    try {
+      if (typeof items_bringing === 'string') {
+        parsedItemsBringing = JSON.parse(items_bringing);
+      } else if (Array.isArray(items_bringing)) {
+        parsedItemsBringing = items_bringing;
+      }
+    } catch (e) {
+      console.error('Error parsing items_bringing:', e);
+    }
+
+    // Update the RSVP
+    await db.run(
+      'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ? WHERE id = ? AND event_id = ?',
+      [name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(parsedItemsBringing), id, eventId]
+    );
+
+    // Get the updated RSVP to verify and return
+    const updatedRsvp = await db.get('SELECT * FROM rsvps WHERE id = ? AND event_id = ?', [id, eventId]);
+    
+    if (!updatedRsvp) {
+      return res.status(404).json({ error: 'RSVP not found after update' });
+    }
+
+    // Parse items_bringing for response
+    try {
+      updatedRsvp.items_bringing = updatedRsvp.items_bringing ? JSON.parse(updatedRsvp.items_bringing) : [];
+    } catch (e) {
+      console.error('Error parsing items_bringing in response:', e);
+      updatedRsvp.items_bringing = [];
+    }
+
+    res.json(updatedRsvp);
   } catch (error) {
-    console.error('Error deleting RSVP:', error);
+    console.error('Error updating RSVP:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
