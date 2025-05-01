@@ -81,6 +81,12 @@ const EventAdmin: React.FC = () => {
   const [manageItemsDialogOpen, setManageItemsDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState('');
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [updateInfoDialogOpen, setUpdateInfoDialogOpen] = useState(false);
+  const [updateForm, setUpdateForm] = useState({
+    description: '',
+    location: '',
+    date: ''
+  });
 
   useEffect(() => {
     fetchEventAndRsvps();
@@ -363,6 +369,41 @@ const EventAdmin: React.FC = () => {
     }
   };
 
+  const handleUpdateInfoSubmit = async () => {
+    if (!event) return;
+    
+    try {
+      await axios.put(`/api/events/${slug}`, {
+        ...event,
+        description: updateForm.description,
+        location: updateForm.location,
+        date: updateForm.date
+      });
+      
+      setEvent(prev => prev ? {
+        ...prev,
+        description: updateForm.description,
+        location: updateForm.location,
+        date: updateForm.date
+      } : null);
+      
+      setUpdateInfoDialogOpen(false);
+    } catch (error) {
+      setError('Failed to update event information');
+    }
+  };
+
+  const handleUpdateInfoClick = () => {
+    if (!event) return;
+    
+    setUpdateForm({
+      description: event.description,
+      location: event.location,
+      date: event.date.slice(0, 16) // Format date for datetime-local input
+    });
+    setUpdateInfoDialogOpen(true);
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -410,6 +451,13 @@ const EventAdmin: React.FC = () => {
                 onClick={() => navigate('/')}
               >
                 Back to Events
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleUpdateInfoClick}
+                startIcon={<EditIcon />}
+              >
+                Update Info
               </Button>
               <Button
                 variant="outlined"
@@ -753,6 +801,47 @@ const EventAdmin: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setManageItemsDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={updateInfoDialogOpen}
+          onClose={() => setUpdateInfoDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Update Event Information</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                label="Description"
+                value={updateForm.description}
+                onChange={(e) => setUpdateForm(prev => ({ ...prev, description: e.target.value }))}
+                fullWidth
+                multiline
+                rows={3}
+              />
+              <TextField
+                label="Location"
+                value={updateForm.location}
+                onChange={(e) => setUpdateForm(prev => ({ ...prev, location: e.target.value }))}
+                fullWidth
+              />
+              <TextField
+                label="Date and Time"
+                type="datetime-local"
+                value={updateForm.date}
+                onChange={(e) => setUpdateForm(prev => ({ ...prev, date: e.target.value }))}
+                fullWidth
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setUpdateInfoDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleUpdateInfoSubmit} color="primary">Save Changes</Button>
           </DialogActions>
         </Dialog>
       </Container>
