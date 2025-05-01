@@ -90,6 +90,37 @@ A modern event RSVP management system with customizable backgrounds and item coo
 - Keep track of guest names
 - Manage what items each person is bringing
 
+## Authentication with Authentik
+
+This application is compatible with Authentik using a proxy provider (single application). To protect the admin routes, add the following configuration to your nginx config:
+
+```nginx
+location ~ (/create|/admin) {
+    proxy_pass	$forward_scheme://$server:$port;
+    auth_request /outpost.goauthentik.io/auth/nginx;
+    error_page 401 = @goauthentik_proxy_signin;
+    auth_request_set $auth_cookie $upstream_http_set_cookie;
+    add_header Set-Cookie $auth_cookie;
+    auth_request_set $authentik_username $upstream_http_x_authentik_username;
+    auth_request_set $authentik_groups $upstream_http_x_authentik_groups;
+    auth_request_set $authentik_email $upstream_http_x_authentik_email;
+    auth_request_set $authentik_name $upstream_http_x_authentik_name;
+    auth_request_set $authentik_uid $upstream_http_x_authentik_uid;
+    auth_request_set $authentik_authorization $upstream_http_authorization;
+    proxy_set_header X-authentik-username $authentik_username;
+    proxy_set_header X-authentik-groups $authentik_groups;
+    proxy_set_header X-authentik-email $authentik_email;
+    proxy_set_header X-authentik-name $authentik_name;
+    proxy_set_header X-authentik-uid $authentik_uid;
+    proxy_set_header Authorization $authentik_authorization;
+}
+```
+
+This configuration will:
+- Protect the `/create` and `/admin` routes with Authentik authentication
+- Redirect unauthenticated users to the Authentik login page
+- Pass through Authentik user information in headers after successful authentication
+
 ## License
 
 MIT 
