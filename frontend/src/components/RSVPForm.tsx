@@ -36,7 +36,7 @@ const RSVPForm: React.FC = () => {
     name: '',
     attending: '',
     bringing_guests: '',
-    guest_count: 0,
+    guest_count: 1,
     guest_names: '',
     items_bringing: []
   });
@@ -145,6 +145,25 @@ const RSVPForm: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+
+    // Validate required fields
+    if (!formData.name.trim() || !formData.attending) {
+      setError('Please fill in all required fields');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.attending === 'yes' && !formData.bringing_guests) {
+      setError('Please indicate if you are bringing guests');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || !formData.guest_names.trim())) {
+      setError('Please provide the number and names of your guests');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const submissionData = {
@@ -320,7 +339,7 @@ const RSVPForm: React.FC = () => {
                 variant="outlined"
               />
 
-              <FormControl fullWidth>
+              <FormControl fullWidth required>
                 <InputLabel>Are you attending?</InputLabel>
                 <Select
                   name="attending"
@@ -329,6 +348,7 @@ const RSVPForm: React.FC = () => {
                   label="Are you attending?"
                   required
                 >
+                  <MenuItem value="">Select an option</MenuItem>
                   <MenuItem value="yes">Yes</MenuItem>
                   <MenuItem value="no">No</MenuItem>
                 </Select>
@@ -336,14 +356,16 @@ const RSVPForm: React.FC = () => {
 
               {formData.attending === 'yes' && (
                 <>
-                  <FormControl fullWidth>
+                  <FormControl fullWidth required>
                     <InputLabel>Are you bringing any guests?</InputLabel>
                     <Select
                       name="bringing_guests"
                       value={formData.bringing_guests}
                       onChange={handleSelectChange}
                       label="Are you bringing any guests?"
+                      required
                     >
+                      <MenuItem value="">Select an option</MenuItem>
                       <MenuItem value="yes">Yes</MenuItem>
                       <MenuItem value="no">No</MenuItem>
                     </Select>
@@ -359,7 +381,10 @@ const RSVPForm: React.FC = () => {
                         onChange={handleChange}
                         fullWidth
                         variant="outlined"
+                        required
                         inputProps={{ min: 1 }}
+                        error={formData.guest_count < 1}
+                        helperText={formData.guest_count < 1 ? "Number of guests must be at least 1" : ""}
                       />
 
                       <TextField
@@ -371,7 +396,10 @@ const RSVPForm: React.FC = () => {
                         rows={3}
                         fullWidth
                         variant="outlined"
+                        required
                         placeholder="Please list the names of your guests"
+                        error={!formData.guest_names.trim()}
+                        helperText={!formData.guest_names.trim() ? "Please enter the names of your guests" : ""}
                       />
                     </>
                   )}
@@ -410,7 +438,11 @@ const RSVPForm: React.FC = () => {
                 variant="contained"
                 color="primary"
                 size="large"
-                disabled={isSubmitting}
+                disabled={isSubmitting || 
+                  !formData.name.trim() || 
+                  !formData.attending ||
+                  (formData.attending === 'yes' && !formData.bringing_guests) ||
+                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || !formData.guest_names.trim()))}
                 sx={{ mt: 2 }}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
