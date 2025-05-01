@@ -96,7 +96,7 @@ const EventDetails: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        backgroundImage: event.wallpaper ? `url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
+        backgroundImage: event?.wallpaper ? `url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         py: 4,

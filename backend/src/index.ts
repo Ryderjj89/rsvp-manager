@@ -19,6 +19,9 @@ app.use(express.json());
 // Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Database connection
 let db: any;
 
@@ -114,7 +117,7 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
 app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
     const { title, description, date, location, needed_items } = req.body;
-    const wallpaperPath = req.file ? `/uploads/wallpapers/${req.file.filename}` : null;
+    const wallpaperPath = req.file ? `${req.file.filename}` : null;
     
     // Generate a slug from the title
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -139,7 +142,7 @@ app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, r
     res.status(201).json({ 
       ...result, 
       slug,
-      wallpaper: wallpaperPath,
+      wallpaper: wallpaperPath ? `/uploads/wallpapers/${wallpaperPath}` : null,
       needed_items: parsedNeededItems
     });
   } catch (error) {
