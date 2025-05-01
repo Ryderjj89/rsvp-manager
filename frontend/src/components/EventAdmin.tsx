@@ -231,35 +231,42 @@ const EventAdmin: React.FC = () => {
   };
 
   const handleEditSubmit = async () => {
-    if (!rsvpToEdit) return;
+    if (!rsvpToEdit || !event) return;
     
     try {
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
+        id: rsvpToEdit.id,
+        event_id: event.id, // Include the event ID
         name: editForm.name,
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
         guest_count: parseInt(editForm.guest_count.toString(), 10),
         guest_names: editForm.guest_names,
-        items_bringing: JSON.stringify(editForm.items_bringing)
+        items_bringing: JSON.stringify(editForm.items_bringing),
+        created_at: rsvpToEdit.created_at, // Preserve original creation timestamp
+        updated_at: new Date().toISOString() // Update the timestamp
       };
 
       // Log the data being sent for debugging
       console.log('Submitting RSVP update:', submissionData);
+
+      // First try to get the current RSVP to verify it exists
+      const currentRsvp = await axios.get(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`);
+      console.log('Current RSVP:', currentRsvp.data);
 
       const response = await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
       
       // Log the response for debugging
       console.log('Server response:', response.data);
 
+      if (!response.data) {
+        throw new Error('Server returned empty response');
+      }
+
       // Create updated RSVP object preserving the ID and merging with response data
       const updatedRsvp: RSVP = {
-        id: rsvpToEdit.id,
-        name: editForm.name,
-        attending: editForm.attending,
-        bringing_guests: editForm.bringing_guests,
-        guest_count: parseInt(editForm.guest_count.toString(), 10),
-        guest_names: editForm.guest_names,
+        ...submissionData,
         items_bringing: editForm.items_bringing // Keep as array in local state
       };
       
@@ -324,10 +331,18 @@ const EventAdmin: React.FC = () => {
       if (!verifiedRsvp) {
         console.error('RSVP update did not persist:', rsvpToEdit.id);
         setError('Warning: The update may not have been saved properly. Please refresh the page to verify.');
+        
+        // Log additional debug information
+        console.log('Original RSVP:', rsvpToEdit);
+        console.log('Event details:', event);
+        console.log('Edit form data:', editForm);
       }
 
     } catch (error) {
       console.error('Failed to update RSVP:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Server error response:', error.response?.data);
+      }
       setError('Failed to update RSVP');
     }
   };
