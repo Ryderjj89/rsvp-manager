@@ -165,10 +165,22 @@ const EventView: React.FC = () => {
           </Box>
 
           <Box sx={{ mb: 4 }}>
+            <Typography variant="body1" paragraph>
+              {event.description}
+            </Typography>
+            <Typography variant="subtitle1" gutterBottom>
+              <strong>Location:</strong> {event.location}
+            </Typography>
+            <Typography variant="subtitle1" gutterBottom>
+              <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+            </Typography>
+          </Box>
+
+          <Box sx={{ mb: 4 }}>
             <Typography variant="h6" gutterBottom>
               Items Status
             </Typography>
-            <Box sx={{ display: 'flex', gap: 4 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: '60%' }}>
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
                   Still Needed:
