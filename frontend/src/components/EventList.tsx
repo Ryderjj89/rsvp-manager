@@ -52,7 +52,7 @@ const EventList: React.FC = () => {
 
   const handleAdminClick = (event: Event, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/admin/events/${event.slug}`);
+    window.location.href = `/admin/events/${event.slug}`;
   };
 
   const handleViewClick = (event: Event, e: React.MouseEvent) => {
@@ -74,7 +74,7 @@ const EventList: React.FC = () => {
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate('/create')}
+          onClick={() => window.location.href = '/create'}
           size="large"
           sx={{ 
             py: 2, 
