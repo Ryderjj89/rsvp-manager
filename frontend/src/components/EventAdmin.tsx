@@ -33,6 +33,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import axios from 'axios';
 
 interface RSVP {
@@ -940,6 +941,7 @@ const EventAdmin: React.FC = () => {
                     variant="outlined"
                     component="label"
                     fullWidth
+                    startIcon={<WallpaperIcon />}
                     sx={{ mt: 1 }}
                   >
                     {updateForm.wallpaper ? 'Change Wallpaper' : (event.wallpaper ? 'Replace Wallpaper' : 'Upload Wallpaper')}
