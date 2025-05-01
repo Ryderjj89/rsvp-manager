@@ -211,13 +211,20 @@ const EventAdmin: React.FC = () => {
   };
 
   const handleEditRsvp = (rsvp: RSVP) => {
+    let processedGuestNames: string[] = [];
+    if (Array.isArray(rsvp.guest_names)) {
+      processedGuestNames = rsvp.guest_names;
+    } else if (typeof rsvp.guest_names === 'string' && rsvp.guest_names) {
+      processedGuestNames = rsvp.guest_names.split(',').map(name => name.trim());
+    }
+
     setRsvpToEdit(rsvp);
     setEditForm({
       name: rsvp.name,
       attending: rsvp.attending || 'yes',
       bringing_guests: rsvp.bringing_guests || 'no',
       guest_count: typeof rsvp.guest_count === 'number' ? rsvp.guest_count : 0,
-      guest_names: rsvp.guest_names ? rsvp.guest_names.split(',').map(name => name.trim()) : [],
+      guest_names: processedGuestNames,
       items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing :
         typeof rsvp.items_bringing === 'string' ? 
           (rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : []) : []
