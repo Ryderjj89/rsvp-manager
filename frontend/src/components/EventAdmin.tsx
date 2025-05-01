@@ -32,6 +32,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
 
 interface RSVP {
@@ -77,6 +78,9 @@ const EventAdmin: React.FC = () => {
     items_bringing: [] as string[],
   });
   const [deleteEventDialogOpen, setDeleteEventDialogOpen] = useState(false);
+  const [manageItemsDialogOpen, setManageItemsDialogOpen] = useState(false);
+  const [newItem, setNewItem] = useState('');
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEventAndRsvps();
@@ -282,6 +286,44 @@ const EventAdmin: React.FC = () => {
     }
   };
 
+  const handleAddItem = async () => {
+    if (!event || !newItem.trim()) return;
+
+    try {
+      const updatedItems = [...(Array.isArray(event.needed_items) ? event.needed_items : []), newItem.trim()];
+      await axios.put(`/api/events/${slug}`, {
+        ...event,
+        needed_items: updatedItems
+      });
+      
+      setEvent(prev => prev ? { ...prev, needed_items: updatedItems } : null);
+      setNeededItems(prev => [...prev, newItem.trim()]);
+      setNewItem('');
+    } catch (error) {
+      setError('Failed to add item');
+    }
+  };
+
+  const handleRemoveItem = async (itemToRemove: string) => {
+    if (!event) return;
+
+    try {
+      const updatedItems = Array.isArray(event.needed_items) 
+        ? event.needed_items.filter(item => item !== itemToRemove)
+        : [];
+      
+      await axios.put(`/api/events/${slug}`, {
+        ...event,
+        needed_items: updatedItems
+      });
+      
+      setEvent(prev => prev ? { ...prev, needed_items: updatedItems } : null);
+      setNeededItems(prev => prev.filter(item => item !== itemToRemove));
+    } catch (error) {
+      setError('Failed to remove item');
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -333,9 +375,18 @@ const EventAdmin: React.FC = () => {
 
           {/* Add items status section */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Items Status
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h6">
+                Items Status
+              </Typography>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={() => setManageItemsDialogOpen(true)}
+              >
+                Manage Items
+              </Button>
+            </Box>
             <Box sx={{ display: 'flex', gap: 4 }}>
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
@@ -610,6 +661,50 @@ const EventAdmin: React.FC = () => {
             <Button onClick={handleDeleteEvent} color="error" variant="contained">
               Delete Event
             </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={manageItemsDialogOpen}
+          onClose={() => setManageItemsDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Manage Needed Items</DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  label="New Item"
+                  value={newItem}
+                  onChange={(e) => setNewItem(e.target.value)}
+                  fullWidth
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleAddItem}
+                  disabled={!newItem.trim()}
+                >
+                  Add
+                </Button>
+              </Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Current Items:
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {event?.needed_items && Array.isArray(event.needed_items) && event.needed_items.map((item, index) => (
+                  <Chip
+                    key={`${item}-${index}`}
+                    label={item}
+                    onDelete={() => handleRemoveItem(item)}
+                    color={claimedItems.includes(item) ? "success" : "primary"}
+                  />
+                ))}
+              </Box>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setManageItemsDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
       </Container>

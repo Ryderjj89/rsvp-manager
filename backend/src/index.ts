@@ -312,6 +312,67 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
   }
 });
 
+// Update event
+app.put('/api/events/:slug', async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const { title, description, date, location, needed_items } = req.body;
+    
+    // Verify the event exists
+    const eventRows = await db.all('SELECT * FROM events WHERE slug = ?', [slug]);
+    
+    if (eventRows.length === 0) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+    
+    // Ensure needed_items is properly formatted
+    let parsedNeededItems: string[] = [];
+    try {
+      if (typeof needed_items === 'string') {
+        parsedNeededItems = JSON.parse(needed_items);
+      } else if (Array.isArray(needed_items)) {
+        parsedNeededItems = needed_items;
+      }
+    } catch (e) {
+      console.error('Error parsing needed_items:', e);
+    }
+    
+    // Update the event
+    await db.run(
+      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ? WHERE slug = ?',
+      [
+        title || eventRows[0].title,
+        description || eventRows[0].description,
+        date || eventRows[0].date,
+        location || eventRows[0].location,
+        JSON.stringify(parsedNeededItems),
+        slug
+      ]
+    );
+
+    // Get the updated event
+    const updatedEvent = await db.get('SELECT * FROM events WHERE slug = ?', [slug]);
+    
+    // Add the full path to the wallpaper
+    if (updatedEvent.wallpaper) {
+      updatedEvent.wallpaper = `/uploads/wallpapers/${updatedEvent.wallpaper}`;
+    }
+    
+    // Parse needed_items for response
+    try {
+      updatedEvent.needed_items = updatedEvent.needed_items ? JSON.parse(updatedEvent.needed_items) : [];
+    } catch (e) {
+      console.error('Error parsing needed_items in response:', e);
+      updatedEvent.needed_items = [];
+    }
+
+    res.json(updatedEvent);
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Initialize database tables
 async function initializeDatabase() {
   try {
