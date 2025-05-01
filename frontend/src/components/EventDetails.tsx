@@ -16,17 +16,6 @@ import {
   Chip
 } from '@mui/material';
 
-interface Event {
-  id: number;
-  title: string;
-  description: string;
-  date: string;
-  location: string;
-  slug: string;
-  needed_items?: string[] | string;
-  wallpaper?: string;
-}
-
 const EventDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
