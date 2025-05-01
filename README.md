@@ -92,7 +92,7 @@ A modern event RSVP management system with customizable backgrounds and item coo
 
 ## Authentication with Authentik
 
-This application is compatible with Authentik. Make sure to create a Proxy Provider for Forward auth (single application). To protect the admin & create routes, add the following configuration to your Nginx Proxy Manager config in the Advanced section. For other web server applications, see the Setup area in Authentik on the Provider page for this app and setup the routes accordingly:
+This application is compatible with Authentik. Make sure to create a Proxy Provider for Forward auth (single application). To protect the admin & create routes, add the following configuration to your Nginx Proxy Manager config in the Advanced section. For other web server applications, see the Setup area in Authentik on the Provider page for this app and setup the routes accordingly.
 
 ```nginx
 # Protected routes
