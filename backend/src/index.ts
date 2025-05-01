@@ -214,7 +214,26 @@ app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
     
     const eventId = eventRows[0].id;
     const rows = await db.all('SELECT * FROM rsvps WHERE event_id = ?', [eventId]);
-    res.json(rows);
+    
+    // Parse JSON arrays in each RSVP
+    const parsedRows = rows.map(rsvp => {
+      try {
+        return {
+          ...rsvp,
+          items_bringing: rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : [],
+          guest_names: rsvp.guest_names ? JSON.parse(rsvp.guest_names) : []
+        };
+      } catch (e) {
+        console.error('Error parsing RSVP JSON fields:', e);
+        return {
+          ...rsvp,
+          items_bringing: [],
+          guest_names: []
+        };
+      }
+    });
+    
+    res.json(parsedRows);
   } catch (error) {
     console.error('Error fetching RSVPs:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -234,7 +253,7 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     
     const eventId = eventRows[0].id;
     
-    // Ensure items_bringing is properly formatted
+    // Parse items_bringing if it's a string
     let parsedItemsBringing: string[] = [];
     try {
       if (typeof items_bringing === 'string') {
@@ -245,13 +264,25 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     } catch (e) {
       console.error('Error parsing items_bringing:', e);
     }
+
+    // Parse guest_names if it's a string
+    let parsedGuestNames: string[] = [];
+    try {
+      if (typeof guest_names === 'string') {
+        parsedGuestNames = JSON.parse(guest_names);
+      } else if (Array.isArray(guest_names)) {
+        parsedGuestNames = guest_names;
+      }
+    } catch (e) {
+      console.error('Error parsing guest_names:', e);
+    }
     
     const result = await db.run(
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [eventId, name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(parsedItemsBringing)]
+      [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing)]
     );
 
-    // Return the complete RSVP data including the parsed items_bringing
+    // Return the complete RSVP data including the parsed arrays
     res.status(201).json({
       id: result.lastID,
       event_id: eventId,
@@ -259,7 +290,7 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       attending,
       bringing_guests,
       guest_count,
-      guest_names,
+      guest_names: parsedGuestNames,
       items_bringing: parsedItemsBringing
     });
   } catch (error) {
@@ -315,10 +346,22 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
       console.error('Error parsing items_bringing:', e);
     }
 
+    // Parse guest_names if it's a string
+    let parsedGuestNames: string[] = [];
+    try {
+      if (typeof guest_names === 'string') {
+        parsedGuestNames = JSON.parse(guest_names);
+      } else if (Array.isArray(guest_names)) {
+        parsedGuestNames = guest_names;
+      }
+    } catch (e) {
+      console.error('Error parsing guest_names:', e);
+    }
+
     // Update the RSVP
     await db.run(
       'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ? WHERE id = ? AND event_id = ?',
-      [name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(parsedItemsBringing), id, eventId]
+      [name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), id, eventId]
     );
 
     // Get the updated RSVP to verify and return
@@ -328,12 +371,14 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'RSVP not found after update' });
     }
 
-    // Parse items_bringing for response
+    // Parse arrays for response
     try {
       updatedRsvp.items_bringing = updatedRsvp.items_bringing ? JSON.parse(updatedRsvp.items_bringing) : [];
+      updatedRsvp.guest_names = updatedRsvp.guest_names ? JSON.parse(updatedRsvp.guest_names) : [];
     } catch (e) {
-      console.error('Error parsing items_bringing in response:', e);
+      console.error('Error parsing arrays in response:', e);
       updatedRsvp.items_bringing = [];
+      updatedRsvp.guest_names = [];
     }
 
     res.json(updatedRsvp);

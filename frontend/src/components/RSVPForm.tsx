@@ -26,7 +26,7 @@ interface RSVPFormData {
   attending: string;
   bringing_guests: string;
   guest_count: number;
-  guest_names: string;
+  guest_names: string[];
   items_bringing: string[];
 }
 
@@ -37,7 +37,7 @@ const RSVPForm: React.FC = () => {
     attending: '',
     bringing_guests: '',
     guest_count: 1,
-    guest_names: '',
+    guest_names: [],
     items_bringing: []
   });
   const [neededItems, setNeededItems] = useState<string[]>([]);
@@ -118,6 +118,63 @@ const RSVPForm: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    if (name === 'attending') {
+      // Reset guest-related fields when attendance changes to 'no' or 'maybe'
+      if (value === 'no' || value === 'maybe') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          bringing_guests: 'no',
+          guest_count: 0,
+          guest_names: [],
+          items_bringing: []
+        }));
+        return;
+      }
+    }
+
+    if (name === 'bringing_guests') {
+      // Reset guest fields when bringing_guests changes
+      if (value === 'no') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          guest_count: 0,
+          guest_names: []
+        }));
+        return;
+      } else if (value === 'yes') {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          guest_count: 1,
+          guest_names: ['']
+        }));
+        return;
+      }
+    }
+
+    if (name === 'guest_count') {
+      const count = parseInt(value) || 0;
+      // Adjust guest_names array size based on count
+      setFormData(prev => ({
+        ...prev,
+        [name]: count,
+        guest_names: Array(count).fill('').map((_, i) => prev.guest_names[i] || '')
+      }));
+      return;
+    }
+
+    if (name.startsWith('guest_name_')) {
+      const index = parseInt(name.split('_')[2]);
+      setFormData(prev => ({
+        ...prev,
+        guest_names: prev.guest_names.map((name, i) => i === index ? value : name)
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -159,8 +216,10 @@ const RSVPForm: React.FC = () => {
       return;
     }
 
-    if (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || !formData.guest_names.trim())) {
-      setError('Please provide the number and names of your guests');
+    if (formData.bringing_guests === 'yes' && 
+        (formData.guest_count < 1 || 
+         formData.guest_names.some(name => !name.trim()))) {
+      setError('Please provide names for all guests');
       setIsSubmitting(false);
       return;
     }
@@ -387,20 +446,23 @@ const RSVPForm: React.FC = () => {
                         helperText={formData.guest_count < 1 ? "Number of guests must be at least 1" : ""}
                       />
 
-                      <TextField
-                        label="Guest Names"
-                        name="guest_names"
-                        value={formData.guest_names}
-                        onChange={handleChange}
-                        multiline
-                        rows={3}
-                        fullWidth
-                        variant="outlined"
-                        required
-                        placeholder="Please list the names of your guests"
-                        error={!formData.guest_names.trim()}
-                        helperText={!formData.guest_names.trim() ? "Please enter the names of your guests" : ""}
-                      />
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="subtitle1" gutterBottom>
+                          Guest Names
+                        </Typography>
+                        {Array.from({ length: formData.guest_count }).map((_, index) => (
+                          <TextField
+                            key={index}
+                            fullWidth
+                            label={`Guest ${index + 1} Name`}
+                            name={`guest_name_${index}`}
+                            value={formData.guest_names[index] || ''}
+                            onChange={handleChange}
+                            margin="normal"
+                            required
+                          />
+                        ))}
+                      </Box>
                     </>
                   )}
 
@@ -442,7 +504,7 @@ const RSVPForm: React.FC = () => {
                   !formData.name.trim() || 
                   !formData.attending ||
                   (formData.attending === 'yes' && !formData.bringing_guests) ||
-                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || !formData.guest_names.trim()))}
+                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))}
                 sx={{ mt: 2 }}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
