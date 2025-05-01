@@ -43,8 +43,13 @@ COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/frontend/build ./frontend/build
 COPY --from=builder /app/database.sqlite ./database.sqlite
 
-# Create uploads directory
-RUN mkdir -p uploads/wallpapers
+# Create uploads directory with proper permissions
+RUN mkdir -p /app/uploads/wallpapers && \
+    chown -R node:node /app/uploads && \
+    chmod -R 755 /app/uploads
+
+# Switch to non-root user
+USER node
 
 # Expose port
 EXPOSE 3000

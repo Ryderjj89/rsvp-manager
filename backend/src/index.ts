@@ -263,6 +263,7 @@ async function initializeDatabase() {
         location TEXT,
         slug TEXT NOT NULL UNIQUE,
         needed_items TEXT,
+        wallpaper TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
