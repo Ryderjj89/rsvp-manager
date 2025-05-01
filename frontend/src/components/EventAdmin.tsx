@@ -110,10 +110,22 @@ const EventAdmin: React.FC = () => {
 
   const fetchEventAndRsvps = async () => {
     try {
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      };
+
       const [eventResponse, rsvpsResponse] = await Promise.all([
-        axios.get(`/api/events/${slug}`),
-        axios.get(`/api/events/${slug}/rsvps`)
+        axios.get(`/api/events/${slug}`, config),
+        axios.get(`/api/events/${slug}/rsvps`, config)
       ]);
+
+      if (!eventResponse.data || !rsvpsResponse.data) {
+        throw new Error('Failed to fetch data from server');
+      }
+
       setEvent(eventResponse.data);
       
       // Process needed items
@@ -167,6 +179,14 @@ const EventAdmin: React.FC = () => {
       setNeededItems(items.filter(item => !claimed.has(item)));
       setLoading(false);
     } catch (error) {
+      console.error('Failed to load event data:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Server error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data
+        });
+      }
       setError('Failed to load event data');
       setLoading(false);
     }
@@ -237,113 +257,118 @@ const EventAdmin: React.FC = () => {
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
         id: rsvpToEdit.id,
-        event_id: event.id, // Include the event ID
+        event_id: event.id,
         name: editForm.name,
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
         guest_count: parseInt(editForm.guest_count.toString(), 10),
         guest_names: editForm.guest_names,
-        items_bringing: JSON.stringify(editForm.items_bringing),
-        created_at: rsvpToEdit.created_at, // Preserve original creation timestamp
-        updated_at: new Date().toISOString() // Update the timestamp
+        items_bringing: JSON.stringify(editForm.items_bringing)
       };
 
       // Log the data being sent for debugging
       console.log('Submitting RSVP update:', submissionData);
 
-      // First try to get the current RSVP to verify it exists
-      const currentRsvp = await axios.get(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`);
-      console.log('Current RSVP:', currentRsvp.data);
-
-      const response = await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
-      
-      // Log the response for debugging
-      console.log('Server response:', response.data);
-
-      if (!response.data) {
-        throw new Error('Server returned empty response');
-      }
-
-      // Create updated RSVP object preserving the ID and merging with response data
-      const updatedRsvp: RSVP = {
-        ...submissionData,
-        items_bringing: editForm.items_bringing // Keep as array in local state
-      };
-      
-      // Update the local state
-      const updatedRsvps = rsvps.map((r: RSVP) => {
-        if (r.id === rsvpToEdit.id) {
-          return updatedRsvp;
-        }
-        return r;
-      });
-      
-      // Recalculate claimed items
-      const claimed = new Set<string>();
-      updatedRsvps.forEach((rsvp: RSVP) => {
-        let rsvpItems: string[] = [];
-        try {
-          if (typeof rsvp.items_bringing === 'string') {
-            const parsed = JSON.parse(rsvp.items_bringing);
-            rsvpItems = Array.isArray(parsed) ? parsed : [];
-          } else if (Array.isArray(rsvp.items_bringing)) {
-            rsvpItems = rsvp.items_bringing;
+      try {
+        // Update the RSVP
+        const response = await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
-          
-          rsvpItems.forEach(item => claimed.add(item));
-        } catch (e) {
-          console.error('Error processing items for RSVP:', e);
-        }
-      });
-
-      // Get all items from the event
-      let allItems: string[] = [];
-      if (event?.needed_items) {
-        try {
-          if (typeof event.needed_items === 'string') {
-            const parsed = JSON.parse(event.needed_items);
-            allItems = Array.isArray(parsed) ? parsed : [];
-          } else if (Array.isArray(event.needed_items)) {
-            allItems = event.needed_items;
-          }
-        } catch (e) {
-          console.error('Error parsing event needed_items:', e);
-          allItems = [];
-        }
-      }
-
-      // Update needed and claimed items
-      const claimedArray = Array.from(claimed);
-      const availableItems = allItems.filter(item => !claimed.has(item));
-
-      setRsvps(updatedRsvps);
-      setNeededItems(availableItems);
-      setClaimedItems(claimedArray);
-      setEditDialogOpen(false);
-      setRsvpToEdit(null);
-
-      // Verify the update by immediately fetching the updated data
-      const verifyResponse = await axios.get(`/api/events/${slug}/rsvps`);
-      console.log('Verification response:', verifyResponse.data);
-
-      // If the verification shows the update didn't persist, show an error
-      const verifiedRsvp = verifyResponse.data.find((r: RSVP) => r.id === rsvpToEdit.id);
-      if (!verifiedRsvp) {
-        console.error('RSVP update did not persist:', rsvpToEdit.id);
-        setError('Warning: The update may not have been saved properly. Please refresh the page to verify.');
+        });
         
-        // Log additional debug information
-        console.log('Original RSVP:', rsvpToEdit);
-        console.log('Event details:', event);
-        console.log('Edit form data:', editForm);
+        // Log the response for debugging
+        console.log('Server response:', response.data);
+
+        if (!response.data) {
+          throw new Error('Server returned empty response');
+        }
+
+        // Create updated RSVP object
+        const updatedRsvp: RSVP = {
+          ...submissionData,
+          items_bringing: editForm.items_bringing // Keep as array in local state
+        };
+        
+        // Update the local state
+        const updatedRsvps = rsvps.map((r: RSVP) => {
+          if (r.id === rsvpToEdit.id) {
+            return updatedRsvp;
+          }
+          return r;
+        });
+
+        // Recalculate claimed items
+        const claimed = new Set<string>();
+        updatedRsvps.forEach((rsvp: RSVP) => {
+          let rsvpItems: string[] = [];
+          try {
+            if (typeof rsvp.items_bringing === 'string') {
+              const parsed = JSON.parse(rsvp.items_bringing);
+              rsvpItems = Array.isArray(parsed) ? parsed : [];
+            } else if (Array.isArray(rsvp.items_bringing)) {
+              rsvpItems = rsvp.items_bringing;
+            }
+            
+            rsvpItems.forEach(item => claimed.add(item));
+          } catch (e) {
+            console.error('Error processing items for RSVP:', e);
+          }
+        });
+
+        // Get all items from the event
+        let allItems: string[] = [];
+        if (event?.needed_items) {
+          try {
+            if (typeof event.needed_items === 'string') {
+              const parsed = JSON.parse(event.needed_items);
+              allItems = Array.isArray(parsed) ? parsed : [];
+            } else if (Array.isArray(event.needed_items)) {
+              allItems = event.needed_items;
+            }
+          } catch (e) {
+            console.error('Error parsing event needed_items:', e);
+            allItems = [];
+          }
+        }
+
+        // Update needed and claimed items
+        const claimedArray = Array.from(claimed);
+        const availableItems = allItems.filter(item => !claimed.has(item));
+
+        setRsvps(updatedRsvps);
+        setNeededItems(availableItems);
+        setClaimedItems(claimedArray);
+        setEditDialogOpen(false);
+        setRsvpToEdit(null);
+
+        // Immediately fetch updated RSVPs to ensure state is in sync
+        fetchEventAndRsvps();
+
+      } catch (error) {
+        console.error('Failed to update RSVP:', error);
+        if (axios.isAxiosError(error)) {
+          console.error('Server error details:', {
+            status: error.response?.status,
+            statusText: error.response?.statusText,
+            data: error.response?.data
+          });
+          
+          // If we get a 404, the RSVP might have been deleted
+          if (error.response?.status === 404) {
+            setError('This RSVP no longer exists. The page will refresh.');
+            await fetchEventAndRsvps(); // Refresh the data
+            setEditDialogOpen(false);
+            return;
+          }
+        }
+        throw error; // Re-throw to be caught by outer catch block
       }
 
     } catch (error) {
-      console.error('Failed to update RSVP:', error);
-      if (axios.isAxiosError(error)) {
-        console.error('Server error response:', error.response?.data);
-      }
-      setError('Failed to update RSVP');
+      console.error('Error in handleEditSubmit:', error);
+      setError('Failed to update RSVP. Please try again.');
     }
   };
 
