@@ -9,10 +9,32 @@ import {
   Paper,
   Chip,
   IconButton,
+  styled,
 } from '@mui/material';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
+
+const DarkTextField = styled(TextField)({
+  '& .MuiOutlinedInput-root': {
+    '& fieldset': {
+      borderColor: 'rgba(255, 255, 255, 0.23)',
+    },
+    '&:hover fieldset': {
+      borderColor: 'rgba(255, 255, 255, 0.4)',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#90caf9',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  '& .MuiOutlinedInput-input': {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+});
 
 interface FormData {
   title: string;
@@ -110,8 +132,16 @@ const EventForm: React.FC = () => {
 
   return (
     <Container maxWidth="sm">
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h4" component="h2" gutterBottom color="primary" align="center">
+      <Paper 
+        elevation={3} 
+        sx={{ 
+          p: 4, 
+          mt: 4, 
+          bgcolor: 'rgba(22, 28, 36, 0.95)',
+          backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))'
+        }}
+      >
+        <Typography variant="h4" component="h2" gutterBottom color="primary" align="center" sx={{ color: '#90caf9' }}>
           Create New Event
         </Typography>
         
@@ -122,7 +152,7 @@ const EventForm: React.FC = () => {
         )}
 
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
+          <DarkTextField
             fullWidth
             label="Title"
             name="title"
@@ -131,7 +161,7 @@ const EventForm: React.FC = () => {
             variant="outlined"
             required
           />
-          <TextField
+          <DarkTextField
             fullWidth
             label="Description"
             name="description"
@@ -141,7 +171,7 @@ const EventForm: React.FC = () => {
             multiline
             rows={4}
           />
-          <TextField
+          <DarkTextField
             fullWidth
             label="Date and Time"
             name="date"
@@ -154,7 +184,7 @@ const EventForm: React.FC = () => {
               shrink: true,
             }}
           />
-          <TextField
+          <DarkTextField
             fullWidth
             label="Location"
             name="location"
@@ -165,7 +195,7 @@ const EventForm: React.FC = () => {
           />
           
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography variant="subtitle1" gutterBottom>
+            <Typography variant="subtitle1" gutterBottom sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               Event Wallpaper
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -174,7 +204,15 @@ const EventForm: React.FC = () => {
                 component="span"
                 startIcon={<WallpaperIcon />}
                 onClick={handleWallpaperClick}
-                sx={{ flexGrow: 1 }}
+                sx={{ 
+                  flexGrow: 1,
+                  borderColor: 'rgba(255, 255, 255, 0.23)',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  '&:hover': {
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  }
+                }}
               >
                 {wallpaper ? 'Change Wallpaper' : 'Upload Wallpaper'}
               </Button>
@@ -183,13 +221,19 @@ const EventForm: React.FC = () => {
                   color="error" 
                   onClick={() => setWallpaper(null)}
                   size="small"
+                  sx={{ 
+                    color: '#f44336',
+                    '&:hover': {
+                      backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                    }
+                  }}
                 >
                   <DeleteIcon />
                 </IconButton>
               )}
             </Box>
             {wallpaper && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mt: 1 }}>
                 Selected: {wallpaper.name}
               </Typography>
             )}
@@ -203,9 +247,11 @@ const EventForm: React.FC = () => {
           </Box>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="subtitle1">Needed Items</Typography>
+            <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              Needed Items
+            </Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
+              <DarkTextField
                 fullWidth
                 label="Add Item"
                 value={currentItem}
@@ -217,6 +263,16 @@ const EventForm: React.FC = () => {
                 variant="contained"
                 onClick={handleAddItem}
                 disabled={!currentItem.trim()}
+                startIcon={<AddIcon />}
+                sx={{ 
+                  bgcolor: '#90caf9',
+                  '&:hover': {
+                    bgcolor: '#42a5f5',
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: 'rgba(144, 202, 249, 0.3)',
+                  }
+                }}
               >
                 Add
               </Button>
@@ -227,7 +283,16 @@ const EventForm: React.FC = () => {
                   key={index}
                   label={item}
                   onDelete={() => handleRemoveItem(index)}
-                  color="primary"
+                  sx={{
+                    bgcolor: 'rgba(144, 202, 249, 0.2)',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    '& .MuiChip-deleteIcon': {
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      '&:hover': {
+                        color: 'rgba(255, 255, 255, 0.9)',
+                      }
+                    }
+                  }}
                 />
               ))}
             </Box>
@@ -238,7 +303,13 @@ const EventForm: React.FC = () => {
             variant="contained"
             color="primary"
             size="large"
-            sx={{ mt: 2 }}
+            sx={{ 
+              mt: 2,
+              bgcolor: '#90caf9',
+              '&:hover': {
+                bgcolor: '#42a5f5',
+              }
+            }}
           >
             Create Event
           </Button>
