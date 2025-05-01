@@ -311,7 +311,7 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
 });
 
 // Update event
-app.put('/api/events/:slug', async (req: Request, res: Response) => {
+app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
     const { slug } = req.params;
     const { title, description, date, location, needed_items, rsvp_cutoff_date } = req.body;
@@ -334,10 +334,25 @@ app.put('/api/events/:slug', async (req: Request, res: Response) => {
     } catch (e) {
       console.error('Error parsing needed_items:', e);
     }
+
+    // Handle wallpaper update
+    let wallpaperPath = eventRows[0].wallpaper;
+    if (req.file) {
+      // If there's an existing wallpaper, delete it
+      if (eventRows[0].wallpaper) {
+        const oldWallpaperPath = path.join(uploadDir, eventRows[0].wallpaper);
+        try {
+          await fs.promises.unlink(oldWallpaperPath);
+        } catch (e) {
+          console.error('Error deleting old wallpaper:', e);
+        }
+      }
+      wallpaperPath = req.file.filename;
+    }
     
     // Update the event
     await db.run(
-      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ? WHERE slug = ?',
+      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ?, wallpaper = ? WHERE slug = ?',
       [
         title ?? eventRows[0].title,
         description === undefined ? eventRows[0].description : description,
@@ -345,6 +360,7 @@ app.put('/api/events/:slug', async (req: Request, res: Response) => {
         location ?? eventRows[0].location,
         JSON.stringify(parsedNeededItems),
         rsvp_cutoff_date !== undefined ? rsvp_cutoff_date : eventRows[0].rsvp_cutoff_date,
+        wallpaperPath,
         slug
       ]
     );
@@ -364,10 +380,16 @@ app.put('/api/events/:slug', async (req: Request, res: Response) => {
       console.error('Error parsing needed_items in response:', e);
       updatedEvent.needed_items = [];
     }
-
+    
     res.json(updatedEvent);
   } catch (error) {
     console.error('Error updating event:', error);
+    // Clean up uploaded file if there was an error
+    if (req.file) {
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });

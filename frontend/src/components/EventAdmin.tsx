@@ -389,29 +389,24 @@ const EventAdmin: React.FC = () => {
     if (!event) return;
     
     try {
-      let updatedWallpaper = event.wallpaper;
-
-      // Handle wallpaper upload if a new file was selected
+      // Create FormData and append all fields
+      const formData = new FormData();
+      formData.append('description', updateForm.description);
+      formData.append('location', updateForm.location);
+      formData.append('date', updateForm.date);
+      formData.append('rsvp_cutoff_date', updateForm.rsvp_cutoff_date);
+      formData.append('title', event.title); // Keep existing title
+      formData.append('needed_items', JSON.stringify(event.needed_items)); // Keep existing needed items
+      
+      // Append wallpaper if a new one was selected
       if (updateForm.wallpaper) {
-        const formData = new FormData();
         formData.append('wallpaper', updateForm.wallpaper);
-        
-        const uploadResponse = await axios.post(`/api/upload/wallpaper`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        
-        updatedWallpaper = uploadResponse.data.path;
       }
       
-      await axios.put(`/api/events/${slug}`, {
-        ...event,
-        description: updateForm.description,
-        location: updateForm.location,
-        date: updateForm.date,
-        rsvp_cutoff_date: updateForm.rsvp_cutoff_date,
-        wallpaper: updatedWallpaper
+      const response = await axios.put(`/api/events/${slug}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       
       setEvent(prev => prev ? {
@@ -420,11 +415,12 @@ const EventAdmin: React.FC = () => {
         location: updateForm.location,
         date: updateForm.date,
         rsvp_cutoff_date: updateForm.rsvp_cutoff_date,
-        wallpaper: updatedWallpaper
+        wallpaper: response.data.wallpaper || prev.wallpaper
       } : null);
       
       setUpdateInfoDialogOpen(false);
     } catch (error) {
+      console.error('Error updating event:', error);
       setError('Failed to update event information');
     }
   };
@@ -945,7 +941,7 @@ const EventAdmin: React.FC = () => {
                   <input
                     type="file"
                     hidden
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/gif"
                     onChange={handleWallpaperChange}
                   />
                 </Button>
