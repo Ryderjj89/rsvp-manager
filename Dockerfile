@@ -12,6 +12,7 @@ COPY backend/package*.json ./backend/
 # Install dependencies
 RUN npm install
 RUN cd frontend && npm install --save-dev @types/react @types/react-dom @types/react-router-dom @types/axios
+RUN cd backend && npm install && npm install --save-dev @types/node @types/express @types/multer @types/cors @types/sqlite3
 
 # Copy source files
 COPY . .
@@ -41,6 +42,9 @@ RUN npm install --production
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/frontend/build ./frontend/build
 COPY --from=builder /app/database.sqlite ./database.sqlite
+
+# Create uploads directory
+RUN mkdir -p uploads/wallpapers
 
 # Expose port
 EXPOSE 3000
