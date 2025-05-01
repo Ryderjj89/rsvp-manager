@@ -181,12 +181,35 @@ const RSVPForm: React.FC = () => {
     }));
   };
 
-  const handleSelectChange = (e: SelectChangeEvent) => {
+  const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name === 'attending' && value !== 'yes') {
+      // If not attending, reset all guest-related fields and items
+      setFormData(prev => ({
+        ...prev,
+        attending: value as 'no' | 'maybe',
+        bringing_guests: 'no',
+        guest_count: 0,
+        guest_names: [],
+        items_bringing: [] // Clear items when not attending
+      }));
+    } else if (name === 'bringing_guests') {
+      // When bringing guests is changed
+      setFormData(prev => ({
+        ...prev,
+        bringing_guests: value as 'yes' | 'no',
+        // If changing to 'yes', set guest count to 1 and initialize one empty name field
+        guest_count: value === 'yes' ? 1 : 0,
+        // Clear guest names if changing to 'no', otherwise initialize with empty string
+        guest_names: value === 'no' ? [] : ['']
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
