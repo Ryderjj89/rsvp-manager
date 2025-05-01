@@ -469,23 +469,18 @@ const RSVPForm: React.FC = () => {
                         helperText={formData.guest_count < 1 ? "Number of guests must be at least 1" : ""}
                       />
 
-                      <Box sx={{ mt: 2 }}>
-                        <Typography variant="subtitle1" gutterBottom>
-                          Guest Names
-                        </Typography>
-                        {Array.from({ length: formData.guest_count }).map((_, index) => (
-                          <TextField
-                            key={index}
-                            fullWidth
-                            label={`Guest ${index + 1} Name`}
-                            name={`guest_name_${index}`}
-                            value={formData.guest_names[index] || ''}
-                            onChange={handleChange}
-                            margin="normal"
-                            required
-                          />
-                        ))}
-                      </Box>
+                      {Array.from({ length: formData.guest_count }).map((_, index) => (
+                        <TextField
+                          key={index}
+                          fullWidth
+                          label={`Guest ${index + 1} Name`}
+                          name={`guest_name_${index}`}
+                          value={formData.guest_names[index] || ''}
+                          onChange={handleChange}
+                          margin="normal"
+                          required
+                        />
+                      ))}
                     </>
                   )}
 
