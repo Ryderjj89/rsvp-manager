@@ -20,5 +20,6 @@ export interface Rsvp {
   guest_count: number;
   guest_names: string;
   items_bringing: string[];
+  other_items?: string;
   created_at: string;
 } 

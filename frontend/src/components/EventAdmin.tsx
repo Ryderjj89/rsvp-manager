@@ -44,6 +44,7 @@ interface RSVP {
   guest_count: number;
   guest_names: string[] | string;
   items_bringing: string[] | string;
+  other_items?: string;
   event_id?: number;
   created_at?: string;
   updated_at?: string;
@@ -778,7 +779,8 @@ const EventAdmin: React.FC = () => {
                     <TableCell>Name</TableCell>
                     <TableCell>Attending</TableCell>
                     <TableCell>Guests</TableCell>
-                    <TableCell>Items Bringing</TableCell>
+                    <TableCell>Needed Items</TableCell>
+                    <TableCell>Other Items</TableCell>
                     <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -803,39 +805,27 @@ const EventAdmin: React.FC = () => {
                         }
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {(() => {
-                            let items: string[] = [];
-                            try {
-                              if (typeof rsvp.items_bringing === 'string') {
-                                try {
-                                  const parsed = JSON.parse(rsvp.items_bringing);
-                                  items = Array.isArray(parsed) ? parsed : [];
-                                } catch (e) {
-                                  console.error('Error parsing items_bringing JSON in table:', e);
-                                }
-                              } else if (Array.isArray(rsvp.items_bringing)) {
-                                items = rsvp.items_bringing;
-                              }
-                            } catch (e) {
-                              console.error('Error processing items in table:', e);
-                            }
-                            
-                            return items.length > 0 ? items.map((item: string, index: number) => (
-                              <Chip
-                                key={`${item}-${index}`}
-                                label={item}
-                                color="success"
-                                size="small"
-                                variant={claimedItems.includes(item) ? "filled" : "outlined"}
+                        {Array.isArray(rsvp.items_bringing) ? 
+                          rsvp.items_bringing.map((item, index) => (
+                            <Chip 
+                              key={index} 
+                              label={item} 
+                              sx={{ m: 0.5 }} 
+                            />
+                          )) : 
+                          typeof rsvp.items_bringing === 'string' ?
+                            JSON.parse(rsvp.items_bringing).map((item: string, index: number) => (
+                              <Chip 
+                                key={index} 
+                                label={item} 
+                                sx={{ m: 0.5 }} 
                               />
-                            )) : (
-                              <Typography variant="body2" color="text.secondary">
-                                No items
-                              </Typography>
-                            );
-                          })()}
-                        </Box>
+                            )) :
+                            'None'
+                        }
+                      </TableCell>
+                      <TableCell>
+                        {rsvp.other_items || 'None'}
                       </TableCell>
                       <TableCell>
                         <IconButton

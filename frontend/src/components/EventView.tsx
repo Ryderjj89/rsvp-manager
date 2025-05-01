@@ -24,6 +24,7 @@ interface RSVP {
   guest_count: number;
   guest_names: string[] | string;
   items_bringing: string[] | string;
+  other_items?: string[];
 }
 
 interface Event {
@@ -263,7 +264,8 @@ const EventView: React.FC = () => {
                     <TableCell>Name</TableCell>
                     <TableCell>Attending</TableCell>
                     <TableCell>Guests</TableCell>
-                    <TableCell>Items Bringing</TableCell>
+                    <TableCell>Needed Items</TableCell>
+                    <TableCell>Other Items</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -315,6 +317,18 @@ const EventView: React.FC = () => {
                             );
                           })()}
                         </Box>
+                      </TableCell>
+                      <TableCell>
+                        {rsvp.other_items && rsvp.other_items.length > 0 ? 
+                          rsvp.other_items.map((item, index) => (
+                            <Chip 
+                              key={index} 
+                              label={item} 
+                              sx={{ m: 0.5 }} 
+                            />
+                          )) : 
+                          'None'
+                        }
                       </TableCell>
                     </TableRow>
                   ))}

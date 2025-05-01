@@ -255,7 +255,7 @@ app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
 app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing } = req.body;
+    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items } = req.body;
     
     const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
     
@@ -290,8 +290,8 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     }
     
     const result = await db.run(
-      'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing)]
+      'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '', new Date().toISOString()]
     );
 
     // Return the complete RSVP data including the parsed arrays
@@ -303,7 +303,9 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       bringing_guests,
       guest_count,
       guest_names: parsedGuestNames,
-      items_bringing: parsedItemsBringing
+      items_bringing: parsedItemsBringing,
+      other_items: other_items || '',
+      created_at: new Date().toISOString()
     });
   } catch (error) {
     console.error('Error creating RSVP:', error);
@@ -335,7 +337,7 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
 app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
   try {
     const { slug, id } = req.params;
-    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing } = req.body;
+    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items } = req.body;
     
     // Verify the RSVP belongs to the correct event
     const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
@@ -378,8 +380,8 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
 
     // Update the RSVP
     await db.run(
-      'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ? WHERE id = ? AND event_id = ?',
-      [name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), id, eventId]
+      'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ?, other_items = ? WHERE id = ? AND event_id = ?',
+      [name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '', id, eventId]
     );
 
     // Get the updated RSVP to verify and return
@@ -520,6 +522,7 @@ async function initializeDatabase() {
         guest_count INTEGER DEFAULT 0,
         guest_names TEXT,
         items_bringing TEXT,
+        other_items TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
       )

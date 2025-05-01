@@ -28,6 +28,7 @@ interface RSVPFormData {
   guest_count: number;
   guest_names: string[];
   items_bringing: string[];
+  other_items: string;
 }
 
 const RSVPForm: React.FC = () => {
@@ -38,7 +39,8 @@ const RSVPForm: React.FC = () => {
     bringing_guests: '',
     guest_count: 1,
     guest_names: [],
-    items_bringing: []
+    items_bringing: [],
+    other_items: ''
   });
   const [neededItems, setNeededItems] = useState<string[]>([]);
   const [claimedItems, setClaimedItems] = useState<string[]>([]);
@@ -128,7 +130,8 @@ const RSVPForm: React.FC = () => {
           bringing_guests: 'no',
           guest_count: 0,
           guest_names: [],
-          items_bringing: []
+          items_bringing: [],
+          other_items: ''
         }));
         return;
       }
@@ -192,7 +195,8 @@ const RSVPForm: React.FC = () => {
         bringing_guests: 'no',
         guest_count: 0,
         guest_names: [],
-        items_bringing: [] // Clear items when not attending
+        items_bringing: [], // Clear items when not attending
+        other_items: ''
       }));
     } else if (name === 'bringing_guests') {
       // When bringing guests is changed
@@ -509,6 +513,18 @@ const RSVPForm: React.FC = () => {
                       </Select>
                     </FormControl>
                   )}
+
+                  <TextField
+                    label="Any other item(s)?"
+                    name="other_items"
+                    value={formData.other_items}
+                    onChange={handleChange}
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    rows={2}
+                    placeholder="Enter any additional items you'd like to bring"
+                  />
                 </>
               )}
 
