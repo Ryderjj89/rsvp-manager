@@ -477,7 +477,6 @@ const RSVPForm: React.FC = () => {
                           name={`guest_name_${index}`}
                           value={formData.guest_names[index] || ''}
                           onChange={handleChange}
-                          margin="normal"
                           required
                         />
                       ))}
