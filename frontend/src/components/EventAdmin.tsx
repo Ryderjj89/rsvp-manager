@@ -44,6 +44,9 @@ interface RSVP {
   guest_count: number;
   guest_names: string;
   items_bringing: string[] | string;
+  event_id?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Event {
@@ -64,7 +67,7 @@ interface EditFormData {
   bringing_guests: 'yes' | 'no';
   guest_count: number;
   guest_names: string;
-  items_bringing: string[];  // Always an array in the form
+  items_bringing: string[];
 }
 
 const EventAdmin: React.FC = () => {
@@ -231,9 +234,8 @@ const EventAdmin: React.FC = () => {
     if (!rsvpToEdit) return;
     
     try {
-      // Prepare submission data while preserving original data
+      // Prepare submission data in the exact format the backend expects
       const submissionData = {
-        ...rsvpToEdit,
         name: editForm.name,
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
@@ -242,15 +244,19 @@ const EventAdmin: React.FC = () => {
         items_bringing: JSON.stringify(editForm.items_bringing)
       };
 
+      // Log the data being sent for debugging
+      console.log('Submitting RSVP update:', submissionData);
+
       const response = await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
       
+      // Log the response for debugging
+      console.log('Server response:', response.data);
+
       // Create updated RSVP object preserving the ID and merging with response data
       const updatedRsvp: RSVP = {
-        ...rsvpToEdit,
-        ...response.data,
-        id: rsvpToEdit.id, // Ensure we keep the ID
-        name: editForm.name, // Ensure we keep the edited name
-        attending: editForm.attending, // Ensure we keep the edited attending status
+        id: rsvpToEdit.id,
+        name: editForm.name,
+        attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
         guest_count: parseInt(editForm.guest_count.toString(), 10),
         guest_names: editForm.guest_names,
@@ -308,6 +314,18 @@ const EventAdmin: React.FC = () => {
       setClaimedItems(claimedArray);
       setEditDialogOpen(false);
       setRsvpToEdit(null);
+
+      // Verify the update by immediately fetching the updated data
+      const verifyResponse = await axios.get(`/api/events/${slug}/rsvps`);
+      console.log('Verification response:', verifyResponse.data);
+
+      // If the verification shows the update didn't persist, show an error
+      const verifiedRsvp = verifyResponse.data.find((r: RSVP) => r.id === rsvpToEdit.id);
+      if (!verifiedRsvp) {
+        console.error('RSVP update did not persist:', rsvpToEdit.id);
+        setError('Warning: The update may not have been saved properly. Please refresh the page to verify.');
+      }
+
     } catch (error) {
       console.error('Failed to update RSVP:', error);
       setError('Failed to update RSVP');
