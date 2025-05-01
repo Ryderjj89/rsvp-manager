@@ -35,6 +35,7 @@ interface Event {
   slug: string;
   needed_items?: string[] | string;
   wallpaper?: string;
+  rsvp_cutoff_date?: string;
 }
 
 const EventView: React.FC = () => {
@@ -176,6 +177,11 @@ const EventView: React.FC = () => {
             <Typography variant="subtitle1" gutterBottom>
               <strong>Date:</strong> {new Date(event.date).toLocaleString()}
             </Typography>
+            {event.rsvp_cutoff_date && (
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+              </Typography>
+            )}
           </Box>
 
           <Box sx={{ mb: 4 }}>
