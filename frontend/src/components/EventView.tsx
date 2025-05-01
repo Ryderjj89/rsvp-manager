@@ -142,12 +142,23 @@ const EventView: React.FC = () => {
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
+        backgroundColor: '#000',
         position: 'relative',
         overflowY: 'auto',
         py: 4,
+        '&::before': event?.wallpaper ? {
+          content: '""',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 0,
+        } : {},
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 4 }}>
           <Box sx={{ mb: 4 }}>
             <Typography variant="h4" component="h2" color="primary" gutterBottom>
