@@ -165,7 +165,7 @@ const EventView: React.FC = () => {
           </Box>
 
           <Box sx={{ mb: 4 }}>
-            <Typography variant="body1" paragraph>
+            <Typography variant="subtitle1" gutterBottom>
               <strong>Info:</strong> {event.description}
             </Typography>
             <Typography variant="subtitle1" gutterBottom>
