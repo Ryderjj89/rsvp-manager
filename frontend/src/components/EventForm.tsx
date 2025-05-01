@@ -42,6 +42,7 @@ interface FormData {
   date: string;
   location: string;
   needed_items: string[];
+  rsvp_cutoff_date: string;
 }
 
 const EventForm: React.FC = () => {
@@ -52,6 +53,7 @@ const EventForm: React.FC = () => {
     date: '',
     location: '',
     needed_items: [],
+    rsvp_cutoff_date: '',
   });
   const [wallpaper, setWallpaper] = useState<File | null>(null);
   const [currentItem, setCurrentItem] = useState('');
@@ -180,6 +182,18 @@ const EventForm: React.FC = () => {
             onChange={handleChange}
             variant="outlined"
             required
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <DarkTextField
+            fullWidth
+            label="RSVP Cut-off Date"
+            name="rsvp_cutoff_date"
+            type="datetime-local"
+            value={formData.rsvp_cutoff_date}
+            onChange={handleChange}
+            variant="outlined"
             InputLabelProps={{
               shrink: true,
             }}

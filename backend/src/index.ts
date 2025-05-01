@@ -387,6 +387,7 @@ async function initializeDatabase() {
         slug TEXT NOT NULL UNIQUE,
         needed_items TEXT,
         wallpaper TEXT,
+        rsvp_cutoff_date TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

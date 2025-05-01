@@ -56,6 +56,15 @@ const RSVPForm: React.FC = () => {
           axios.get(`/api/events/${slug}/rsvps`)
         ]);
         
+        // Check if event is closed for RSVPs
+        if (eventResponse.data.rsvp_cutoff_date) {
+          const cutoffDate = new Date(eventResponse.data.rsvp_cutoff_date);
+          if (new Date() > cutoffDate) {
+            navigate(`/view/events/${slug}`);
+            return;
+          }
+        }
+
         // Process needed items
         let items: string[] = [];
         if (eventResponse.data.needed_items) {
@@ -288,6 +297,12 @@ const RSVPForm: React.FC = () => {
           {error && (
             <Typography color="error" align="center" sx={{ mb: 2 }}>
               {error}
+            </Typography>
+          )}
+
+          {event?.rsvp_cutoff_date && (
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
+              <strong>Note:</strong> RSVPs will close on {new Date(event.rsvp_cutoff_date).toLocaleString()}
             </Typography>
           )}
 

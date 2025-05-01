@@ -54,6 +54,7 @@ interface Event {
   slug: string;
   needed_items?: string[] | string;
   wallpaper?: string;
+  rsvp_cutoff_date?: string;
 }
 
 const EventAdmin: React.FC = () => {
@@ -85,7 +86,8 @@ const EventAdmin: React.FC = () => {
   const [updateForm, setUpdateForm] = useState({
     description: '',
     location: '',
-    date: ''
+    date: '',
+    rsvp_cutoff_date: ''
   });
 
   useEffect(() => {
@@ -369,6 +371,18 @@ const EventAdmin: React.FC = () => {
     }
   };
 
+  const handleUpdateInfoClick = () => {
+    if (!event) return;
+    
+    setUpdateForm({
+      description: event.description,
+      location: event.location,
+      date: event.date.slice(0, 16), // Format date for datetime-local input
+      rsvp_cutoff_date: event.rsvp_cutoff_date ? event.rsvp_cutoff_date.slice(0, 16) : ''
+    });
+    setUpdateInfoDialogOpen(true);
+  };
+
   const handleUpdateInfoSubmit = async () => {
     if (!event) return;
     
@@ -377,31 +391,22 @@ const EventAdmin: React.FC = () => {
         ...event,
         description: updateForm.description,
         location: updateForm.location,
-        date: updateForm.date
+        date: updateForm.date,
+        rsvp_cutoff_date: updateForm.rsvp_cutoff_date
       });
       
       setEvent(prev => prev ? {
         ...prev,
         description: updateForm.description,
         location: updateForm.location,
-        date: updateForm.date
+        date: updateForm.date,
+        rsvp_cutoff_date: updateForm.rsvp_cutoff_date
       } : null);
       
       setUpdateInfoDialogOpen(false);
     } catch (error) {
       setError('Failed to update event information');
     }
-  };
-
-  const handleUpdateInfoClick = () => {
-    if (!event) return;
-    
-    setUpdateForm({
-      description: event.description,
-      location: event.location,
-      date: event.date.slice(0, 16) // Format date for datetime-local input
-    });
-    setUpdateInfoDialogOpen(true);
   };
 
   if (loading) {
@@ -487,6 +492,11 @@ const EventAdmin: React.FC = () => {
             <Typography variant="subtitle1" gutterBottom>
               <strong>Date:</strong> {new Date(event.date).toLocaleString()}
             </Typography>
+            {event.rsvp_cutoff_date && (
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+              </Typography>
+            )}
           </Box>
 
           {/* Add items status section */}
@@ -832,6 +842,16 @@ const EventAdmin: React.FC = () => {
                 type="datetime-local"
                 value={updateForm.date}
                 onChange={(e) => setUpdateForm(prev => ({ ...prev, date: e.target.value }))}
+                fullWidth
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+              <TextField
+                label="RSVP Cut-off Date"
+                type="datetime-local"
+                value={updateForm.rsvp_cutoff_date}
+                onChange={(e) => setUpdateForm(prev => ({ ...prev, rsvp_cutoff_date: e.target.value }))}
                 fullWidth
                 InputLabelProps={{
                   shrink: true,

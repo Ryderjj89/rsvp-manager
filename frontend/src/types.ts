@@ -8,6 +8,7 @@ export interface Event {
   created_at: string;
   needed_items: string[];
   wallpaper?: string;
+  rsvp_cutoff_date?: string;
 }
 
 export interface Rsvp {

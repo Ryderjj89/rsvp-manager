@@ -9,6 +9,7 @@ import {
   Grid,
   CardActions,
   Container,
+  Chip,
 } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -21,6 +22,7 @@ interface Event {
   date: string;
   location: string;
   slug: string;
+  rsvp_cutoff_date?: string;
 }
 
 const EventList: React.FC = () => {
@@ -40,12 +42,26 @@ const EventList: React.FC = () => {
     }
   };
 
-  const handleEventClick = (event: Event) => {
-    navigate(`/rsvp/events/${event.slug}`);
+  const isEventOpen = (event: Event) => {
+    if (!event.rsvp_cutoff_date) return true;
+    const cutoffDate = new Date(event.rsvp_cutoff_date);
+    return new Date() < cutoffDate;
   };
 
-  const handleAdminClick = (event: Event) => {
+  const handleEventClick = (event: Event) => {
+    if (isEventOpen(event)) {
+      navigate(`/rsvp/events/${event.slug}`);
+    }
+  };
+
+  const handleAdminClick = (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(`/admin/events/${event.slug}`);
+  };
+
+  const handleViewClick = (event: Event, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/view/events/${event.slug}`);
   };
 
   return (
@@ -74,75 +90,67 @@ const EventList: React.FC = () => {
         </Button>
       </Container>
 
-      {events.length > 0 && (
-        <Box sx={{ mt: 6 }}>
-          <Typography variant="h4" component="h2" sx={{ mb: 4 }}>
-            Current Events
-          </Typography>
-          <Grid container spacing={3}>
-            {events.map((event) => (
-              <Grid item xs={12} key={event.id}>
-                <Card 
-                  onClick={() => handleEventClick(event)}
-                  sx={{ 
-                    cursor: 'pointer',
-                    '&:hover': {
-                      boxShadow: 6,
-                    }
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="h5" component="h2">
+      <Container maxWidth="lg">
+        <Grid container spacing={4}>
+          {events.map((event) => (
+            <Grid item xs={12} sm={6} md={4} key={event.id}>
+              <Card 
+                sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  cursor: isEventOpen(event) ? 'pointer' : 'default',
+                  opacity: isEventOpen(event) ? 1 : 0.7,
+                }} 
+                onClick={() => handleEventClick(event)}
+              >
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <Typography variant="h5" component="h2" sx={{ flexGrow: 1 }}>
                       {event.title}
                     </Typography>
-                    <Typography color="textSecondary" gutterBottom>
-                      {new Date(event.date).toLocaleString(undefined, {
-                        year: 'numeric',
-                        month: 'numeric',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                      })} at {event.location}
+                    <Chip
+                      label={isEventOpen(event) ? "Open" : "Closed"}
+                      color={isEventOpen(event) ? "success" : "error"}
+                      size="small"
+                    />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" paragraph>
+                    {event.description}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Location:</strong> {event.location}
+                  </Typography>
+                  {event.rsvp_cutoff_date && (
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
                     </Typography>
-                    <Typography variant="body2" component="p">
-                      {event.description}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/view/events/${event.slug}`);
-                      }}
-                      color="primary"
-                      aria-label="view rsvps"
-                      variant="outlined"
-                      startIcon={<VisibilityIcon />}
-                      sx={{ ml: 1 }}
-                    >
-                      View RSVPs
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAdminClick(event);
-                      }}
-                      color="primary"
-                      aria-label="manage rsvps"
-                      variant="outlined"
-                      startIcon={<AdminPanelSettingsIcon />}
-                      sx={{ ml: 1 }}
-                    >
-                      Manage RSVPs
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Box>
-      )}
+                  )}
+                </CardContent>
+                <CardActions>
+                  <Button
+                    size="small"
+                    startIcon={<AdminPanelSettingsIcon />}
+                    onClick={(e) => handleAdminClick(event, e)}
+                  >
+                    Manage
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<VisibilityIcon />}
+                    onClick={(e) => handleViewClick(event, e)}
+                  >
+                    View RSVPs
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
     </Box>
   );
 };
