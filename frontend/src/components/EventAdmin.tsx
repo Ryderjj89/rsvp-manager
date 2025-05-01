@@ -231,17 +231,29 @@ const EventAdmin: React.FC = () => {
     if (!rsvpToEdit) return;
     
     try {
+      // Prepare submission data while preserving original data
       const submissionData = {
-        ...editForm,
-        guest_count: parseInt(editForm.guest_count.toString(), 10), // Ensure guest_count is a number
+        ...rsvpToEdit,
+        name: editForm.name,
+        attending: editForm.attending,
+        bringing_guests: editForm.bringing_guests,
+        guest_count: parseInt(editForm.guest_count.toString(), 10),
+        guest_names: editForm.guest_names,
         items_bringing: JSON.stringify(editForm.items_bringing)
       };
 
       const response = await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
       
-      // Update the local state with the response data
-      const updatedRsvp = {
+      // Create updated RSVP object preserving the ID and merging with response data
+      const updatedRsvp: RSVP = {
+        ...rsvpToEdit,
         ...response.data,
+        id: rsvpToEdit.id, // Ensure we keep the ID
+        name: editForm.name, // Ensure we keep the edited name
+        attending: editForm.attending, // Ensure we keep the edited attending status
+        bringing_guests: editForm.bringing_guests,
+        guest_count: parseInt(editForm.guest_count.toString(), 10),
+        guest_names: editForm.guest_names,
         items_bringing: editForm.items_bringing // Keep as array in local state
       };
       
@@ -645,7 +657,7 @@ const EventAdmin: React.FC = () => {
                 <TableBody>
                   {rsvps.map((rsvp: RSVP) => (
                     <TableRow key={rsvp.id}>
-                      <TableCell>{rsvp.name}</TableCell>
+                      <TableCell>{rsvp.name || 'No name provided'}</TableCell>
                       <TableCell>
                         {rsvp.attending ? 
                           rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1) : 
@@ -654,46 +666,44 @@ const EventAdmin: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {rsvp.bringing_guests === 'yes' ? 
-                          `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
+                          `${rsvp.guest_count || 0} (${rsvp.guest_names ? rsvp.guest_names.replace(/\s+/g, ', ') : 'No names provided'})` : 
                           'No'
                         }
                       </TableCell>
                       <TableCell>
-                        {(() => {
-                          let items: string[] = [];
-                          try {
-                            if (typeof rsvp.items_bringing === 'string') {
-                              try {
-                                const parsed = JSON.parse(rsvp.items_bringing);
-                                items = Array.isArray(parsed) ? parsed : [];
-                              } catch (e) {
-                                console.error('Error parsing items_bringing JSON in table:', e);
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {(() => {
+                            let items: string[] = [];
+                            try {
+                              if (typeof rsvp.items_bringing === 'string') {
+                                try {
+                                  const parsed = JSON.parse(rsvp.items_bringing);
+                                  items = Array.isArray(parsed) ? parsed : [];
+                                } catch (e) {
+                                  console.error('Error parsing items_bringing JSON in table:', e);
+                                }
+                              } else if (Array.isArray(rsvp.items_bringing)) {
+                                items = rsvp.items_bringing;
                               }
-                            } else if (Array.isArray(rsvp.items_bringing)) {
-                              items = rsvp.items_bringing;
+                            } catch (e) {
+                              console.error('Error processing items in table:', e);
                             }
-                          } catch (e) {
-                            console.error('Error processing items in table:', e);
-                          }
-                          
-                          return (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {items.length > 0 ? items.map((item: string, index: number) => (
-                                <Chip
-                                  key={`${item}-${index}`}
-                                  label={item}
-                                  color="success"
-                                  size="small"
-                                  variant={claimedItems.includes(item) ? "filled" : "outlined"}
-                                />
-                              )) : (
-                                <Typography variant="body2" color="text.secondary">
-                                  No items
-                                </Typography>
-                              )}
-                            </Box>
-                          );
-                        })()}
+                            
+                            return items.length > 0 ? items.map((item: string, index: number) => (
+                              <Chip
+                                key={`${item}-${index}`}
+                                label={item}
+                                color="success"
+                                size="small"
+                                variant={claimedItems.includes(item) ? "filled" : "outlined"}
+                              />
+                            )) : (
+                              <Typography variant="body2" color="text.secondary">
+                                No items
+                              </Typography>
+                            );
+                          })()}
+                        </Box>
                       </TableCell>
                       <TableCell>
                         <IconButton
