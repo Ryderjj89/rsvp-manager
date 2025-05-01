@@ -7,8 +7,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./database:/app/database
-      - ./uploads:/app/uploads
+      - data:/app/database
+      - uploads:/app/uploads
     environment:
       - NODE_ENV=development
     restart: unless-stopped
