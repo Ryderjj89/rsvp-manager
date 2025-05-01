@@ -25,6 +25,18 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Database connection
 let db: any;
 
+interface RSVP {
+  id: number;
+  event_id: number;
+  name: string;
+  attending: string;
+  bringing_guests: string;
+  guest_count: number;
+  guest_names: string | null;
+  items_bringing: string | null;
+  created_at?: string;
+}
+
 async function connectToDatabase() {
   try {
     // Database file will be in the app directory
@@ -216,7 +228,7 @@ app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
     const rows = await db.all('SELECT * FROM rsvps WHERE event_id = ?', [eventId]);
     
     // Parse JSON arrays in each RSVP
-    const parsedRows = rows.map(rsvp => {
+    const parsedRows = rows.map((rsvp: RSVP) => {
       try {
         return {
           ...rsvp,
