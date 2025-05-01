@@ -256,8 +256,6 @@ const EventAdmin: React.FC = () => {
     try {
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
-        id: rsvpToEdit.id,
-        event_id: event.id,
         name: editForm.name,
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
@@ -267,19 +265,41 @@ const EventAdmin: React.FC = () => {
       };
 
       // Log the data being sent for debugging
-      console.log('Submitting RSVP update:', submissionData);
+      console.log('Submitting RSVP update:', {
+        endpoint: `/api/events/${slug}/rsvps/${rsvpToEdit.id}`,
+        data: submissionData
+      });
 
       try {
+        // First try to get the current RSVP to verify the endpoint
+        const checkResponse = await axios.get(`/api/events/${slug}/rsvps`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        console.log('Current RSVPs:', checkResponse.data);
+
         // Update the RSVP
-        const response = await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData, {
+        const response = await axios({
+          method: 'put',
+          url: `/api/events/${slug}/rsvps/${rsvpToEdit.id}`,
+          data: submissionData,
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
+          },
+          validateStatus: (status) => {
+            return status >= 200 && status < 300;
           }
         });
         
         // Log the response for debugging
-        console.log('Server response:', response.data);
+        console.log('Server response:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: response.data,
+          headers: response.headers
+        });
 
         if (!response.data) {
           throw new Error('Server returned empty response');
@@ -288,6 +308,8 @@ const EventAdmin: React.FC = () => {
         // Create updated RSVP object
         const updatedRsvp: RSVP = {
           ...submissionData,
+          id: rsvpToEdit.id,
+          event_id: event.id,
           items_bringing: editForm.items_bringing // Keep as array in local state
         };
         
@@ -343,8 +365,17 @@ const EventAdmin: React.FC = () => {
         setEditDialogOpen(false);
         setRsvpToEdit(null);
 
-        // Immediately fetch updated RSVPs to ensure state is in sync
-        fetchEventAndRsvps();
+        // Verify the update was successful
+        const verifyResponse = await axios.get(`/api/events/${slug}/rsvps`, {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        console.log('Verification response:', verifyResponse.data);
+
+        if (!verifyResponse.data.some((r: RSVP) => r.id === rsvpToEdit.id)) {
+          throw new Error('Update verification failed');
+        }
 
       } catch (error) {
         console.error('Failed to update RSVP:', error);
@@ -352,23 +383,25 @@ const EventAdmin: React.FC = () => {
           console.error('Server error details:', {
             status: error.response?.status,
             statusText: error.response?.statusText,
-            data: error.response?.data
+            data: error.response?.data,
+            headers: error.response?.headers
           });
           
-          // If we get a 404, the RSVP might have been deleted
           if (error.response?.status === 404) {
             setError('This RSVP no longer exists. The page will refresh.');
-            await fetchEventAndRsvps(); // Refresh the data
+            await fetchEventAndRsvps();
             setEditDialogOpen(false);
             return;
           }
         }
-        throw error; // Re-throw to be caught by outer catch block
+        throw error;
       }
 
     } catch (error) {
       console.error('Error in handleEditSubmit:', error);
       setError('Failed to update RSVP. Please try again.');
+      // Refresh the data to ensure we're in sync with the server
+      await fetchEventAndRsvps();
     }
   };
 
