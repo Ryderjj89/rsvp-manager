@@ -7,6 +7,7 @@ export interface Event {
   slug: string;
   created_at: string;
   needed_items: string[];
+  wallpaper?: string;
 }
 
 export interface Rsvp {
