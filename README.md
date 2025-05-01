@@ -4,23 +4,36 @@ A modern event RSVP management system with customizable backgrounds and item coo
 
 ## Features
 
-- User-friendly RSVP interface
-- Comprehensive event management
-  - Create and manage events
+- Event Creation and Management
+  - Create and manage events with title, description, date, time, and location
+  - Set optional RSVP cut-off dates to automatically close registrations
+  - Upload custom wallpapers to personalize event pages
   - Track RSVPs and guest counts
-  - Set RSVP cut-off dates to automatically close registrations
-  - Coordinate needed items and track who's bringing what
-  - Customizable event backgrounds/wallpapers
-- Real-time item status tracking
-  - See what items are still needed
-  - Track claimed items
+  - Comprehensive admin interface for event management
+
+- Item Coordination
+  - Create and manage lists of needed items for events
+  - Real-time tracking of claimed vs needed items
   - Prevent duplicate item claims
-- Guest management
-  - Track guest attendance
+  - Allow attendees to bring additional items not on the list
+  - Remove items that are no longer needed
+
+- Guest Management
+  - Track attendance status (yes/no/maybe)
   - Support for bringing additional guests
-  - Guest names tracking
-- Modern, responsive UI
-- Containerized deployment
+  - Keep track of guest names
+  - View all RSVPs and items being brought
+
+- Modern, Responsive UI
+  - Clean, intuitive interface
+  - Mobile-friendly design
+  - Real-time updates
+  - Customizable event backgrounds
+
+- Containerized Deployment
+  - Docker support
+  - Easy deployment and scaling
+  - Consistent environment across installations
 
 ## Tech Stack
 
