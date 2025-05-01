@@ -302,9 +302,18 @@ const EventAdmin: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
+        width: '100%',
         backgroundImage: event?.wallpaper ? `url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflowY: 'auto',
         py: 4,
       }}
     >
