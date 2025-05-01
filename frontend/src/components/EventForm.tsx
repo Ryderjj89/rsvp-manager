@@ -8,8 +8,10 @@ import {
   Container,
   Paper,
   Chip,
-  Input,
+  IconButton,
 } from '@mui/material';
+import WallpaperIcon from '@mui/icons-material/Wallpaper';
+import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 
 interface FormData {
@@ -33,12 +35,18 @@ const EventForm: React.FC = () => {
   const [currentItem, setCurrentItem] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleWallpaperClick = () => {
+    fileInputRef.current?.click();
   };
 
   const handleWallpaperChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,21 +163,45 @@ const EventForm: React.FC = () => {
             variant="outlined"
             required
           />
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="subtitle1">Event Wallpaper</Typography>
-            <Input
-              type="file"
-              onChange={handleWallpaperChange}
-              inputProps={{
-                accept: 'image/jpeg,image/png,image/gif'
-              }}
-            />
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Event Wallpaper
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Button
+                variant="outlined"
+                component="span"
+                startIcon={<WallpaperIcon />}
+                onClick={handleWallpaperClick}
+                sx={{ flexGrow: 1 }}
+              >
+                {wallpaper ? 'Change Wallpaper' : 'Upload Wallpaper'}
+              </Button>
+              {wallpaper && (
+                <IconButton 
+                  color="error" 
+                  onClick={() => setWallpaper(null)}
+                  size="small"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              )}
+            </Box>
             {wallpaper && (
-              <Typography variant="body2" color="textSecondary">
-                Selected file: {wallpaper.name}
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Selected: {wallpaper.name}
               </Typography>
             )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleWallpaperChange}
+              accept="image/jpeg,image/png,image/gif"
+              style={{ display: 'none' }}
+            />
           </Box>
+
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="subtitle1">Needed Items</Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -200,23 +232,16 @@ const EventForm: React.FC = () => {
               ))}
             </Box>
           </Box>
-          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              size="large"
-            >
-              Create Event
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/')}
-              size="large"
-            >
-              Cancel
-            </Button>
-          </Box>
+
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            size="large"
+            sx={{ mt: 2 }}
+          >
+            Create Event
+          </Button>
         </Box>
       </Paper>
     </Container>
