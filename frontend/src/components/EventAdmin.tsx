@@ -247,12 +247,23 @@ const EventAdmin: React.FC = () => {
       });
     } else if (name === 'guest_count') {
       const newCount = Math.max(0, parseInt(value) || 0);
-      setEditForm(prev => ({
-        ...prev,
-        guest_count: newCount,
-        // Adjust guest_names array size to match new count
-        guest_names: prev.guest_names.slice(0, newCount).concat(Array(Math.max(0, newCount - prev.guest_names.length)).fill(''))
-      }));
+      setEditForm(prev => {
+        // Create new guest names array preserving existing names
+        const newGuestNames = [...prev.guest_names];
+        // If increasing size, add empty strings for new slots
+        while (newGuestNames.length < newCount) {
+          newGuestNames.push('');
+        }
+        // If decreasing size, truncate the array
+        while (newGuestNames.length > newCount) {
+          newGuestNames.pop();
+        }
+        return {
+          ...prev,
+          guest_count: newCount,
+          guest_names: newGuestNames
+        };
+      });
     } else {
       setEditForm(prev => ({
         ...prev,
@@ -281,13 +292,13 @@ const EventAdmin: React.FC = () => {
         bringing_guests: value as 'yes' | 'no',
         // If changing to 'yes', set guest count to 1 and initialize one empty name field
         guest_count: value === 'yes' ? 1 : 0,
-        // Clear guest names if changing to 'no', otherwise keep existing or initialize new
+        // Clear guest names if changing to 'no', otherwise initialize with empty string or keep existing
         guest_names: value === 'no' ? [] : (value === 'yes' ? [''] : prev.guest_names)
       }));
     } else {
-      setEditForm((prev: typeof editForm) => ({
+      setEditForm(prev => ({
         ...prev,
-        [name as string]: value,
+        [name]: value
       }));
     }
   };
@@ -305,13 +316,18 @@ const EventAdmin: React.FC = () => {
     if (!rsvpToEdit || !event) return;
     
     try {
+      // Filter out empty guest names
+      const filteredGuestNames = editForm.guest_names
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+      
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
         name: editForm.name,
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
-        guest_count: parseInt(editForm.guest_count.toString(), 10),
-        guest_names: editForm.guest_names.filter(name => name.trim()).join(', '), // Join non-empty names
+        guest_count: editForm.bringing_guests === 'yes' ? Math.max(1, parseInt(editForm.guest_count.toString(), 10)) : 0,
+        guest_names: filteredGuestNames,
         items_bringing: JSON.stringify(editForm.items_bringing),
         event_id: event.id
       };
@@ -345,6 +361,7 @@ const EventAdmin: React.FC = () => {
         const updatedRsvp: RSVP = {
           ...rsvpToEdit,
           ...submissionData,
+          guest_names: filteredGuestNames,
           items_bringing: editForm.items_bringing // Keep as array in local state
         };
         

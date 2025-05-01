@@ -361,13 +361,19 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
     // Parse guest_names if it's a string
     let parsedGuestNames: string[] = [];
     try {
-      if (typeof guest_names === 'string') {
+      if (typeof guest_names === 'string' && guest_names.includes('[')) {
+        // If it's a JSON string array
         parsedGuestNames = JSON.parse(guest_names);
+      } else if (typeof guest_names === 'string') {
+        // If it's a comma-separated string
+        parsedGuestNames = guest_names.split(',').map(name => name.trim()).filter(name => name);
       } else if (Array.isArray(guest_names)) {
-        parsedGuestNames = guest_names;
+        // If it's already an array
+        parsedGuestNames = guest_names.filter(name => name && name.trim());
       }
     } catch (e) {
       console.error('Error parsing guest_names:', e);
+      parsedGuestNames = [];
     }
 
     // Update the RSVP
