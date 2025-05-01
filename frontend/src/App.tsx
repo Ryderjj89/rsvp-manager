@@ -61,10 +61,7 @@ const App: React.FC = () => {
         <Box
           sx={{
             minHeight: '100vh',
-            backgroundImage: 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundAttachment: 'fixed',
+            backgroundColor: 'rgb(25, 28, 34)',
           }}
         >
           <Container maxWidth="lg" sx={{ py: 4 }}>

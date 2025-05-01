@@ -460,12 +460,12 @@ const EventAdmin: React.FC = () => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundImage: event?.wallpaper ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
+        backgroundImage: event?.wallpaper ? `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${event.wallpaper})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundAttachment: 'fixed',
-        backgroundColor: '#000',
+        backgroundColor: event?.wallpaper ? '#000' : 'rgb(25, 28, 34)',
         overflowY: 'auto',
       }}
     >
