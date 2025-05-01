@@ -143,3 +143,7 @@ This configuration will:
 - Properly manage cookies and headers for the authentication process
 
 Note: Replace `<YOUR_AUTHENTIK_URL>` with your actual Authentik instance URL.
+
+## License
+
+MIT
