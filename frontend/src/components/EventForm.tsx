@@ -206,11 +206,11 @@ const EventForm: React.FC = () => {
                 onClick={handleWallpaperClick}
                 sx={{ 
                   flexGrow: 1,
-                  borderColor: 'rgba(255, 255, 255, 0.23)',
-                  color: 'rgba(255, 255, 255, 0.9)',
+                  borderColor: '#64b5f6',
+                  color: '#64b5f6',
                   '&:hover': {
-                    borderColor: 'rgba(255, 255, 255, 0.4)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    borderColor: '#90caf9',
+                    backgroundColor: 'rgba(100, 181, 246, 0.08)',
                   }
                 }}
               >
