@@ -193,9 +193,9 @@ const EventAdmin: React.FC = () => {
 
   const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditForm((prev: typeof editForm) => ({
+    setEditForm(prev => ({
       ...prev,
-      [name]: value,
+      [name]: name === 'guest_count' ? Math.max(0, parseInt(value) || 0) : value
     }));
   };
 
@@ -222,18 +222,22 @@ const EventAdmin: React.FC = () => {
     try {
       const submissionData = {
         ...editForm,
+        guest_count: parseInt(editForm.guest_count.toString(), 10), // Ensure guest_count is a number
         items_bringing: JSON.stringify(editForm.items_bringing)
       };
-      await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
+
+      const response = await axios.put(`/api/events/${slug}/rsvps/${rsvpToEdit.id}`, submissionData);
+      
+      // Update the local state with the response data
+      const updatedRsvp = {
+        ...response.data,
+        items_bringing: editForm.items_bringing // Keep as array in local state
+      };
       
       // Update the local state
       const updatedRsvps = rsvps.map((r: RSVP) => {
         if (r.id === rsvpToEdit.id) {
-          return {
-            ...r,
-            ...editForm,
-            items_bringing: editForm.items_bringing // Keep as array in local state
-          };
+          return updatedRsvp;
         }
         return r;
       });
@@ -282,6 +286,7 @@ const EventAdmin: React.FC = () => {
       setEditDialogOpen(false);
       setRsvpToEdit(null);
     } catch (error) {
+      console.error('Failed to update RSVP:', error);
       setError('Failed to update RSVP');
     }
   };
