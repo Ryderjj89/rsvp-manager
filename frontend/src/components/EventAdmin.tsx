@@ -87,7 +87,8 @@ const EventAdmin: React.FC = () => {
     description: '',
     location: '',
     date: '',
-    rsvp_cutoff_date: ''
+    rsvp_cutoff_date: '',
+    wallpaper: null as File | null
   });
 
   useEffect(() => {
@@ -378,7 +379,8 @@ const EventAdmin: React.FC = () => {
       description: event.description,
       location: event.location,
       date: event.date.slice(0, 16), // Format date for datetime-local input
-      rsvp_cutoff_date: event.rsvp_cutoff_date ? event.rsvp_cutoff_date.slice(0, 16) : ''
+      rsvp_cutoff_date: event.rsvp_cutoff_date ? event.rsvp_cutoff_date.slice(0, 16) : '',
+      wallpaper: null
     });
     setUpdateInfoDialogOpen(true);
   };
@@ -387,12 +389,29 @@ const EventAdmin: React.FC = () => {
     if (!event) return;
     
     try {
+      let updatedWallpaper = event.wallpaper;
+
+      // Handle wallpaper upload if a new file was selected
+      if (updateForm.wallpaper) {
+        const formData = new FormData();
+        formData.append('wallpaper', updateForm.wallpaper);
+        
+        const uploadResponse = await axios.post(`/api/upload/wallpaper`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        updatedWallpaper = uploadResponse.data.path;
+      }
+      
       await axios.put(`/api/events/${slug}`, {
         ...event,
         description: updateForm.description,
         location: updateForm.location,
         date: updateForm.date,
-        rsvp_cutoff_date: updateForm.rsvp_cutoff_date
+        rsvp_cutoff_date: updateForm.rsvp_cutoff_date,
+        wallpaper: updatedWallpaper
       });
       
       setEvent(prev => prev ? {
@@ -400,12 +419,22 @@ const EventAdmin: React.FC = () => {
         description: updateForm.description,
         location: updateForm.location,
         date: updateForm.date,
-        rsvp_cutoff_date: updateForm.rsvp_cutoff_date
+        rsvp_cutoff_date: updateForm.rsvp_cutoff_date,
+        wallpaper: updatedWallpaper
       } : null);
       
       setUpdateInfoDialogOpen(false);
     } catch (error) {
       setError('Failed to update event information');
+    }
+  };
+
+  const handleWallpaperChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setUpdateForm(prev => ({
+        ...prev,
+        wallpaper: e.target.files![0]
+      }));
     }
   };
 
@@ -884,6 +913,48 @@ const EventAdmin: React.FC = () => {
                   shrink: true,
                 }}
               />
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Wallpaper
+                </Typography>
+                {event.wallpaper && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Current wallpaper:
+                    </Typography>
+                    <Box
+                      component="img"
+                      src={event.wallpaper}
+                      alt="Current wallpaper"
+                      sx={{
+                        width: '100%',
+                        height: 120,
+                        objectFit: 'cover',
+                        borderRadius: 1,
+                      }}
+                    />
+                  </Box>
+                )}
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  sx={{ mt: 1 }}
+                >
+                  {updateForm.wallpaper ? 'Change Wallpaper' : (event.wallpaper ? 'Replace Wallpaper' : 'Upload Wallpaper')}
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleWallpaperChange}
+                  />
+                </Button>
+                {updateForm.wallpaper && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Selected file: {updateForm.wallpaper.name}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           </DialogContent>
           <DialogActions>
