@@ -18,6 +18,7 @@ import {
   OutlinedInput,
   Chip,
 } from '@mui/material';
+import { Event } from '../types';
 
 interface RSVPFormData {
   name: string;
@@ -49,23 +50,18 @@ const RSVPForm: React.FC = () => {
     const fetchEventDetails = async () => {
       try {
         const [eventResponse, rsvpsResponse] = await Promise.all([
-          axios.get(`/api/events/${slug}`),
+          axios.get<Event>(`/api/events/${slug}`),
           axios.get(`/api/events/${slug}/rsvps`)
         ]);
         
         // Process needed items
         let items: string[] = [];
         if (eventResponse.data.needed_items) {
-          try {
-            items = typeof eventResponse.data.needed_items === 'string'
+          items = Array.isArray(eventResponse.data.needed_items) 
+            ? eventResponse.data.needed_items 
+            : typeof eventResponse.data.needed_items === 'string'
               ? JSON.parse(eventResponse.data.needed_items)
-              : Array.isArray(eventResponse.data.needed_items)
-                ? eventResponse.data.needed_items
-                : [];
-          } catch (e) {
-            console.error('Error parsing needed_items:', e);
-            items = [];
-          }
+              : [];
         }
 
         // Get all claimed items from existing RSVPs
@@ -74,26 +70,18 @@ const RSVPForm: React.FC = () => {
           try {
             let rsvpItems: string[] = [];
             if (typeof rsvp.items_bringing === 'string') {
-              try {
-                const parsed = JSON.parse(rsvp.items_bringing);
-                rsvpItems = Array.isArray(parsed) ? parsed : [];
-              } catch (e) {
-                console.error('Error parsing items_bringing JSON:', e);
-                rsvpItems = [];
-              }
+              rsvpItems = JSON.parse(rsvp.items_bringing);
             } else if (Array.isArray(rsvp.items_bringing)) {
               rsvpItems = rsvp.items_bringing;
             }
             
-            if (Array.isArray(rsvpItems)) {
-              rsvpItems.forEach((item: string) => claimed.add(item));
-            }
+            rsvpItems.forEach((item: string) => claimed.add(item));
           } catch (e) {
             console.error('Error processing RSVP items:', e);
           }
         });
         
-        // Filter out claimed items
+        // Filter out claimed items from available items
         const availableItems = items.filter(item => !claimed.has(item));
         
         setNeededItems(availableItems);
@@ -153,17 +141,11 @@ const RSVPForm: React.FC = () => {
       // Process needed items
       let items: string[] = [];
       if (eventResponse.data.needed_items) {
-        try {
-          if (typeof eventResponse.data.needed_items === 'string') {
-            const parsed = JSON.parse(eventResponse.data.needed_items);
-            items = Array.isArray(parsed) ? parsed : [];
-          } else if (Array.isArray(eventResponse.data.needed_items)) {
-            items = eventResponse.data.needed_items;
-          }
-        } catch (e) {
-          console.error('Error parsing needed_items:', e);
-          items = [];
-        }
+        items = Array.isArray(eventResponse.data.needed_items) 
+          ? eventResponse.data.needed_items 
+          : typeof eventResponse.data.needed_items === 'string'
+            ? JSON.parse(eventResponse.data.needed_items)
+            : [];
       }
       
       // Get all claimed items from existing RSVPs including the new submission
@@ -179,12 +161,7 @@ const RSVPForm: React.FC = () => {
         try {
           let rsvpItems: string[] = [];
           if (typeof rsvp.items_bringing === 'string') {
-            try {
-              const parsed = JSON.parse(rsvp.items_bringing);
-              rsvpItems = Array.isArray(parsed) ? parsed : [];
-            } catch (e) {
-              console.error('Error parsing items_bringing JSON:', e);
-            }
+            rsvpItems = JSON.parse(rsvp.items_bringing);
           } else if (Array.isArray(rsvp.items_bringing)) {
             rsvpItems = rsvp.items_bringing;
           }

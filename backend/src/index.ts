@@ -4,6 +4,8 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import dotenv from 'dotenv';
 import path from 'path';
+import multer from 'multer';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -45,26 +47,62 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
-    res.json(rows[0]);
+
+    // Parse needed_items from JSON string to array
+    const event = rows[0];
+    try {
+      event.needed_items = event.needed_items ? JSON.parse(event.needed_items) : [];
+    } catch (e) {
+      console.error('Error parsing needed_items:', e);
+      event.needed_items = [];
+    }
+
+    res.json(event);
   } catch (error) {
     console.error('Error fetching event:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-app.post('/api/events', async (req: Request, res: Response) => {
+app.post('/api/events', multer().single('wallpaper'), async (req: Request, res: Response) => {
   try {
     const { title, description, date, location, needed_items } = req.body;
+    const wallpaperPath = req.file ? `/uploads/wallpapers/${req.file.filename}` : null;
+    
     // Generate a slug from the title
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     
+    // Ensure needed_items is properly formatted
+    let parsedNeededItems: string[] = [];
+    try {
+      if (typeof needed_items === 'string') {
+        parsedNeededItems = JSON.parse(needed_items);
+      } else if (Array.isArray(needed_items)) {
+        parsedNeededItems = needed_items;
+      }
+    } catch (e) {
+      console.error('Error parsing needed_items:', e);
+    }
+    
     const result = await db.run(
-      'INSERT INTO events (title, description, date, location, slug, needed_items) VALUES (?, ?, ?, ?, ?, ?)',
-      [title, description, date, location, slug, JSON.stringify(needed_items || [])]
+      'INSERT INTO events (title, description, date, location, slug, needed_items, wallpaper) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [title, description, date, location, slug, JSON.stringify(parsedNeededItems), wallpaperPath]
     );
-    res.status(201).json({ ...result, slug });
+    
+    res.status(201).json({ 
+      ...result, 
+      slug,
+      wallpaper: wallpaperPath,
+      needed_items: parsedNeededItems
+    });
   } catch (error) {
     console.error('Error creating event:', error);
+    if (req.file) {
+      // Clean up uploaded file if there was an error
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
