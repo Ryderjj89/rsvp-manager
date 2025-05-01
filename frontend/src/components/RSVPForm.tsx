@@ -45,6 +45,7 @@ const RSVPForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const [event, setEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -86,6 +87,7 @@ const RSVPForm: React.FC = () => {
         
         setNeededItems(availableItems);
         setClaimedItems(Array.from(claimed));
+        setEvent(eventResponse.data);
       } catch (error) {
         console.error('Error fetching event details:', error);
         setError('Failed to load event details');
@@ -211,127 +213,137 @@ const RSVPForm: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="sm">
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h4" component="h2" gutterBottom color="primary" align="center">
-          RSVP Form
-        </Typography>
-        
-        {error && (
-          <Typography color="error" align="center" sx={{ mb: 2 }}>
-            {error}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundImage: event?.wallpaper ? `url(${event.wallpaper})` : 'url(https://www.rydertech.us/backgrounds/space1.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        py: 4,
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+          <Typography variant="h4" component="h2" gutterBottom color="primary" align="center">
+            RSVP Form
           </Typography>
-        )}
-
-        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <TextField
-            label="Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            fullWidth
-            variant="outlined"
-          />
-
-          <FormControl fullWidth>
-            <InputLabel>Are you attending?</InputLabel>
-            <Select
-              name="attending"
-              value={formData.attending}
-              onChange={handleSelectChange}
-              label="Are you attending?"
-              required
-            >
-              <MenuItem value="yes">Yes</MenuItem>
-              <MenuItem value="no">No</MenuItem>
-            </Select>
-          </FormControl>
-
-          {formData.attending === 'yes' && (
-            <>
-              <FormControl fullWidth>
-                <InputLabel>Are you bringing any guests?</InputLabel>
-                <Select
-                  name="bringing_guests"
-                  value={formData.bringing_guests}
-                  onChange={handleSelectChange}
-                  label="Are you bringing any guests?"
-                >
-                  <MenuItem value="yes">Yes</MenuItem>
-                  <MenuItem value="no">No</MenuItem>
-                </Select>
-              </FormControl>
-
-              {formData.bringing_guests === 'yes' && (
-                <>
-                  <TextField
-                    label="Number of Guests"
-                    name="guest_count"
-                    type="number"
-                    value={formData.guest_count}
-                    onChange={handleChange}
-                    fullWidth
-                    variant="outlined"
-                    inputProps={{ min: 1 }}
-                  />
-
-                  <TextField
-                    label="Guest Names"
-                    name="guest_names"
-                    value={formData.guest_names}
-                    onChange={handleChange}
-                    multiline
-                    rows={3}
-                    fullWidth
-                    variant="outlined"
-                    placeholder="Please list the names of your guests"
-                  />
-                </>
-              )}
-
-              {neededItems.length > 0 && (
-                <FormControl fullWidth>
-                  <InputLabel>What items are you bringing?</InputLabel>
-                  <Select
-                    multiple
-                    name="items_bringing"
-                    value={formData.items_bringing}
-                    onChange={handleItemsChange}
-                    input={<OutlinedInput label="What items are you bringing?" />}
-                    renderValue={(selected) => (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {selected.map((value) => (
-                          <Chip key={value} label={value} />
-                        ))}
-                      </Box>
-                    )}
-                  >
-                    {neededItems.map((item) => (
-                      <MenuItem key={item} value={item}>
-                        <Checkbox checked={formData.items_bringing.includes(item)} />
-                        <ListItemText primary={item} />
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-            </>
+          
+          {error && (
+            <Typography color="error" align="center" sx={{ mb: 2 }}>
+              {error}
+            </Typography>
           )}
 
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            size="large"
-            disabled={isSubmitting}
-            sx={{ mt: 2 }}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              fullWidth
+              variant="outlined"
+            />
+
+            <FormControl fullWidth>
+              <InputLabel>Are you attending?</InputLabel>
+              <Select
+                name="attending"
+                value={formData.attending}
+                onChange={handleSelectChange}
+                label="Are you attending?"
+                required
+              >
+                <MenuItem value="yes">Yes</MenuItem>
+                <MenuItem value="no">No</MenuItem>
+              </Select>
+            </FormControl>
+
+            {formData.attending === 'yes' && (
+              <>
+                <FormControl fullWidth>
+                  <InputLabel>Are you bringing any guests?</InputLabel>
+                  <Select
+                    name="bringing_guests"
+                    value={formData.bringing_guests}
+                    onChange={handleSelectChange}
+                    label="Are you bringing any guests?"
+                  >
+                    <MenuItem value="yes">Yes</MenuItem>
+                    <MenuItem value="no">No</MenuItem>
+                  </Select>
+                </FormControl>
+
+                {formData.bringing_guests === 'yes' && (
+                  <>
+                    <TextField
+                      label="Number of Guests"
+                      name="guest_count"
+                      type="number"
+                      value={formData.guest_count}
+                      onChange={handleChange}
+                      fullWidth
+                      variant="outlined"
+                      inputProps={{ min: 1 }}
+                    />
+
+                    <TextField
+                      label="Guest Names"
+                      name="guest_names"
+                      value={formData.guest_names}
+                      onChange={handleChange}
+                      multiline
+                      rows={3}
+                      fullWidth
+                      variant="outlined"
+                      placeholder="Please list the names of your guests"
+                    />
+                  </>
+                )}
+
+                {neededItems.length > 0 && (
+                  <FormControl fullWidth>
+                    <InputLabel>What items are you bringing?</InputLabel>
+                    <Select
+                      multiple
+                      name="items_bringing"
+                      value={formData.items_bringing}
+                      onChange={handleItemsChange}
+                      input={<OutlinedInput label="What items are you bringing?" />}
+                      renderValue={(selected) => (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {selected.map((value) => (
+                            <Chip key={value} label={value} />
+                          ))}
+                        </Box>
+                      )}
+                    >
+                      {neededItems.map((item) => (
+                        <MenuItem key={item} value={item}>
+                          <Checkbox checked={formData.items_bringing.includes(item)} />
+                          <ListItemText primary={item} />
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
+              </>
+            )}
+
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              size="large"
+              disabled={isSubmitting}
+              sx={{ mt: 2 }}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
