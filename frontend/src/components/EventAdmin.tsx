@@ -42,7 +42,7 @@ interface RSVP {
   attending: 'yes' | 'no' | 'maybe';
   bringing_guests: 'yes' | 'no';
   guest_count: number;
-  guest_names: string;
+  guest_names: string[] | string;
   items_bringing: string[] | string;
   event_id?: number;
   created_at?: string;
@@ -66,7 +66,7 @@ interface EditFormData {
   attending: 'yes' | 'no' | 'maybe';
   bringing_guests: 'yes' | 'no';
   guest_count: number;
-  guest_names: string;
+  guest_names: string[];
   items_bringing: string[];
 }
 
@@ -88,7 +88,7 @@ const EventAdmin: React.FC = () => {
     attending: 'yes',
     bringing_guests: 'no',
     guest_count: 0,
-    guest_names: '',
+    guest_names: [],
     items_bringing: []
   });
   const [deleteEventDialogOpen, setDeleteEventDialogOpen] = useState(false);
@@ -217,7 +217,7 @@ const EventAdmin: React.FC = () => {
       attending: rsvp.attending || 'yes',
       bringing_guests: rsvp.bringing_guests || 'no',
       guest_count: typeof rsvp.guest_count === 'number' ? rsvp.guest_count : 0,
-      guest_names: rsvp.guest_names || '',
+      guest_names: rsvp.guest_names ? rsvp.guest_names.split(',').map(name => name.trim()) : [],
       items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing :
         typeof rsvp.items_bringing === 'string' ? 
           (rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : []) : []
@@ -227,10 +227,31 @@ const EventAdmin: React.FC = () => {
 
   const handleTextInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditForm(prev => ({
-      ...prev,
-      [name]: name === 'guest_count' ? Math.max(0, parseInt(value) || 0) : value
-    }));
+    if (name.startsWith('guest_name_')) {
+      // Handle individual guest name changes
+      const index = parseInt(name.split('_')[2]);
+      setEditForm(prev => {
+        const newGuestNames = [...prev.guest_names];
+        newGuestNames[index] = value;
+        return {
+          ...prev,
+          guest_names: newGuestNames
+        };
+      });
+    } else if (name === 'guest_count') {
+      const newCount = Math.max(0, parseInt(value) || 0);
+      setEditForm(prev => ({
+        ...prev,
+        guest_count: newCount,
+        // Adjust guest_names array size to match new count
+        guest_names: prev.guest_names.slice(0, newCount).concat(Array(Math.max(0, newCount - prev.guest_names.length)).fill(''))
+      }));
+    } else {
+      setEditForm(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
@@ -243,7 +264,7 @@ const EventAdmin: React.FC = () => {
         attending: value as 'no' | 'maybe',
         bringing_guests: 'no',
         guest_count: 0,
-        guest_names: '',
+        guest_names: [],
         items_bringing: [] // Clear items when not attending
       }));
     } else if (name === 'bringing_guests') {
@@ -251,10 +272,10 @@ const EventAdmin: React.FC = () => {
       setEditForm(prev => ({
         ...prev,
         bringing_guests: value as 'yes' | 'no',
-        // If changing to 'yes', set guest count to 1, otherwise reset to 0
+        // If changing to 'yes', set guest count to 1 and initialize one empty name field
         guest_count: value === 'yes' ? 1 : 0,
-        // Clear guest names if changing to 'no'
-        guest_names: value === 'no' ? '' : prev.guest_names
+        // Clear guest names if changing to 'no', otherwise keep existing or initialize new
+        guest_names: value === 'no' ? [] : (value === 'yes' ? [''] : prev.guest_names)
       }));
     } else {
       setEditForm((prev: typeof editForm) => ({
@@ -283,9 +304,9 @@ const EventAdmin: React.FC = () => {
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
         guest_count: parseInt(editForm.guest_count.toString(), 10),
-        guest_names: editForm.guest_names,
+        guest_names: editForm.guest_names.filter(name => name.trim()).join(', '), // Join non-empty names
         items_bringing: JSON.stringify(editForm.items_bringing),
-        event_id: event.id  // Ensure event_id is included
+        event_id: event.id
       };
 
       console.log('Submitting RSVP update:', {
@@ -749,7 +770,11 @@ const EventAdmin: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {rsvp.bringing_guests === 'yes' ? 
-                          `${rsvp.guest_count || 0} (${rsvp.guest_names ? rsvp.guest_names.replace(/\s+/g, ', ') : 'No names provided'})` : 
+                          `${rsvp.guest_count || 0} (${Array.isArray(rsvp.guest_names) ? 
+                            rsvp.guest_names.join(', ') : 
+                            typeof rsvp.guest_names === 'string' ? 
+                              rsvp.guest_names.replace(/\s+/g, ', ') : 
+                              'No names provided'})` : 
                           'No'
                         }
                       </TableCell>
@@ -877,15 +902,17 @@ const EventAdmin: React.FC = () => {
                       onChange={handleTextInputChange}
                       fullWidth
                     />
-                    <TextField
-                      label="Guest Names"
-                      name="guest_names"
-                      value={editForm.guest_names}
-                      onChange={handleTextInputChange}
-                      fullWidth
-                      multiline
-                      rows={2}
-                    />
+                    {/* Individual guest name fields */}
+                    {Array.from({ length: editForm.guest_count }, (_, index) => (
+                      <TextField
+                        key={`guest_name_${index}`}
+                        label={`Guest ${index + 1} Name`}
+                        name={`guest_name_${index}`}
+                        value={editForm.guest_names[index] || ''}
+                        onChange={handleTextInputChange}
+                        fullWidth
+                      />
+                    ))}
                   </>
                 )}
                 <FormControl fullWidth>
