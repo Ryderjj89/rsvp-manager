@@ -154,8 +154,9 @@ const RSVPForm: React.FC = () => {
       const claimed = new Set<string>();
       
       // First add items from the new submission
-      if (Array.isArray(response.data.items_bringing)) {
-        response.data.items_bringing.forEach((item: string) => claimed.add(item));
+      const newRsvpItems = response.data.items_bringing || [];
+      if (Array.isArray(newRsvpItems)) {
+        newRsvpItems.forEach((item: string) => claimed.add(item));
       }
       
       // Then add items from existing RSVPs
@@ -163,14 +164,17 @@ const RSVPForm: React.FC = () => {
         try {
           let rsvpItems: string[] = [];
           if (typeof rsvp.items_bringing === 'string') {
-            rsvpItems = JSON.parse(rsvp.items_bringing);
+            try {
+              rsvpItems = JSON.parse(rsvp.items_bringing);
+            } catch (e) {
+              console.error('Error parsing items_bringing JSON:', e);
+              rsvpItems = [];
+            }
           } else if (Array.isArray(rsvp.items_bringing)) {
             rsvpItems = rsvp.items_bringing;
           }
           
-          if (rsvpItems.length > 0) {
-            rsvpItems.forEach((item: string) => claimed.add(item));
-          }
+          rsvpItems.forEach((item: string) => claimed.add(item));
         } catch (e) {
           console.error('Error processing RSVP items:', e);
         }

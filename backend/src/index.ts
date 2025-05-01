@@ -213,7 +213,18 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [eventId, name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(items_bringing || [])]
     );
-    res.status(201).json(result);
+
+    // Return the complete RSVP data including the parsed items_bringing
+    res.status(201).json({
+      ...result,
+      id: result.lastID,
+      name,
+      attending,
+      bringing_guests,
+      guest_count,
+      guest_names,
+      items_bringing: items_bringing || []
+    });
   } catch (error) {
     console.error('Error creating RSVP:', error);
     res.status(500).json({ error: 'Internal server error' });
