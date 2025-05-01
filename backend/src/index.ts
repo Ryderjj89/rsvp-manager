@@ -339,10 +339,10 @@ app.put('/api/events/:slug', async (req: Request, res: Response) => {
     await db.run(
       'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ? WHERE slug = ?',
       [
-        title || eventRows[0].title,
-        description || eventRows[0].description,
-        date || eventRows[0].date,
-        location || eventRows[0].location,
+        title ?? eventRows[0].title,
+        description === undefined ? eventRows[0].description : description,
+        date ?? eventRows[0].date,
+        location ?? eventRows[0].location,
         JSON.stringify(parsedNeededItems),
         rsvp_cutoff_date !== undefined ? rsvp_cutoff_date : eventRows[0].rsvp_cutoff_date,
         slug
