@@ -414,7 +414,7 @@ const EventAdmin: React.FC = () => {
 
           <Box sx={{ mb: 4 }}>
             <Typography variant="body1" paragraph>
-              {event.description}
+              <strong>Info:</strong> {event.description}
             </Typography>
             <Typography variant="subtitle1" gutterBottom>
               <strong>Location:</strong> {event.location}
