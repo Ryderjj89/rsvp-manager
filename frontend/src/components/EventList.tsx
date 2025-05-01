@@ -112,9 +112,11 @@ const EventList: React.FC = () => {
                       size="small"
                     />
                   </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Info:</strong> {event.description}
-                  </Typography>
+                  {event.description && (
+                    <Typography variant="body2" color="text.secondary">
+                      <strong>Info:</strong> {event.description}
+                    </Typography>
+                  )}
                   <Typography variant="body2" color="text.secondary">
                     <strong>Date:</strong> {new Date(event.date).toLocaleString()}
                   </Typography>
