@@ -235,10 +235,23 @@ const EventAdmin: React.FC = () => {
 
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
-    setEditForm((prev: typeof editForm) => ({
-      ...prev,
-      [name as string]: value,
-    }));
+    
+    if (name === 'attending' && value !== 'yes') {
+      // If not attending, reset all guest-related fields and items
+      setEditForm(prev => ({
+        ...prev,
+        attending: value,
+        bringing_guests: 'no',
+        guest_count: 0,
+        guest_names: '',
+        items_bringing: [] // Clear items when not attending
+      }));
+    } else {
+      setEditForm((prev: typeof editForm) => ({
+        ...prev,
+        [name as string]: value,
+      }));
+    }
   };
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
