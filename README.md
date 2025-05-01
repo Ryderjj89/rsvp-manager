@@ -19,7 +19,7 @@ A modern event RSVP management system with customizable backgrounds and item coo
   - Remove items that are no longer needed
 
 - Guest Management
-  - Track attendance status (yes/no/maybe)
+  - Track attendance status (yes/no)
   - Support for bringing additional guests
   - Keep track of guest names
   - View all RSVPs and items being brought
@@ -81,27 +81,6 @@ A modern event RSVP management system with customizable backgrounds and item coo
    cd ../frontend
    npm start
    ```
-
-### Key Features Explained
-
-#### Event Creation and Management
-- Create events with title, description, date, time, and location
-- Set optional RSVP cut-off dates to automatically close registrations
-- Upload custom wallpapers to personalize event pages
-- Manage RSVPs and track attendance
-
-#### Item Coordination
-- Create a list of needed items for the event
-- Attendees can claim items they'll bring
-- Real-time tracking of claimed vs needed items
-- Prevent duplicate item claims
-- Remove items that are no longer needed
-
-#### RSVP Management
-- Track who's attending
-- Support for bringing additional guests
-- Keep track of guest names
-- Manage what items each person is bringing
 
 ## Authentication with Authentik
 
