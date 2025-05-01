@@ -85,7 +85,17 @@ app.get('/api/events', async (req: Request, res: Response) => {
     const rows = await db.all('SELECT * FROM events');
     
     // Add the full path to wallpapers
-    const events = rows.map(event => ({
+    const events = rows.map((event: { 
+      id: number;
+      title: string;
+      description: string;
+      date: string;
+      location: string;
+      slug: string;
+      needed_items: string | null;
+      wallpaper: string | null;
+      created_at: string;
+    }) => ({
       ...event,
       wallpaper: event.wallpaper ? `/uploads/wallpapers/${event.wallpaper}` : null,
       needed_items: event.needed_items ? JSON.parse(event.needed_items) : []
