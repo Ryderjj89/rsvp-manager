@@ -242,7 +242,7 @@ const EventView: React.FC = () => {
             </Box>
 
             <Typography variant="h6" gutterBottom>
-              RSVPs ({rsvps.length}) | Total Guests: {rsvps.reduce((total, rsvp) => {
+              RSVPs: {rsvps.length} | Total Guests: {rsvps.reduce((total, rsvp) => {
                 // Count the RSVP person as 1 if they're attending
                 const rsvpCount = rsvp.attending === 'yes' ? 1 : 0;
                 // Add their guests if they're bringing any
