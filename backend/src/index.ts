@@ -139,7 +139,7 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
 
 app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
-    const { title, description, date, location, needed_items } = req.body;
+    const { title, description, date, location, needed_items, rsvp_cutoff_date } = req.body;
     const wallpaperPath = req.file ? `${req.file.filename}` : null;
     
     // Generate a slug from the title
@@ -158,15 +158,16 @@ app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, r
     }
     
     const result = await db.run(
-      'INSERT INTO events (title, description, date, location, slug, needed_items, wallpaper) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [title, description, date, location, slug, JSON.stringify(parsedNeededItems), wallpaperPath]
+      'INSERT INTO events (title, description, date, location, slug, needed_items, wallpaper, rsvp_cutoff_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, description, date, location, slug, JSON.stringify(parsedNeededItems), wallpaperPath, rsvp_cutoff_date]
     );
     
     res.status(201).json({ 
       ...result, 
       slug,
       wallpaper: wallpaperPath ? `/uploads/wallpapers/${wallpaperPath}` : null,
-      needed_items: parsedNeededItems
+      needed_items: parsedNeededItems,
+      rsvp_cutoff_date
     });
   } catch (error) {
     console.error('Error creating event:', error);
@@ -301,13 +302,10 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
     }
     
     const eventId = eventRows[0].id;
-    await db.run(
-      'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ? WHERE id = ? AND event_id = ?',
-      [name, attending, bringing_guests, guest_count, guest_names, JSON.stringify(items_bringing || []), id, eventId]
-    );
-    res.status(200).json({ message: 'RSVP updated successfully' });
+    await db.run('DELETE FROM rsvps WHERE id = ? AND event_id = ?', [id, eventId]);
+    res.status(204).send();
   } catch (error) {
-    console.error('Error updating RSVP:', error);
+    console.error('Error deleting RSVP:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -316,7 +314,7 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
 app.put('/api/events/:slug', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const { title, description, date, location, needed_items } = req.body;
+    const { title, description, date, location, needed_items, rsvp_cutoff_date } = req.body;
     
     // Verify the event exists
     const eventRows = await db.all('SELECT * FROM events WHERE slug = ?', [slug]);
@@ -339,13 +337,14 @@ app.put('/api/events/:slug', async (req: Request, res: Response) => {
     
     // Update the event
     await db.run(
-      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ? WHERE slug = ?',
+      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ? WHERE slug = ?',
       [
         title || eventRows[0].title,
         description || eventRows[0].description,
         date || eventRows[0].date,
         location || eventRows[0].location,
         JSON.stringify(parsedNeededItems),
+        rsvp_cutoff_date !== undefined ? rsvp_cutoff_date : eventRows[0].rsvp_cutoff_date,
         slug
       ]
     );
