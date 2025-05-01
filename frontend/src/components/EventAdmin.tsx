@@ -261,68 +261,53 @@ const EventAdmin: React.FC = () => {
         bringing_guests: editForm.bringing_guests,
         guest_count: parseInt(editForm.guest_count.toString(), 10),
         guest_names: editForm.guest_names,
-        items_bringing: JSON.stringify(editForm.items_bringing)
+        items_bringing: JSON.stringify(editForm.items_bringing),
+        event_id: event.id  // Ensure event_id is included
       };
 
-      // Log the data being sent for debugging
       console.log('Submitting RSVP update:', {
         endpoint: `/api/events/${slug}/rsvps/${rsvpToEdit.id}`,
         data: submissionData
       });
 
-      try {
-        // First try to get the current RSVP to verify the endpoint
-        const checkResponse = await axios.get(`/api/events/${slug}/rsvps`, {
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        console.log('Current RSVPs:', checkResponse.data);
-
-        // Update the RSVP
-        const response = await axios({
-          method: 'put',
-          url: `/api/events/${slug}/rsvps/${rsvpToEdit.id}`,
-          data: submissionData,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          validateStatus: (status) => {
-            return status >= 200 && status < 300;
-          }
-        });
-        
-        // Log the response for debugging
-        console.log('Server response:', {
-          status: response.status,
-          statusText: response.statusText,
-          data: response.data,
-          headers: response.headers
-        });
-
-        if (!response.data) {
-          throw new Error('Server returned empty response');
+      // Update the RSVP
+      const response = await axios({
+        method: 'put',
+        url: `/api/events/${slug}/rsvps/${rsvpToEdit.id}`,
+        data: submissionData,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
+      });
+      
+      console.log('Server response:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        headers: response.headers
+      });
 
-        // Create updated RSVP object
+      // Handle successful update (both 200 and 204 responses)
+      if (response.status === 204 || response.status === 200) {
+        // Create updated RSVP object using our submitted data since 204 returns no content
         const updatedRsvp: RSVP = {
+          ...rsvpToEdit,
           ...submissionData,
-          id: rsvpToEdit.id,
-          event_id: event.id,
           items_bringing: editForm.items_bringing // Keep as array in local state
         };
         
         // Update the local state
-        const updatedRsvps = rsvps.map((r: RSVP) => {
-          if (r.id === rsvpToEdit.id) {
-            return updatedRsvp;
-          }
-          return r;
-        });
+        setRsvps(prevRsvps => prevRsvps.map((r: RSVP) => 
+          r.id === rsvpToEdit.id ? updatedRsvp : r
+        ));
 
         // Recalculate claimed items
         const claimed = new Set<string>();
+        const updatedRsvps = rsvps.map((r: RSVP) => 
+          r.id === rsvpToEdit.id ? updatedRsvp : r
+        );
+
         updatedRsvps.forEach((rsvp: RSVP) => {
           let rsvpItems: string[] = [];
           try {
@@ -332,7 +317,6 @@ const EventAdmin: React.FC = () => {
             } else if (Array.isArray(rsvp.items_bringing)) {
               rsvpItems = rsvp.items_bringing;
             }
-            
             rsvpItems.forEach(item => claimed.add(item));
           } catch (e) {
             console.error('Error processing items for RSVP:', e);
@@ -359,49 +343,34 @@ const EventAdmin: React.FC = () => {
         const claimedArray = Array.from(claimed);
         const availableItems = allItems.filter(item => !claimed.has(item));
 
-        setRsvps(updatedRsvps);
         setNeededItems(availableItems);
         setClaimedItems(claimedArray);
         setEditDialogOpen(false);
         setRsvpToEdit(null);
 
-        // Verify the update was successful
-        const verifyResponse = await axios.get(`/api/events/${slug}/rsvps`, {
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        console.log('Verification response:', verifyResponse.data);
-
-        if (!verifyResponse.data.some((r: RSVP) => r.id === rsvpToEdit.id)) {
-          throw new Error('Update verification failed');
-        }
-
-      } catch (error) {
-        console.error('Failed to update RSVP:', error);
-        if (axios.isAxiosError(error)) {
-          console.error('Server error details:', {
-            status: error.response?.status,
-            statusText: error.response?.statusText,
-            data: error.response?.data,
-            headers: error.response?.headers
+        // Verify the update was successful but don't throw error if verification response is empty
+        try {
+          const verifyResponse = await axios.get(`/api/events/${slug}/rsvps`, {
+            headers: {
+              'Accept': 'application/json'
+            }
           });
-          
-          if (error.response?.status === 404) {
-            setError('This RSVP no longer exists. The page will refresh.');
-            await fetchEventAndRsvps();
-            setEditDialogOpen(false);
-            return;
-          }
+          console.log('Verification response:', verifyResponse.data);
+        } catch (verifyError) {
+          console.warn('Verification request failed, but update may still be successful:', verifyError);
         }
-        throw error;
+      } else {
+        throw new Error(`Unexpected response status: ${response.status}`);
       }
 
     } catch (error) {
       console.error('Error in handleEditSubmit:', error);
       setError('Failed to update RSVP. Please try again.');
-      // Refresh the data to ensure we're in sync with the server
-      await fetchEventAndRsvps();
+      
+      // Only refresh data if we get a specific error indicating the RSVP doesn't exist
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        await fetchEventAndRsvps();
+      }
     }
   };
 
