@@ -22,7 +22,7 @@ interface RSVP {
   attending: string;
   bringing_guests: string;
   guest_count: number;
-  guest_names: string;
+  guest_names: string[] | string;
   items_bringing: string[] | string;
 }
 
@@ -273,7 +273,11 @@ const EventView: React.FC = () => {
                       <TableCell>{rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1)}</TableCell>
                       <TableCell>
                         {rsvp.bringing_guests === 'yes' ? 
-                          `${rsvp.guest_count} (${rsvp.guest_names.replace(/\s+/g, ', ')})` : 
+                          `${rsvp.guest_count} (${Array.isArray(rsvp.guest_names) ? 
+                            rsvp.guest_names.join(', ') : 
+                            typeof rsvp.guest_names === 'string' ? 
+                              rsvp.guest_names.replace(/\s+/g, ', ') : 
+                              'No names provided'})` : 
                           'No'
                         }
                       </TableCell>
