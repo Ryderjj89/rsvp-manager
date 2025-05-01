@@ -400,16 +400,33 @@ const EventAdmin: React.FC = () => {
     >
       <Container maxWidth="lg">
         <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Typography variant="h4" component="h2" color="primary">
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h4" component="h2" color="primary" gutterBottom>
               {event.title} - Admin
             </Typography>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/')}
-            >
-              Back to Events
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/')}
+              >
+                Back to Events
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<AddIcon />}
+                onClick={() => setManageItemsDialogOpen(true)}
+              >
+                Manage Items
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setDeleteEventDialogOpen(true)}
+              >
+                Delete Event
+              </Button>
+            </Box>
           </Box>
 
           <Box sx={{ mb: 4 }}>
@@ -426,19 +443,9 @@ const EventAdmin: React.FC = () => {
 
           {/* Add items status section */}
           <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Items Status
-              </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={() => setManageItemsDialogOpen(true)}
-              >
-                Manage Items
-              </Button>
-            </Box>
-            
+            <Typography variant="h6">
+              Items Status
+            </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: '60%' }}>
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
@@ -565,17 +572,6 @@ const EventAdmin: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-            <Button
-              variant="contained"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={() => setDeleteEventDialogOpen(true)}
-            >
-              Delete Event
-            </Button>
-          </Box>
         </Paper>
 
         <Dialog

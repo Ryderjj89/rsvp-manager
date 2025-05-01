@@ -152,16 +152,18 @@ const EventView: React.FC = () => {
     >
       <Container maxWidth="lg">
         <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Typography variant="h4" component="h2" color="primary">
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h4" component="h2" color="primary" gutterBottom>
               {event.title} - RSVPs
             </Typography>
-            <Button
-              variant="outlined"
-              onClick={() => navigate('/')}
-            >
-              Back to Events
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/')}
+              >
+                Back to Events
+              </Button>
+            </Box>
           </Box>
 
           <Box sx={{ mb: 4 }}>
