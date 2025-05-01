@@ -67,20 +67,29 @@ const RSVPForm: React.FC = () => {
 
         // Get all claimed items from existing RSVPs
         const claimed = new Set<string>();
-        rsvpsResponse.data.forEach((rsvp: any) => {
-          try {
-            let rsvpItems: string[] = [];
-            if (typeof rsvp.items_bringing === 'string') {
-              rsvpItems = JSON.parse(rsvp.items_bringing);
-            } else if (Array.isArray(rsvp.items_bringing)) {
-              rsvpItems = rsvp.items_bringing;
+        if (Array.isArray(rsvpsResponse.data)) {
+          rsvpsResponse.data.forEach((rsvp: any) => {
+            try {
+              let rsvpItems: string[] = [];
+              if (typeof rsvp.items_bringing === 'string') {
+                try {
+                  const parsed = JSON.parse(rsvp.items_bringing);
+                  rsvpItems = Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                  console.error('Error parsing items_bringing JSON:', e);
+                }
+              } else if (Array.isArray(rsvp.items_bringing)) {
+                rsvpItems = rsvp.items_bringing;
+              }
+              
+              if (Array.isArray(rsvpItems)) {
+                rsvpItems.forEach((item: string) => claimed.add(item));
+              }
+            } catch (e) {
+              console.error('Error processing RSVP items:', e);
             }
-            
-            rsvpItems.forEach((item: string) => claimed.add(item));
-          } catch (e) {
-            console.error('Error processing RSVP items:', e);
-          }
-        });
+          });
+        }
         
         // Filter out claimed items from available items
         const availableItems = items.filter(item => !claimed.has(item));
@@ -160,25 +169,30 @@ const RSVPForm: React.FC = () => {
       }
       
       // Then add items from existing RSVPs
-      rsvpsResponse.data.forEach((rsvp: { items_bringing: string | string[] }) => {
-        try {
-          let rsvpItems: string[] = [];
-          if (typeof rsvp.items_bringing === 'string') {
-            try {
-              rsvpItems = JSON.parse(rsvp.items_bringing);
-            } catch (e) {
-              console.error('Error parsing items_bringing JSON:', e);
-              rsvpItems = [];
+      if (Array.isArray(rsvpsResponse.data)) {
+        rsvpsResponse.data.forEach((rsvp: { items_bringing: string | string[] }) => {
+          try {
+            let rsvpItems: string[] = [];
+            if (typeof rsvp.items_bringing === 'string') {
+              try {
+                const parsed = JSON.parse(rsvp.items_bringing);
+                rsvpItems = Array.isArray(parsed) ? parsed : [];
+              } catch (e) {
+                console.error('Error parsing items_bringing JSON:', e);
+                rsvpItems = [];
+              }
+            } else if (Array.isArray(rsvp.items_bringing)) {
+              rsvpItems = rsvp.items_bringing;
             }
-          } else if (Array.isArray(rsvp.items_bringing)) {
-            rsvpItems = rsvp.items_bringing;
+            
+            if (Array.isArray(rsvpItems)) {
+              rsvpItems.forEach((item: string) => claimed.add(item));
+            }
+          } catch (e) {
+            console.error('Error processing RSVP items:', e);
           }
-          
-          rsvpItems.forEach((item: string) => claimed.add(item));
-        } catch (e) {
-          console.error('Error processing RSVP items:', e);
-        }
-      });
+        });
+      }
       
       // Filter out claimed items
       const availableItems = items.filter(item => !claimed.has(item));
