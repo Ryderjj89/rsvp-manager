@@ -10,9 +10,11 @@ import {
   CardActions,
   Container,
   Chip,
+  Stack,
 } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
 import axios from 'axios';
 
 interface Event {
@@ -46,12 +48,6 @@ const EventList: React.FC = () => {
     if (!event.rsvp_cutoff_date) return true;
     const cutoffDate = new Date(event.rsvp_cutoff_date);
     return new Date() < cutoffDate;
-  };
-
-  const handleEventClick = (event: Event) => {
-    if (isEventOpen(event)) {
-      navigate(`/rsvp/events/${event.slug}`);
-    }
   };
 
   const handleAdminClick = (event: Event, e: React.MouseEvent) => {
@@ -99,13 +95,11 @@ const EventList: React.FC = () => {
                   height: '100%', 
                   display: 'flex', 
                   flexDirection: 'column',
-                  cursor: isEventOpen(event) ? 'pointer' : 'default',
                   opacity: isEventOpen(event) ? 1 : 0.7,
                   '& .MuiCardContent-root': {
                     padding: 3
                   }
                 }} 
-                onClick={() => handleEventClick(event)}
               >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -133,20 +127,31 @@ const EventList: React.FC = () => {
                     </Typography>
                   )}
                 </CardContent>
-                <CardActions>
+                <CardActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
+                  <Stack direction="row" spacing={1}>
+                    {isEventOpen(event) && (
+                      <Button
+                        size="small"
+                        startIcon={<HowToRegIcon />}
+                        onClick={() => navigate(`/rsvp/events/${event.slug}`)}
+                      >
+                        Submit RSVP
+                      </Button>
+                    )}
+                    <Button
+                      size="small"
+                      startIcon={<VisibilityIcon />}
+                      onClick={(e) => handleViewClick(event, e)}
+                    >
+                      View RSVPs
+                    </Button>
+                  </Stack>
                   <Button
                     size="small"
                     startIcon={<AdminPanelSettingsIcon />}
                     onClick={(e) => handleAdminClick(event, e)}
                   >
                     Manage
-                  </Button>
-                  <Button
-                    size="small"
-                    startIcon={<VisibilityIcon />}
-                    onClick={(e) => handleViewClick(event, e)}
-                  >
-                    View RSVPs
                   </Button>
                 </CardActions>
               </Card>
