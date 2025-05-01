@@ -8,6 +8,7 @@ import {
   Container,
   Paper,
   Chip,
+  Input,
 } from '@mui/material';
 import axios from 'axios';
 
@@ -20,6 +21,7 @@ const EventForm: React.FC = () => {
     location: '',
     needed_items: [] as string[],
   });
+  const [wallpaper, setWallpaper] = useState<File | null>(null);
   const [currentItem, setCurrentItem] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +31,12 @@ const EventForm: React.FC = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleWallpaperChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setWallpaper(e.target.files[0]);
+    }
   };
 
   const handleItemChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +64,27 @@ const EventForm: React.FC = () => {
     e.preventDefault();
     setError(null);
     try {
-      await axios.post('/api/events', formData);
+      const submitData = new FormData();
+      
+      // Append all form fields
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'needed_items') {
+          submitData.append(key, JSON.stringify(value));
+        } else {
+          submitData.append(key, value);
+        }
+      });
+
+      // Append wallpaper if selected
+      if (wallpaper) {
+        submitData.append('wallpaper', wallpaper);
+      }
+
+      await axios.post('/api/events', submitData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       navigate('/');
     } catch (error) {
       setError('Failed to create event. Please try again.');
@@ -119,6 +147,21 @@ const EventForm: React.FC = () => {
             variant="outlined"
             required
           />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Typography variant="subtitle1">Event Wallpaper</Typography>
+            <Input
+              type="file"
+              onChange={handleWallpaperChange}
+              inputProps={{
+                accept: 'image/jpeg,image/png,image/gif'
+              }}
+            />
+            {wallpaper && (
+              <Typography variant="body2" color="textSecondary">
+                Selected file: {wallpaper.name}
+              </Typography>
+            )}
+          </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Typography variant="subtitle1">Needed Items</Typography>
             <Box sx={{ display: 'flex', gap: 1 }}>
