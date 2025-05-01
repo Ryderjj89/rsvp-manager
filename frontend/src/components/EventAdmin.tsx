@@ -58,6 +58,15 @@ interface Event {
   rsvp_cutoff_date?: string;
 }
 
+interface EditFormData {
+  name: string;
+  attending: 'yes' | 'no' | 'maybe';
+  bringing_guests: 'yes' | 'no';
+  guest_count: number;
+  guest_names: string;
+  items_bringing: string[];  // Always an array in the form
+}
+
 const EventAdmin: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -71,7 +80,7 @@ const EventAdmin: React.FC = () => {
   const [rsvpToDelete, setRsvpToDelete] = useState<RSVP | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [rsvpToEdit, setRsvpToEdit] = useState<RSVP | null>(null);
-  const [editForm, setEditForm] = useState<Omit<RSVP, 'id'>>({
+  const [editForm, setEditForm] = useState<EditFormData>({
     name: '',
     attending: 'yes',
     bringing_guests: 'no',
@@ -187,7 +196,8 @@ const EventAdmin: React.FC = () => {
       guest_count: typeof rsvp.guest_count === 'number' ? rsvp.guest_count : 0,
       guest_names: rsvp.guest_names || '',
       items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing :
-        typeof rsvp.items_bringing === 'string' ? JSON.parse(rsvp.items_bringing) : []
+        typeof rsvp.items_bringing === 'string' ? 
+          (rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : []) : []
     });
     setEditDialogOpen(true);
   };
@@ -210,7 +220,7 @@ const EventAdmin: React.FC = () => {
 
   const handleItemsChange = (e: SelectChangeEvent<string[]>) => {
     const { value } = e.target;
-    const newItems = Array.isArray(value) ? value : [];
+    const newItems = typeof value === 'string' ? value.split(',') : value;
     setEditForm(prev => ({
       ...prev,
       items_bringing: newItems
@@ -787,7 +797,7 @@ const EventAdmin: React.FC = () => {
                 )}
                 <FormControl fullWidth>
                   <InputLabel>What items are you bringing?</InputLabel>
-                  <Select
+                  <Select<string[]>
                     multiple
                     name="items_bringing"
                     value={editForm.items_bringing}
@@ -795,13 +805,13 @@ const EventAdmin: React.FC = () => {
                     input={<OutlinedInput label="What items are you bringing?" />}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                        {Array.isArray(selected) ? selected.map((value: string) => (
+                        {selected.map((value: string) => (
                           <Chip
                             key={value}
                             label={value}
                             color="primary"
                           />
-                        )) : null}
+                        ))}
                       </Box>
                     )}
                   >
