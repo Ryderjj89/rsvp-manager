@@ -83,7 +83,15 @@ const upload = multer({
 app.get('/api/events', async (req: Request, res: Response) => {
   try {
     const rows = await db.all('SELECT * FROM events');
-    res.json(rows);
+    
+    // Add the full path to wallpapers
+    const events = rows.map(event => ({
+      ...event,
+      wallpaper: event.wallpaper ? `/uploads/wallpapers/${event.wallpaper}` : null,
+      needed_items: event.needed_items ? JSON.parse(event.needed_items) : []
+    }));
+    
+    res.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -105,6 +113,11 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
     } catch (e) {
       console.error('Error parsing needed_items:', e);
       event.needed_items = [];
+    }
+
+    // Add the full path to the wallpaper
+    if (event.wallpaper) {
+      event.wallpaper = `/uploads/wallpapers/${event.wallpaper}`;
     }
 
     res.json(event);
