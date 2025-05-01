@@ -29,6 +29,42 @@ async function connectToDatabase() {
   });
 }
 
+// Configure multer for file uploads
+const uploadDir = path.join(__dirname, '../../uploads/wallpapers');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Define multer request interface
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
+
+const storage = multer.diskStorage({
+  destination: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) {
+    cb(null, uploadDir);
+  },
+  filename: function (req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'));
+    }
+  }
+});
+
 // Routes
 app.get('/api/events', async (req: Request, res: Response) => {
   try {
@@ -64,7 +100,7 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
   }
 });
 
-app.post('/api/events', multer().single('wallpaper'), async (req: Request, res: Response) => {
+app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
     const { title, description, date, location, needed_items } = req.body;
     const wallpaperPath = req.file ? `/uploads/wallpapers/${req.file.filename}` : null;
