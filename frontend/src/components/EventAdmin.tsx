@@ -240,11 +240,21 @@ const EventAdmin: React.FC = () => {
       // If not attending, reset all guest-related fields and items
       setEditForm(prev => ({
         ...prev,
-        attending: value as 'no' | 'maybe', // Type assertion to match EditFormData interface
+        attending: value as 'no' | 'maybe',
         bringing_guests: 'no',
         guest_count: 0,
         guest_names: '',
         items_bringing: [] // Clear items when not attending
+      }));
+    } else if (name === 'bringing_guests') {
+      // When bringing guests is changed
+      setEditForm(prev => ({
+        ...prev,
+        [name]: value,
+        // If changing to 'yes', set guest count to 1, otherwise reset to 0
+        guest_count: value === 'yes' ? 1 : 0,
+        // Clear guest names if changing to 'no'
+        guest_names: value === 'no' ? '' : prev.guest_names
       }));
     } else {
       setEditForm((prev: typeof editForm) => ({
