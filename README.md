@@ -66,7 +66,13 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
 ```
 docker volume create rsvp-manager_data
 docker volume create rsvp-manager_uploads
-docker run --name rsvp_manager -p 3000:3000 -v rsvp-manager_data:/app -v rsvp-manager_uploads:/app/uploads -e NODE_ENV=production --restart unless-stopped
+docker run -d --name rsvp-manager \
+  -p 3000:3000 \
+  -v rsvp-manager_data:/app \
+  -v rsvp-manager_uploads:/app/uploads \
+  -e NODE_ENV=production \
+  --restart unless-stopped \
+  ryderjj89/rsvp-manager:latest
 ```
 2. Access the application at `http://localhost:3000`
 
