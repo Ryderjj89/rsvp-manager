@@ -57,7 +57,7 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
 #### Docker Compose
 
 1. Clone the repository
-2. Run `docker-compose up -d` to start the application
+2. Run `docker compose up -d` to start the application
 3. Access the application at `http://localhost:3000`
 
 #### Docker Run
