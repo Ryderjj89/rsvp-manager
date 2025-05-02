@@ -2,6 +2,8 @@
 
 A modern event RSVP management system with customizable backgrounds and item coordination.
 
+This project was created completely by the [Cursor AI Code Editor](https://www.cursor.com/)!
+
 ## Features
 
 - Event Creation and Management
@@ -52,9 +54,21 @@ A modern event RSVP management system with customizable backgrounds and item coo
 
 ### Installation
 
+#### Docker Compose
+
 1. Clone the repository
 2. Run `docker-compose up` to start the application
 3. Access the application at `http://localhost:3000`
+
+#### Docker Run
+
+1. Run these commands:
+```
+docker volume create rsvp-manager_data
+docker volume create rsvp-manager_uploads
+docker run --name rsvp_manager -p 3000:3000 -v rsvp-manager_data:/app -v rsvp-manager_uploads:/app/uploads -e NODE_ENV=production --restart unless-stopped
+```
+2. Access the application at `http://localhost:3000`
 
 ## Development
 
