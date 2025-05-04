@@ -1,0 +1,16 @@
+services:
+  app:
+    container_name: rsvp_manager
+    image: ryderjj89/rsvp-manager:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - data:/app
+      - uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  data:
+  uploads: 
