@@ -11,6 +11,8 @@ import {
   Container,
   Chip,
   Stack,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -30,6 +32,7 @@ interface Event {
 const EventList: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const navigate = useNavigate();
+  const [hideClosed, setHideClosed] = useState(false);
 
   useEffect(() => {
     fetchEvents();
@@ -84,81 +87,95 @@ const EventList: React.FC = () => {
         >
           Create Event
         </Button>
+        <Box sx={{ mt: 2, mb: 4, display: 'flex', justifyContent: 'center' }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={hideClosed}
+                onChange={(_, checked) => setHideClosed(checked)}
+                color="primary"
+              />
+            }
+            label="Hide Closed Events"
+          />
+        </Box>
       </Container>
 
       <Container maxWidth="lg">
         <Grid container spacing={4}>
-          {events.map((event) => (
-            <Grid item xs={12} sm={6} md={6} key={event.id}>
-              <Card 
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  opacity: isEventOpen(event) ? 1 : 0.7,
-                  '& .MuiCardContent-root': {
-                    padding: 3
-                  }
-                }} 
-              >
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <Typography variant="h5" component="h2" sx={{ flexGrow: 1 }}>
-                      {event.title}
-                    </Typography>
-                    <Chip
-                      label={isEventOpen(event) ? "Open" : "Closed"}
-                      color={isEventOpen(event) ? "success" : "error"}
-                      size="small"
-                    />
-                  </Box>
-                  {event.description && (
+          {events
+            .filter(event => !hideClosed || isEventOpen(event))
+            .map((event) => (
+              <Grid item xs={12} sm={6} md={6} key={event.id}>
+                <Card 
+                  sx={{ 
+                    height: '100%', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    opacity: isEventOpen(event) ? 1 : 0.7,
+                    '& .MuiCardContent-root': {
+                      padding: 3
+                    }
+                  }} 
+                >
+                  <CardContent sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                      <Typography variant="h5" component="h2" sx={{ flexGrow: 1 }}>
+                        {event.title}
+                      </Typography>
+                      <Chip
+                        label={isEventOpen(event) ? "Open" : "Closed"}
+                        color={isEventOpen(event) ? "success" : "error"}
+                        size="small"
+                      />
+                    </Box>
+                    {event.description && (
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>Info:</strong> {event.description}
+                      </Typography>
+                    )}
                     <Typography variant="body2" color="text.secondary">
-                      <strong>Info:</strong> {event.description}
+                      <strong>Date:</strong> {new Date(event.date).toLocaleString()}
                     </Typography>
-                  )}
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Date:</strong> {new Date(event.date).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Location:</strong> {event.location}
-                  </Typography>
-                  {event.rsvp_cutoff_date && (
                     <Typography variant="body2" color="text.secondary">
-                      <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+                      <strong>Location:</strong> {event.location}
                     </Typography>
-                  )}
-                </CardContent>
-                <CardActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-                  <Stack direction="row" spacing={1}>
-                    {isEventOpen(event) && (
+                    {event.rsvp_cutoff_date && (
+                      <Typography variant="body2" color="text.secondary">
+                        <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+                      </Typography>
+                    )}
+                  </CardContent>
+                  <CardActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
+                    <Stack direction="row" spacing={1}>
+                      {isEventOpen(event) && (
+                        <Button
+                          size="small"
+                          startIcon={<HowToRegIcon />}
+                          onClick={() => navigate(`/rsvp/events/${event.slug}`)}
+                        >
+                          Submit RSVP
+                        </Button>
+                      )}
                       <Button
                         size="small"
-                        startIcon={<HowToRegIcon />}
-                        onClick={() => navigate(`/rsvp/events/${event.slug}`)}
+                        startIcon={<VisibilityIcon />}
+                        onClick={(e) => handleViewClick(event, e)}
                       >
-                        Submit RSVP
+                        View RSVPs
                       </Button>
-                    )}
+                    </Stack>
                     <Button
                       size="small"
-                      startIcon={<VisibilityIcon />}
-                      onClick={(e) => handleViewClick(event, e)}
+                      startIcon={<AdminPanelSettingsIcon />}
+                      onClick={(e) => handleAdminClick(event, e)}
                     >
-                      View RSVPs
+                      Manage
                     </Button>
-                  </Stack>
-                  <Button
-                    size="small"
-                    startIcon={<AdminPanelSettingsIcon />}
-                    onClick={(e) => handleAdminClick(event, e)}
-                  >
-                    Manage
-                  </Button>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
         </Grid>
       </Container>
     </Box>
