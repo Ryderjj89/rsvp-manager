@@ -770,8 +770,6 @@ const EventAdmin: React.FC = () => {
                     {(() => {
                       const allOtherItems = rsvps
                         .map(r => r.other_items)
-                        .filter(Boolean)
-                        .flat()
                         .filter((item): item is string => typeof item === 'string' && item.trim() !== '');
                       return allOtherItems.length > 0
                         ? allOtherItems.join(', ')
