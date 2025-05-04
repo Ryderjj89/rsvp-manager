@@ -249,7 +249,7 @@ const EventView: React.FC = () => {
                         .map(r => r.other_items)
                         .filter(Boolean)
                         .flat()
-                        .filter((item: string) => item && item.trim() !== '');
+                        .filter((item): item is string => typeof item === 'string' && item.trim() !== '');
                       return allOtherItems.length > 0
                         ? allOtherItems.join(', ')
                         : 'No other items have been brought';
