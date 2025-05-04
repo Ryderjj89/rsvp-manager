@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: rsvp_manager
+    container_name: rsvp_manager-dev
     build:
       context: .
       dockerfile: Dockerfile
