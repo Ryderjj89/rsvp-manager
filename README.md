@@ -54,11 +54,21 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
 
 ### Installation
 
+#### Branch Selection
+
+There are 2 branches, latest & dev.
+
+| Branch | Description |
+| ------------- | ------------- |
+| Latest | The most recent stable build. Use this if you don't like to get changes early. |
+| Dev | Use this if you want to be on the cutting edge, can be unstable. |
+
 #### Docker Compose
 
-1. Clone the repository
-2. Run `docker compose up -d` to start the application
-3. Access the application at `http://localhost:3000`
+1. Clone the repository.
+2. Edit the `docker-compose.yml` for the tag you'd like to use, then save it.
+3. Run `docker compose up -d` to start the application.
+4. Access the application at `http://localhost:3000`.
 
 #### Docker Run
 
@@ -72,7 +82,7 @@ docker run -d --name rsvp-manager \
   -v rsvp-manager_uploads:/app/uploads \
   -e NODE_ENV=production \
   --restart unless-stopped \
-  ryderjj89/rsvp-manager:latest
+  ryderjj89/rsvp-manager:<CHANGE THIS TAG!>
 ```
 2. Access the application at `http://localhost:3000`
 
