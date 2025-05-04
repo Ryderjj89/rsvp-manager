@@ -229,6 +229,12 @@ const EventAdmin: React.FC = () => {
       processedGuestNames = rsvp.guest_names.split(',').map(name => name.trim());
     }
 
+    // Convert stored comma-separated other_items to multiline for textarea
+    let otherItemsMultiline = rsvp.other_items || '';
+    if (otherItemsMultiline.includes(',')) {
+      otherItemsMultiline = otherItemsMultiline.split(',').map(s => s.trim()).join('\n');
+    }
+
     setRsvpToEdit(rsvp);
     setEditForm({
       name: rsvp.name,
@@ -239,7 +245,7 @@ const EventAdmin: React.FC = () => {
       items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing :
         typeof rsvp.items_bringing === 'string' ? 
           (rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : []) : [],
-      other_items: rsvp.other_items || ''
+      other_items: otherItemsMultiline
     });
     setEditDialogOpen(true);
   };
@@ -334,7 +340,14 @@ const EventAdmin: React.FC = () => {
       const filteredGuestNames = editForm.guest_names
         .map(name => name.trim())
         .filter(name => name.length > 0);
-      
+
+      // Split other_items on newlines and commas, trim, filter, join with commas
+      const splitOtherItems = editForm.other_items
+        .split(/\r?\n|,/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join(', ');
+
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
         name: editForm.name,
@@ -343,7 +356,7 @@ const EventAdmin: React.FC = () => {
         guest_count: editForm.bringing_guests === 'yes' ? Math.max(1, parseInt(editForm.guest_count.toString(), 10)) : 0,
         guest_names: filteredGuestNames,
         items_bringing: JSON.stringify(editForm.items_bringing),
-        other_items: editForm.other_items,
+        other_items: splitOtherItems,
         event_id: event.id
       };
 
@@ -378,7 +391,7 @@ const EventAdmin: React.FC = () => {
           ...submissionData,
           guest_names: filteredGuestNames,
           items_bringing: editForm.items_bringing,
-          other_items: editForm.other_items
+          other_items: splitOtherItems
         };
         
         // Update the local state

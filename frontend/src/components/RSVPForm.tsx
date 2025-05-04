@@ -252,9 +252,15 @@ const RSVPForm: React.FC = () => {
     }
 
     try {
+      const splitOtherItems = formData.other_items
+        .split(/\r?\n|,/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join(', ');
       const submissionData = {
         ...formData,
-        items_bringing: formData.items_bringing
+        items_bringing: formData.items_bringing,
+        other_items: splitOtherItems
       };
       const response = await axios.post(`/api/events/${slug}/rsvp`, submissionData);
       
