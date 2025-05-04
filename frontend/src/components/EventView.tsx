@@ -24,7 +24,7 @@ interface RSVP {
   guest_count: number;
   guest_names: string[] | string;
   items_bringing: string[] | string;
-  other_items?: string[];
+  other_items?: string;
 }
 
 interface Event {
