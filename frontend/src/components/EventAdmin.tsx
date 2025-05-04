@@ -79,6 +79,7 @@ const EventAdmin: React.FC = () => {
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [neededItems, setNeededItems] = useState<string[]>([]);
   const [claimedItems, setClaimedItems] = useState<string[]>([]);
+  const [otherItems, setOtherItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -149,6 +150,7 @@ const EventAdmin: React.FC = () => {
       
       // Get all claimed items from existing RSVPs
       const claimed = new Set<string>();
+      const otherItemsSet = new Set<string>();
       const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => {
         let itemsBringing: string[] = [];
         try {
@@ -169,6 +171,11 @@ const EventAdmin: React.FC = () => {
           console.error('Error processing items for RSVP:', e);
         }
         
+        // Add non-empty other_items to set
+        if (typeof rsvp.other_items === 'string' && rsvp.other_items.trim() !== '') {
+          otherItemsSet.add(rsvp.other_items.trim());
+        }
+        
         return {
           ...rsvp,
           items_bringing: itemsBringing
@@ -178,8 +185,8 @@ const EventAdmin: React.FC = () => {
       // Update state with processed data
       setRsvps(processedRsvps);
       setClaimedItems(Array.from(claimed));
-      // Filter needed items to only show unclaimed ones
       setNeededItems(items.filter(item => !claimed.has(item)));
+      setOtherItems(Array.from(otherItemsSet));
       setLoading(false);
     } catch (error) {
       console.error('Failed to load event data:', error);
@@ -767,20 +774,9 @@ const EventAdmin: React.FC = () => {
                     Other Items:
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {(() => {
-                      const allOtherItems = rsvps
-                        .map(r => r.other_items)
-                        .flatMap(item =>
-                          Array.isArray(item)
-                            ? item.filter((s): s is string => typeof s === 'string' && s.trim() !== '')
-                            : typeof item === 'string' && item.trim() !== ''
-                              ? [item]
-                              : []
-                        );
-                      return allOtherItems.length > 0
-                        ? allOtherItems.join(', ')
-                        : 'No other items have been brought';
-                    })()}
+                    {otherItems.length > 0
+                      ? otherItems.join(', ')
+                      : 'No other items have been brought'}
                   </Typography>
                 </Box>
               </Box>
