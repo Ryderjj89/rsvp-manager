@@ -1,7 +1,9 @@
 services:
   app:
     container_name: rsvp_manager
-    image: ryderjj89/rsvp-manager:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
