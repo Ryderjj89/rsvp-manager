@@ -24,7 +24,7 @@ interface RSVP {
   guest_count: number;
   guest_names: string[] | string;
   items_bringing: string[] | string;
-  other_items?: string[];
+  other_items?: string;
 }
 
 interface Event {
@@ -46,6 +46,7 @@ const EventView: React.FC = () => {
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [neededItems, setNeededItems] = useState<string[]>([]);
   const [claimedItems, setClaimedItems] = useState<string[]>([]);
+  const [otherItems, setOtherItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +80,7 @@ const EventView: React.FC = () => {
       
       // Get all claimed items from existing RSVPs
       const claimed = new Set<string>();
+      const otherItemsSet = new Set<string>();
       const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => {
         let itemsBringing: string[] = [];
         try {
@@ -98,6 +100,10 @@ const EventView: React.FC = () => {
         } catch (e) {
           console.error('Error processing items for RSVP:', e);
         }
+        // Add non-empty other_items to set
+        if (typeof rsvp.other_items === 'string' && rsvp.other_items.trim() !== '') {
+          otherItemsSet.add(rsvp.other_items.trim());
+        }
         
         return {
           ...rsvp,
@@ -110,6 +116,7 @@ const EventView: React.FC = () => {
       setClaimedItems(Array.from(claimed));
       // Filter needed items to only show unclaimed ones
       setNeededItems(items.filter(item => !claimed.has(item)));
+      setOtherItems(Array.from(otherItemsSet));
       setLoading(false);
     } catch (error) {
       setError('Failed to load event data');
@@ -238,6 +245,16 @@ const EventView: React.FC = () => {
                       </Typography>
                     )}
                   </Box>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Other Items:
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {otherItems.length > 0
+                      ? otherItems.join(', ')
+                      : 'No other items have been brought'}
+                  </Typography>
                 </Box>
               </Box>
             </Box>

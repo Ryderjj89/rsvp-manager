@@ -79,6 +79,7 @@ const EventAdmin: React.FC = () => {
   const [rsvps, setRsvps] = useState<RSVP[]>([]);
   const [neededItems, setNeededItems] = useState<string[]>([]);
   const [claimedItems, setClaimedItems] = useState<string[]>([]);
+  const [otherItems, setOtherItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -149,6 +150,7 @@ const EventAdmin: React.FC = () => {
       
       // Get all claimed items from existing RSVPs
       const claimed = new Set<string>();
+      const otherItemsSet = new Set<string>();
       const processedRsvps = rsvpsResponse.data.map((rsvp: RSVP) => {
         let itemsBringing: string[] = [];
         try {
@@ -169,6 +171,11 @@ const EventAdmin: React.FC = () => {
           console.error('Error processing items for RSVP:', e);
         }
         
+        // Add non-empty other_items to set
+        if (typeof rsvp.other_items === 'string' && rsvp.other_items.trim() !== '') {
+          otherItemsSet.add(rsvp.other_items.trim());
+        }
+        
         return {
           ...rsvp,
           items_bringing: itemsBringing
@@ -178,8 +185,8 @@ const EventAdmin: React.FC = () => {
       // Update state with processed data
       setRsvps(processedRsvps);
       setClaimedItems(Array.from(claimed));
-      // Filter needed items to only show unclaimed ones
       setNeededItems(items.filter(item => !claimed.has(item)));
+      setOtherItems(Array.from(otherItemsSet));
       setLoading(false);
     } catch (error) {
       console.error('Failed to load event data:', error);
@@ -208,6 +215,7 @@ const EventAdmin: React.FC = () => {
       setRsvps(rsvps.filter((r: RSVP) => r.id !== rsvpToDelete.id));
       setDeleteDialogOpen(false);
       setRsvpToDelete(null);
+      fetchEventAndRsvps();
     } catch (error) {
       setError('Failed to delete RSVP');
     }
@@ -221,6 +229,12 @@ const EventAdmin: React.FC = () => {
       processedGuestNames = rsvp.guest_names.split(',').map(name => name.trim());
     }
 
+    // Convert stored comma-separated other_items to multiline for textarea
+    let otherItemsMultiline = rsvp.other_items || '';
+    if (otherItemsMultiline.includes(',')) {
+      otherItemsMultiline = otherItemsMultiline.split(',').map(s => s.trim()).join('\n');
+    }
+
     setRsvpToEdit(rsvp);
     setEditForm({
       name: rsvp.name,
@@ -231,7 +245,7 @@ const EventAdmin: React.FC = () => {
       items_bringing: Array.isArray(rsvp.items_bringing) ? rsvp.items_bringing :
         typeof rsvp.items_bringing === 'string' ? 
           (rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : []) : [],
-      other_items: rsvp.other_items || ''
+      other_items: otherItemsMultiline
     });
     setEditDialogOpen(true);
   };
@@ -326,7 +340,14 @@ const EventAdmin: React.FC = () => {
       const filteredGuestNames = editForm.guest_names
         .map(name => name.trim())
         .filter(name => name.length > 0);
-      
+
+      // Split other_items on newlines and commas, trim, filter, join with commas
+      const splitOtherItems = editForm.other_items
+        .split(/\r?\n|,/)
+        .map(s => s.trim())
+        .filter(Boolean)
+        .join(', ');
+
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
         name: editForm.name,
@@ -335,7 +356,7 @@ const EventAdmin: React.FC = () => {
         guest_count: editForm.bringing_guests === 'yes' ? Math.max(1, parseInt(editForm.guest_count.toString(), 10)) : 0,
         guest_names: filteredGuestNames,
         items_bringing: JSON.stringify(editForm.items_bringing),
-        other_items: editForm.other_items,
+        other_items: splitOtherItems,
         event_id: event.id
       };
 
@@ -370,7 +391,7 @@ const EventAdmin: React.FC = () => {
           ...submissionData,
           guest_names: filteredGuestNames,
           items_bringing: editForm.items_bringing,
-          other_items: editForm.other_items
+          other_items: splitOtherItems
         };
         
         // Update the local state
@@ -423,6 +444,7 @@ const EventAdmin: React.FC = () => {
         setClaimedItems(claimedArray);
         setEditDialogOpen(false);
         setRsvpToEdit(null);
+        fetchEventAndRsvps();
 
         // Verify the update was successful but don't throw error if verification response is empty
         try {
@@ -760,6 +782,17 @@ const EventAdmin: React.FC = () => {
                       </Typography>
                     )}
                   </Box>
+                </Box>
+                {/* Other Items Section */}
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Other Items:
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {otherItems.length > 0
+                      ? otherItems.join(', ')
+                      : 'No other items have been brought'}
+                  </Typography>
                 </Box>
               </Box>
             </Box>
