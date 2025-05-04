@@ -770,7 +770,13 @@ const EventAdmin: React.FC = () => {
                     {(() => {
                       const allOtherItems = rsvps
                         .map(r => r.other_items)
-                        .filter((item): item is string => typeof item === 'string' && item.trim() !== '');
+                        .flatMap(item =>
+                          Array.isArray(item)
+                            ? item.filter((s): s is string => typeof s === 'string' && s.trim() !== '')
+                            : typeof item === 'string' && item.trim() !== ''
+                              ? [item]
+                              : []
+                        );
                       return allOtherItems.length > 0
                         ? allOtherItems.join(', ')
                         : 'No other items have been brought';
