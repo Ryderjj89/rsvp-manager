@@ -761,6 +761,24 @@ const EventAdmin: React.FC = () => {
                     )}
                   </Box>
                 </Box>
+                {/* Other Items Section */}
+                <Box>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Other Items:
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {(() => {
+                      const allOtherItems = rsvps
+                        .map(r => r.other_items)
+                        .filter(Boolean)
+                        .flat()
+                        .filter((item: string) => item && item.trim() !== '');
+                      return allOtherItems.length > 0
+                        ? allOtherItems.join(', ')
+                        : 'No other items have been brought';
+                    })()}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
 
