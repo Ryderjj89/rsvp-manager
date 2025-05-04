@@ -215,6 +215,7 @@ const EventAdmin: React.FC = () => {
       setRsvps(rsvps.filter((r: RSVP) => r.id !== rsvpToDelete.id));
       setDeleteDialogOpen(false);
       setRsvpToDelete(null);
+      fetchEventAndRsvps();
     } catch (error) {
       setError('Failed to delete RSVP');
     }
@@ -430,6 +431,7 @@ const EventAdmin: React.FC = () => {
         setClaimedItems(claimedArray);
         setEditDialogOpen(false);
         setRsvpToEdit(null);
+        fetchEventAndRsvps();
 
         // Verify the update was successful but don't throw error if verification response is empty
         try {
