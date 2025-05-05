@@ -37,10 +37,18 @@ export async function sendRSVPEmail(data: RSVPEmailData) {
     to,
   } = data;
 
+  // Capitalize attending and bringingGuests values
+  function capitalizeYesNo(value: string) {
+    if (typeof value !== 'string') return value;
+    return value.toLowerCase() === 'yes' ? 'Yes' : value.toLowerCase() === 'no' ? 'No' : value;
+  }
+
   const subject = `RSVP Confirmation for ${eventTitle}`;
   const guestList = guestNames.length ? guestNames.join(', ') : 'None';
   const itemsList = itemsBringing.length ? itemsBringing.join(', ') : 'None';
   const otherItemsList = otherItems ? otherItems : 'None';
+  const attendingDisplay = capitalizeYesNo(attending);
+  const bringingGuestsDisplay = capitalizeYesNo(bringingGuests);
 
   // Assume the frontend is served at the same host
   const baseUrl = process.env.FRONTEND_BASE_URL || '';
@@ -51,8 +59,8 @@ export async function sendRSVPEmail(data: RSVPEmailData) {
     <h2>RSVP Confirmation</h2>
     <p><strong>Event:</strong> ${eventTitle}</p>
     <p><strong>Name:</strong> ${name}</p>
-    <p><strong>Attending:</strong> ${attending}</p>
-    <p><strong>Bringing Guests:</strong> ${bringingGuests} (${guestCount})</p>
+    <p><strong>Attending:</strong> ${attendingDisplay}</p>
+    <p><strong>Bringing Guests:</strong> ${bringingGuestsDisplay} (${guestCount})</p>
     <p><strong>Guest Names:</strong> ${guestList}</p>
     <p><strong>Items Bringing (from needed list):</strong> ${itemsList}</p>
     <p><strong>Other Items:</strong> ${otherItemsList}</p>
