@@ -295,15 +295,17 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '']
     );
 
-    // Fetch event title for the email
-    const eventInfo = await db.get('SELECT title FROM events WHERE id = ?', [eventId]);
+    // Fetch event title and slug for the email
+    const eventInfo = await db.get('SELECT title, slug FROM events WHERE id = ?', [eventId]);
     const eventTitle = eventInfo ? eventInfo.title : slug;
+    const eventSlug = eventInfo ? eventInfo.slug : slug;
 
     // Send RSVP confirmation email (if email provided)
     if (req.body.email) {
       try {
         await sendRSVPEmail({
           eventTitle,
+          eventSlug,
           name,
           attending,
           bringingGuests: bringing_guests,
