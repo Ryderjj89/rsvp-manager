@@ -36,11 +36,9 @@ RUN mkdir -p /app/uploads/wallpapers && \
     chmod 755 /app/uploads && \
     chmod 644 /app/database.sqlite
 
-# Copy package files and install dependencies
-COPY package*.json ./
-COPY backend/package*.json ./backend/
+# Copy backend package files and install dependencies
+COPY backend/package*.json ./
 RUN npm install --production
-RUN cd backend && npm install --production
 
 # Copy built files from builder stage
 COPY --from=builder /app/backend/dist ./dist
