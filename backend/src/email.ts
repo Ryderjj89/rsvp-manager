@@ -62,7 +62,7 @@ export async function sendRSVPEmail(data: RSVPEmailData) {
     <p><strong>Attending:</strong> ${attendingDisplay}</p>
     <p><strong>Bringing Guests:</strong> ${bringingGuestsDisplay} (${guestCount})</p>
     <p><strong>Guest Names:</strong> ${guestList}</p>
-    <p><strong>Items Bringing (from needed list):</strong> ${itemsList}</p>
+    <p><strong>Items Claimed:</strong> ${itemsList}</p>
     <p><strong>Other Items:</strong> ${otherItemsList}</p>
     <p><a href="${manageRsvpsUrl}">Manage RSVPs for this event</a></p>
     <p><a href="${viewRsvpsUrl}">View all RSVPs for this event</a></p>
