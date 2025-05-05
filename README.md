@@ -12,6 +12,7 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
   - Upload custom wallpapers to personalize event pages
   - Track RSVPs and guest counts
   - Comprehensive admin interface for event management
+  - Email notifications for submitted RSVPs
 
 - Item Coordination
   - Create and manage lists of needed items for events
@@ -111,6 +112,10 @@ docker run -d --name rsvp-manager \
    cd ../frontend
    npm start
    ```
+
+## Email Notifications (Currently in dev branch!)
+
+By setting up the environment variables in the `docker-compose.yml`, you can have notifications sent to the recipients of your choice when someone submits an RSVP to an event. The notification will include the details of their submission and links to view or manage the RSVPs for that event.
 
 ## Authentication with Authentik
 
