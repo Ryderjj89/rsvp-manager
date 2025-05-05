@@ -7,9 +7,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
-  },
-  logger: true,
-  debug: true,
+  }
 });
 
 export interface RSVPEmailData {
@@ -46,8 +44,8 @@ export async function sendRSVPEmail(data: RSVPEmailData) {
 
   // Assume the frontend is served at the same host
   const baseUrl = process.env.FRONTEND_BASE_URL || '';
-  const manageRsvpsUrl = `${baseUrl}/events/${eventSlug}/manage-rsvps`;
-  const viewRsvpsUrl = `${baseUrl}/events/${eventSlug}/rsvps`;
+  const manageRsvpsUrl = `${baseUrl}/admin/events/${eventSlug}`;
+  const viewRsvpsUrl = `${baseUrl}/view/events/${eventSlug}`;
 
   const html = `
     <h2>RSVP Confirmation</h2>
