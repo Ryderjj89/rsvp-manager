@@ -300,22 +300,25 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     const eventTitle = eventInfo ? eventInfo.title : slug;
     const eventSlug = eventInfo ? eventInfo.slug : slug;
 
-    // Send RSVP confirmation email to admin
-    try {
-      await sendRSVPEmail({
-        eventTitle,
-        eventSlug,
-        name,
-        attending,
-        bringingGuests: bringing_guests,
-        guestCount: guest_count,
-        guestNames: parsedGuestNames,
-        itemsBringing: parsedItemsBringing,
-        otherItems: other_items || '',
-        to: process.env.EMAIL_USER,
-      });
-    } catch (emailErr) {
-      console.error('Error sending RSVP email:', emailErr);
+    // Optionally send RSVP confirmation email to admin if EMAIL_USER is set
+    const adminEmail = process.env.EMAIL_USER;
+    if (adminEmail) {
+      try {
+        await sendRSVPEmail({
+          eventTitle,
+          eventSlug,
+          name,
+          attending,
+          bringingGuests: bringing_guests,
+          guestCount: guest_count,
+          guestNames: parsedGuestNames,
+          itemsBringing: parsedItemsBringing,
+          otherItems: other_items || '',
+          to: adminEmail,
+        });
+      } catch (emailErr) {
+        console.error('Error sending RSVP email:', emailErr);
+      }
     }
 
     // Return the complete RSVP data including the parsed arrays
