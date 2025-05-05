@@ -300,25 +300,34 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     const eventTitle = eventInfo ? eventInfo.title : slug;
     const eventSlug = eventInfo ? eventInfo.slug : slug;
 
-    // Optionally send RSVP confirmation email to admin if EMAIL_USER is set
-    const adminEmail = process.env.EMAIL_USER;
-    if (adminEmail) {
+    // Optionally send RSVP confirmation email to recipients
+    let recipients: string[] = [];
+    if (process.env.EMAIL_RECIPIENTS) {
+      recipients = process.env.EMAIL_RECIPIENTS.split(',').map(addr => addr.trim()).filter(Boolean);
+    } else if (process.env.EMAIL_USER) {
+      recipients = [process.env.EMAIL_USER];
+    }
+    if (recipients.length > 0) {
       try {
-        await sendRSVPEmail({
-          eventTitle,
-          eventSlug,
-          name,
-          attending,
-          bringingGuests: bringing_guests,
-          guestCount: guest_count,
-          guestNames: parsedGuestNames,
-          itemsBringing: parsedItemsBringing,
-          otherItems: other_items || '',
-          to: adminEmail,
-        });
+        for (const to of recipients) {
+          await sendRSVPEmail({
+            eventTitle,
+            eventSlug,
+            name,
+            attending,
+            bringingGuests: bringing_guests,
+            guestCount: guest_count,
+            guestNames: parsedGuestNames,
+            itemsBringing: parsedItemsBringing,
+            otherItems: other_items || '',
+            to,
+          });
+        }
       } catch (emailErr) {
         console.error('Error sending RSVP email:', emailErr);
       }
+    } else {
+      console.warn('No email recipients set. Skipping RSVP email notification.');
     }
 
     // Return the complete RSVP data including the parsed arrays
