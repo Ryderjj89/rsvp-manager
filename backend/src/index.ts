@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import multer from 'multer';
 import fs from 'fs';
+import { sendRSVPEmail } from './email';
 
 dotenv.config();
 
@@ -293,6 +294,29 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '']
     );
+
+    // Fetch event title for the email
+    const eventInfo = await db.get('SELECT title FROM events WHERE id = ?', [eventId]);
+    const eventTitle = eventInfo ? eventInfo.title : slug;
+
+    // Send RSVP confirmation email (if email provided)
+    if (req.body.email) {
+      try {
+        await sendRSVPEmail({
+          eventTitle,
+          name,
+          attending,
+          bringingGuests: bringing_guests,
+          guestCount: guest_count,
+          guestNames: parsedGuestNames,
+          itemsBringing: parsedItemsBringing,
+          otherItems: other_items || '',
+          to: req.body.email,
+        });
+      } catch (emailErr) {
+        console.error('Error sending RSVP email:', emailErr);
+      }
+    }
 
     // Return the complete RSVP data including the parsed arrays
     res.status(201).json({
