@@ -327,7 +327,7 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       
       // Use the event's email recipients
       if (eventEmailRecipients) {
-        recipients = eventEmailRecipients.split(',').map(addr => addr.trim()).filter(Boolean);
+        recipients = eventEmailRecipients.split(',').map((addr: string) => addr.trim()).filter(Boolean);
       }
       
       // If no recipients are set for the event, use the sender email as a fallback
