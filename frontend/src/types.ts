@@ -10,6 +10,8 @@ export interface Event {
   wallpaper?: string;
   rsvp_cutoff_date?: string;
   max_guests_per_rsvp?: number;
+  email_notifications_enabled?: boolean;
+  email_recipients?: string;
 }
 
 export interface Rsvp {
