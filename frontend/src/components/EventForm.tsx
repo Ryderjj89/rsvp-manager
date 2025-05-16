@@ -43,6 +43,7 @@ interface FormData {
   location: string;
   needed_items: string[];
   rsvp_cutoff_date: string;
+  max_guests_per_rsvp: number;
 }
 
 const EventForm: React.FC = () => {
@@ -54,6 +55,7 @@ const EventForm: React.FC = () => {
     location: '',
     needed_items: [],
     rsvp_cutoff_date: '',
+    max_guests_per_rsvp: 0,
   });
   const [wallpaper, setWallpaper] = useState<File | null>(null);
   const [currentItem, setCurrentItem] = useState('');
@@ -198,6 +200,24 @@ const EventForm: React.FC = () => {
               shrink: true,
             }}
           />
+          
+          <DarkTextField
+            fullWidth
+            label="Maximum Additional Guests Per RSVP"
+            name="max_guests_per_rsvp"
+            type="number"
+            value={formData.max_guests_per_rsvp}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              setFormData((prev) => ({
+                ...prev,
+                max_guests_per_rsvp: isNaN(value) ? 0 : value,
+              }));
+            }}
+            variant="outlined"
+            helperText="Set to 0 for no additional guests, -1 for unlimited"
+            inputProps={{ min: -1 }}
+          />
           <DarkTextField
             fullWidth
             label="Location"
@@ -333,4 +353,4 @@ const EventForm: React.FC = () => {
   );
 };
 
-export default EventForm; 
+export default EventForm;

@@ -199,15 +199,35 @@ const RSVPForm: React.FC = () => {
         other_items: ''
       }));
     } else if (name === 'bringing_guests') {
-      // When bringing guests is changed
-      setFormData(prev => ({
-        ...prev,
-        bringing_guests: value as 'yes' | 'no',
-        // If changing to 'yes', set guest count to 1 and initialize one empty name field
-        guest_count: value === 'yes' ? 1 : 0,
-        // Clear guest names if changing to 'no', otherwise initialize with empty string
-        guest_names: value === 'no' ? [] : ['']
-      }));
+          // When bringing guests is changed
+          setFormData(prev => {
+            const maxGuests = event?.max_guests_per_rsvp;
+            let initialGuestCount = 1;
+            
+            // If max_guests_per_rsvp is 0, don't allow guests
+            if (maxGuests === 0 && value === 'yes') {
+              return {
+                ...prev,
+                bringing_guests: 'no',
+                guest_count: 0,
+                guest_names: []
+              };
+            }
+            
+            // If max_guests_per_rsvp is set and not -1 (unlimited), limit initial count
+            if (maxGuests !== undefined && maxGuests !== -1 && maxGuests < initialGuestCount) {
+              initialGuestCount = maxGuests;
+            }
+            
+            return {
+              ...prev,
+              bringing_guests: value as 'yes' | 'no',
+              // If changing to 'yes', set guest count to appropriate value
+              guest_count: value === 'yes' ? initialGuestCount : 0,
+              // Clear guest names if changing to 'no', otherwise initialize with empty strings
+              guest_names: value === 'no' ? [] : Array(initialGuestCount).fill('')
+            };
+          });
     } else {
       setFormData(prev => ({
         ...prev,
@@ -465,19 +485,51 @@ const RSVPForm: React.FC = () => {
 
                   {formData.bringing_guests === 'yes' && (
                     <>
-                      <TextField
-                        label="Number of Guests"
-                        name="guest_count"
-                        type="number"
-                        value={formData.guest_count}
-                        onChange={handleChange}
-                        fullWidth
-                        variant="outlined"
-                        required
-                        inputProps={{ min: 1 }}
-                        error={formData.guest_count < 1}
-                        helperText={formData.guest_count < 1 ? "Number of guests must be at least 1" : ""}
-                      />
+      <TextField
+        label="Number of Guests"
+        name="guest_count"
+        type="number"
+        value={formData.guest_count}
+        onChange={(e) => {
+          const value = parseInt(e.target.value);
+          if (isNaN(value)) return;
+          
+          // Check if there's a maximum guest limit
+          const maxGuests = event?.max_guests_per_rsvp;
+          let newCount = value;
+          
+          // If max_guests_per_rsvp is set and not -1 (unlimited), enforce the limit
+          if (maxGuests !== undefined && maxGuests !== -1 && value > maxGuests) {
+            newCount = maxGuests;
+          }
+          
+          // Ensure count is at least 1
+          if (newCount < 1) newCount = 1;
+          
+          setFormData(prev => ({
+            ...prev,
+            guest_count: newCount,
+            guest_names: Array(newCount).fill('').map((_, i) => prev.guest_names[i] || '')
+          }));
+        }}
+        fullWidth
+        variant="outlined"
+        required
+        inputProps={{ 
+          min: 1,
+          max: event?.max_guests_per_rsvp === -1 ? undefined : event?.max_guests_per_rsvp
+        }}
+        error={formData.guest_count < 1}
+        helperText={
+          formData.guest_count < 1 
+            ? "Number of guests must be at least 1" 
+            : event?.max_guests_per_rsvp === 0 
+              ? "No additional guests allowed for this event"
+              : event?.max_guests_per_rsvp === -1
+                ? "No limit on number of guests"
+                : `Maximum ${event?.max_guests_per_rsvp} additional guests allowed`
+        }
+      />
 
                       {Array.from({ length: formData.guest_count }).map((_, index) => (
                         <TextField
@@ -556,4 +608,4 @@ const RSVPForm: React.FC = () => {
   );
 };
 
-export default RSVPForm; 
+export default RSVPForm;

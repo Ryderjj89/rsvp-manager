@@ -152,7 +152,7 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
 
 app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
-    const { title, description, date, location, needed_items, rsvp_cutoff_date } = req.body;
+    const { title, description, date, location, needed_items, rsvp_cutoff_date, max_guests_per_rsvp } = req.body;
     const wallpaperPath = req.file ? `${req.file.filename}` : null;
     
     // Generate a slug from the title
@@ -170,9 +170,12 @@ app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, r
       console.error('Error parsing needed_items:', e);
     }
     
+    // Parse max_guests_per_rsvp to ensure it's a number
+    const maxGuests = parseInt(max_guests_per_rsvp as string) || 0;
+    
     const result = await db.run(
-      'INSERT INTO events (title, description, date, location, slug, needed_items, wallpaper, rsvp_cutoff_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, description, date, location, slug, JSON.stringify(parsedNeededItems), wallpaperPath, rsvp_cutoff_date]
+      'INSERT INTO events (title, description, date, location, slug, needed_items, wallpaper, rsvp_cutoff_date, max_guests_per_rsvp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, description, date, location, slug, JSON.stringify(parsedNeededItems), wallpaperPath, rsvp_cutoff_date, maxGuests]
     );
     
     res.status(201).json({ 
@@ -180,7 +183,8 @@ app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, r
       slug,
       wallpaper: wallpaperPath ? `/uploads/wallpapers/${wallpaperPath}` : null,
       needed_items: parsedNeededItems,
-      rsvp_cutoff_date
+      rsvp_cutoff_date,
+      max_guests_per_rsvp: maxGuests
     });
   } catch (error) {
     console.error('Error creating event:', error);
@@ -448,7 +452,7 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
 app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
     const { slug } = req.params;
-    const { title, description, date, location, needed_items, rsvp_cutoff_date } = req.body;
+    const { title, description, date, location, needed_items, rsvp_cutoff_date, max_guests_per_rsvp } = req.body;
     
     // Verify the event exists
     const eventRows = await db.all('SELECT * FROM events WHERE slug = ?', [slug]);
@@ -469,6 +473,11 @@ app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterReque
       console.error('Error parsing needed_items:', e);
     }
 
+    // Parse max_guests_per_rsvp to ensure it's a number
+    const maxGuests = max_guests_per_rsvp !== undefined ? 
+      (parseInt(max_guests_per_rsvp as string) || 0) : 
+      eventRows[0].max_guests_per_rsvp || 0;
+
     // Handle wallpaper update
     let wallpaperPath = eventRows[0].wallpaper;
     if (req.file) {
@@ -486,7 +495,7 @@ app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterReque
     
     // Update the event
     await db.run(
-      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ?, wallpaper = ? WHERE slug = ?',
+      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ?, wallpaper = ?, max_guests_per_rsvp = ? WHERE slug = ?',
       [
         title ?? eventRows[0].title,
         description === undefined ? eventRows[0].description : description,
@@ -495,6 +504,7 @@ app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterReque
         JSON.stringify(parsedNeededItems),
         rsvp_cutoff_date !== undefined ? rsvp_cutoff_date : eventRows[0].rsvp_cutoff_date,
         wallpaperPath,
+        maxGuests,
         slug
       ]
     );
@@ -543,6 +553,7 @@ async function initializeDatabase() {
         needed_items TEXT,
         wallpaper TEXT,
         rsvp_cutoff_date TEXT,
+        max_guests_per_rsvp INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -579,4 +590,4 @@ app.get('*', (req: Request, res: Response) => {
 app.listen(port, async () => {
   console.log(`Server running on port ${port}`);
   await connectToDatabase();
-}); 
+});

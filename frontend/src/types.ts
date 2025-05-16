@@ -9,6 +9,7 @@ export interface Event {
   needed_items: string[];
   wallpaper?: string;
   rsvp_cutoff_date?: string;
+  max_guests_per_rsvp?: number;
 }
 
 export interface Rsvp {
@@ -22,4 +23,4 @@ export interface Rsvp {
   items_bringing: string[] | string;
   other_items?: string;
   created_at: string;
-} 
+}
