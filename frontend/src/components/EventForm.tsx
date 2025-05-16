@@ -224,46 +224,6 @@ const EventForm: React.FC = () => {
             helperText="Set to 0 for no additional guests, -1 for unlimited"
             inputProps={{ min: -1 }}
           />
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={formData.email_notifications_enabled}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      email_notifications_enabled: e.target.checked,
-                    }));
-                  }}
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    '&.Mui-checked': {
-                      color: '#90caf9',
-                    },
-                  }}
-                />
-              }
-              label="Enable Email Notifications"
-              sx={{
-                color: 'rgba(255, 255, 255, 0.9)',
-              }}
-            />
-          </Box>
-          
-          {formData.email_notifications_enabled && (
-            <DarkTextField
-              fullWidth
-              label="Email Recipients (comma separated)"
-              name="email_recipients"
-              value={formData.email_recipients}
-              onChange={handleChange}
-              variant="outlined"
-              placeholder="email1@example.com, email2@example.com"
-              helperText="Enter email addresses separated by commas"
-              sx={{ mt: 2 }}
-            />
-          )}
           <DarkTextField
             fullWidth
             label="Location"
@@ -376,6 +336,52 @@ const EventForm: React.FC = () => {
                 />
               ))}
             </Box>
+          </Box>
+
+          <Box sx={{ mt: 4, mb: 3, borderTop: '1px solid rgba(255, 255, 255, 0.12)', pt: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.9)' }}>
+              Email Notifications
+            </Typography>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.email_notifications_enabled}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        email_notifications_enabled: e.target.checked,
+                      }));
+                    }}
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      '&.Mui-checked': {
+                        color: '#90caf9',
+                      },
+                    }}
+                  />
+                }
+                label="Enable Email Notifications"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.9)',
+                }}
+              />
+            </Box>
+            
+            {formData.email_notifications_enabled && (
+              <DarkTextField
+                fullWidth
+                label="Email Recipients (comma separated)"
+                name="email_recipients"
+                value={formData.email_recipients}
+                onChange={handleChange}
+                variant="outlined"
+                placeholder="email1@example.com, email2@example.com"
+                helperText="Enter email addresses separated by commas"
+                sx={{ mt: 2 }}
+              />
+            )}
           </Box>
 
           <Button
