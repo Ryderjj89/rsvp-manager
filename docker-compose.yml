@@ -16,10 +16,9 @@ services:
       - EMAIL_FROM_NAME=RSVP Manager
       - EMAIL_FROM_ADDRESS=your@email.com
       - EMAIL_SECURE=false
-      - EMAIL_RECIPIENTS=admin1@email.com,admin2@email.com
       - FRONTEND_BASE_URL=https://your-frontend-domain.com
     restart: unless-stopped
 
 volumes:
   data:
-  uploads: 
+  uploads:

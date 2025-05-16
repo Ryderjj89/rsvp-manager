@@ -325,18 +325,14 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       // Get recipients from event settings
       let recipients: string[] = [];
       
-      // First try to use the event's email recipients
+      // Use the event's email recipients
       if (eventEmailRecipients) {
         recipients = eventEmailRecipients.split(',').map(addr => addr.trim()).filter(Boolean);
       }
       
-      // If no event recipients, fall back to environment variables
-      if (recipients.length === 0) {
-        if (process.env.EMAIL_RECIPIENTS) {
-          recipients = process.env.EMAIL_RECIPIENTS.split(',').map(addr => addr.trim()).filter(Boolean);
-        } else if (process.env.EMAIL_USER) {
-          recipients = [process.env.EMAIL_USER];
-        }
+      // If no recipients are set for the event, use the sender email as a fallback
+      if (recipients.length === 0 && process.env.EMAIL_USER) {
+        recipients = [process.env.EMAIL_USER];
       }
       
       if (recipients.length > 0) {
