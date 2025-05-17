@@ -77,4 +77,44 @@ export async function sendRSVPEmail(data: RSVPEmailData) {
     subject,
     html,
   });
-} 
+}
+
+export interface RSVPEditLinkEmailData {
+  eventTitle: string;
+  eventSlug: string;
+  name: string;
+  to: string;
+  editLink: string;
+}
+
+export async function sendRSVPEditLinkEmail(data: RSVPEditLinkEmailData) {
+  const {
+    eventTitle,
+    eventSlug,
+    name,
+    to,
+    editLink,
+  } = data;
+
+  const subject = `Edit Your RSVP for ${eventTitle}`;
+
+  const html = `
+    <h2>Edit Your RSVP</h2>
+    <p>Hello ${name},</p>
+    <p>You have successfully RSVP'd for the event "${eventTitle}".</p>
+    <p>You can edit your RSVP at any time by clicking the link below:</p>
+    <p><a href="${editLink}">${editLink}</a></p>
+    <p>Please save this email if you think you might need to edit your submission later.</p>
+    <p>Thank you!</p>
+  `;
+
+  await transporter.sendMail({
+    from: {
+      name: process.env.EMAIL_FROM_NAME || '',
+      address: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || '',
+    },
+    to,
+    subject,
+    html,
+  });
+}

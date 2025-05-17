@@ -6,9 +6,20 @@ import dotenv from 'dotenv';
 import path from 'path';
 import multer from 'multer';
 import fs from 'fs';
-import { sendRSVPEmail } from './email';
+import { sendRSVPEmail, sendRSVPEditLinkEmail } from './email'; // Import the new email function
 
 dotenv.config();
+
+// Function to generate a random alphanumeric string
+function generateAlphanumericId(length: number): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -275,7 +286,17 @@ app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
 app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items } = req.body;
+    const { 
+      name, 
+      attending, 
+      bringing_guests, 
+      guest_count, 
+      guest_names, 
+      items_bringing, 
+      other_items,
+      send_email_confirmation, // New field for email opt-in
+      email_address // New field for recipient email
+    } = req.body;
     
     // Get the event with email notification settings
     const eventRows = await db.all('SELECT id, title, slug, email_notifications_enabled, email_recipients FROM events WHERE slug = ?', [slug]);
@@ -315,12 +336,23 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       console.error('Error parsing guest_names:', e);
     }
     
+    // Generate a unique edit ID
+    let editId = '';
+    let isUnique = false;
+    while (!isUnique) {
+      editId = generateAlphanumericId(16);
+      const existingRsvp = await db.get('SELECT id FROM rsvps WHERE edit_id = ?', [editId]);
+      if (!existingRsvp) {
+        isUnique = true;
+      }
+    }
+
     const result = await db.run(
-      'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '']
+      'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items, edit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '', editId]
     );
 
-    // Send email notifications if enabled for this event
+    // Send email notifications to event recipients if enabled for this event
     if (emailNotificationsEnabled) {
       // Get recipients from event settings
       let recipients: string[] = [];
@@ -352,16 +384,43 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
             });
           }
         } catch (emailErr) {
-          console.error('Error sending RSVP email:', emailErr);
+          console.error('Error sending RSVP email to event recipients:', emailErr);
         }
       } else {
-        console.warn('No email recipients set. Skipping RSVP email notification.');
+        console.warn('No event email recipients set. Skipping RSVP email notification to event recipients.');
       }
     } else {
-      console.log('Email notifications disabled for this event. Skipping RSVP email notification.');
+      console.log('Email notifications disabled for this event. Skipping RSVP email notification to event recipients.');
     }
 
-    // Return the complete RSVP data including the parsed arrays
+    // Send email confirmation with edit link to the submitter if requested
+    const sendEmailConfirmationBool = send_email_confirmation === 'true' || send_email_confirmation === true;
+    const submitterEmail = email_address?.trim();
+
+    if (sendEmailConfirmationBool && submitterEmail && process.env.EMAIL_USER) {
+      try {
+        const editLink = `${process.env.FRONTEND_BASE_URL}/events/${eventSlug}/rsvp/edit/${editId}`;
+        await sendRSVPEditLinkEmail({
+          eventTitle,
+          eventSlug,
+          name,
+          to: submitterEmail,
+          editLink,
+        });
+        console.log(`Sent RSVP edit link email to ${submitterEmail}`);
+      } catch (emailErr) {
+        console.error('Error sending RSVP edit link email:', emailErr);
+      }
+    } else if (sendEmailConfirmationBool && !submitterEmail) {
+      console.warn('Email confirmation requested but no email address provided. Skipping edit link email.');
+    } else if (sendEmailConfirmationBool && !process.env.EMAIL_USER) {
+       console.warn('Email confirmation requested but EMAIL_USER environment variable is not set. Cannot send edit link email.');
+    } else {
+      console.log('Email confirmation not requested. Skipping edit link email.');
+    }
+
+
+    // Return the complete RSVP data including the parsed arrays and edit_id
     res.status(201).json({
       id: result.lastID,
       event_id: eventId,
@@ -372,6 +431,7 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       guest_names: parsedGuestNames,
       items_bringing: parsedItemsBringing,
       other_items: other_items || '',
+      edit_id: editId,
       created_at: new Date().toISOString()
     });
   } catch (error) {
@@ -621,6 +681,7 @@ async function initializeDatabase() {
         guest_names TEXT,
         items_bringing TEXT,
         other_items TEXT,
+        edit_id TEXT UNIQUE, -- Add a column for the unique edit ID
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
       )
