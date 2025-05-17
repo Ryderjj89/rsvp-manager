@@ -512,6 +512,7 @@ const RSVPEditForm: React.FC = () => {
                           value={formData.guest_names[index] || ''}
                           onChange={handleChange}
                           required
+                          disabled={isEventClosed} // Disable if event is closed
                         />
                       ))}
                     </>
