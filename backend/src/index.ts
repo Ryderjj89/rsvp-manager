@@ -440,6 +440,34 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
   }
 });
 
+// Get RSVP by edit ID
+app.get('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
+  try {
+    const { editId } = req.params;
+    const rsvp = await db.get('SELECT * FROM rsvps WHERE edit_id = ?', [editId]);
+
+    if (!rsvp) {
+      return res.status(404).json({ error: 'RSVP not found' });
+    }
+
+    // Parse arrays for response
+    try {
+      rsvp.items_bringing = rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : [];
+      rsvp.guest_names = rsvp.guest_names ? JSON.parse(rsvp.guest_names) : [];
+    } catch (e) {
+      console.error('Error parsing arrays in response:', e);
+      rsvp.items_bringing = [];
+      rsvp.guest_names = [];
+    }
+
+    res.json(rsvp);
+  } catch (error) {
+    console.error('Error fetching RSVP by edit ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
 app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
   try {
     const { slug, id } = req.params;
@@ -459,6 +487,83 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Update RSVP by edit ID
+app.put('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
+  try {
+    const { editId } = req.params;
+    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items } = req.body;
+
+    // Find the RSVP by edit_id
+    const rsvp = await db.get('SELECT id, event_id FROM rsvps WHERE edit_id = ?', [editId]);
+
+    if (!rsvp) {
+      return res.status(404).json({ error: 'RSVP not found' });
+    }
+
+    const rsvpId = rsvp.id;
+    const eventId = rsvp.event_id;
+
+    // Parse items_bringing if it's a string
+    let parsedItemsBringing: string[] = [];
+    try {
+      if (typeof items_bringing === 'string') {
+        parsedItemsBringing = JSON.parse(items_bringing);
+      } else if (Array.isArray(items_bringing)) {
+        parsedItemsBringing = items_bringing;
+      }
+    } catch (e) {
+      console.error('Error parsing items_bringing:', e);
+    }
+
+    // Parse guest_names if it's a string
+    let parsedGuestNames: string[] = [];
+    try {
+      if (typeof guest_names === 'string' && guest_names.includes('[')) {
+        // If it's a JSON string array
+        parsedGuestNames = JSON.parse(guest_names);
+      } else if (typeof guest_names === 'string') {
+        // If it's a comma-separated string
+        parsedGuestNames = guest_names.split(',').map(name => name.trim()).filter(name => name);
+      } else if (Array.isArray(guest_names)) {
+        // If it's already an array
+        parsedGuestNames = guest_names.filter(name => name && name.trim());
+      }
+    } catch (e) {
+      console.error('Error parsing guest_names:', e);
+      parsedGuestNames = [];
+    }
+
+    // Update the RSVP
+    await db.run(
+      'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ?, other_items = ? WHERE id = ?',
+      [name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '', rsvpId]
+    );
+
+    // Get the updated RSVP to verify and return
+    const updatedRsvp = await db.get('SELECT * FROM rsvps WHERE id = ?', [rsvpId]);
+
+    if (!updatedRsvp) {
+      return res.status(404).json({ error: 'RSVP not found after update' });
+    }
+
+    // Parse arrays for response
+    try {
+      updatedRsvp.items_bringing = updatedRsvp.items_bringing ? JSON.parse(updatedRsvp.items_bringing) : [];
+      updatedRsvp.guest_names = updatedRsvp.guest_names ? JSON.parse(updatedRsvp.guest_names) : [];
+    } catch (e) {
+      console.error('Error parsing arrays in response:', e);
+      updatedRsvp.items_bringing = [];
+      updatedRsvp.guest_names = [];
+    }
+
+    res.json(updatedRsvp);
+  } catch (error) {
+    console.error('Error updating RSVP by edit ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 // Update RSVP
 app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {

@@ -8,6 +8,7 @@ import EventForm from './components/EventForm';
 import RSVPForm from './components/RSVPForm';
 import EventAdmin from './components/EventAdmin';
 import EventView from './components/EventView';
+import RSVPEditForm from './components/RSVPEditForm'; // Import the new component
 import './App.css';
 
 const darkTheme = createTheme({
@@ -71,6 +72,7 @@ const App: React.FC = () => {
               <Route path="/rsvp/events/:slug" element={<RSVPForm />} />
               <Route path="/admin/events/:slug" element={<EventAdmin />} />
               <Route path="/view/events/:slug" element={<EventView />} />
+              <Route path="/events/:slug/rsvp/edit/:editId" element={<RSVPEditForm />} /> {/* Add the new route */}
             </Routes>
           </Container>
         </Box>
@@ -79,4 +81,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App; 
+export default App;
