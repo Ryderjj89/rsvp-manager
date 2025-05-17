@@ -77,13 +77,6 @@ const RSVPEditForm: React.FC = () => {
         setEvent(eventResponse.data);
         setRsvpId(rsvpResponse.data.id);
 
-        if (!eventResponse.data || !rsvpResponse.data || !rsvpsResponse.data) {
-          throw new Error('Failed to fetch data from server');
-        }
-
-        setEvent(eventResponse.data);
-        setRsvpId(rsvpResponse.data.id);
-
         // Pre-fill the form with existing RSVP data
         setFormData({
           name: rsvpResponse.data.name,
@@ -432,138 +425,6 @@ const RSVPEditForm: React.FC = () => {
                 disabled={isEventClosed} // Disable if event is closed
               />
 
-              <FormControl fullWidth required>
-                <InputLabel>Are you attending?</InputLabel>
-                <Select
-                  name="attending"
-                  value={formData.attending}
-                  onChange={handleSelectChange}
-                  label="Are you attending?"
-                  required
-                >
-                  <MenuItem value="">Select an option</MenuItem>
-                  <MenuItem value="yes">Yes</MenuItem>
-                  <MenuItem value="no">No</MenuItem>
-                </Select>
-              </FormControl>
-
-              {formData.attending === 'yes' && (
-                <>
-                  <FormControl fullWidth required>
-                    <InputLabel>Are you bringing any guests?</InputLabel>
-                    <Select
-                      name="bringing_guests"
-                      value={formData.bringing_guests}
-                      onChange={handleSelectChange}
-                      label="Are you bringing any guests?"
-                      required
-                    >
-                      <MenuItem value="">Select an option</MenuItem>
-                      <MenuItem value="yes">Yes</MenuItem>
-                      <MenuItem value="no">No</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  {formData.bringing_guests === 'yes' && (
-                    <>
-                      <TextField
-                        label="Number of Guests"
-                        name="guest_count"
-                        type="number"
-                        value={formData.guest_count}
-                        onChange={(e) => {
-                          const value = parseInt(e.target.value);
-                          if (isNaN(value)) return;
-
-                          const maxGuests = event?.max_guests_per_rsvp;
-                          let newCount = value;
-
-                          if (maxGuests !== undefined && maxGuests !== -1 && value > maxGuests) {
-                            newCount = maxGuests;
-                          }
-
-                          if (newCount < 1) newCount = 1;
-
-                          setFormData(prev => ({
-                            ...prev,
-                            guest_count: newCount,
-                            guest_names: Array(newCount).fill('').map((_, i) => prev.guest_names[i] || '')
-                          }));
-                        }}
-                        fullWidth
-                        variant="outlined"
-                        required
-                        inputProps={{
-                          min: 1,
-                          max: event?.max_guests_per_rsvp === -1 ? undefined : event?.max_guests_per_rsvp
-                        }}
-                        error={formData.guest_count < 1}
-                        helperText={
-                          formData.guest_count < 1
-                            ? "Number of guests must be at least 1"
-                            : event?.max_guests_per_rsvp === 0
-                              ? "No additional guests allowed for this event"
-                              : event?.max_guests_per_rsvp === -1
-                                ? "No limit on number of guests"
-                                : `Maximum ${event?.max_guests_per_rsvp} additional guests allowed`
-                        }
-                      />
-
-                      {Array.from({ length: formData.guest_count }).map((_, index) => (
-                        <TextField
-                          key={index}
-                          fullWidth
-                          label={`Guest ${index + 1} Name`}
-                          name={`guest_name_${index}`}
-                          value={formData.guest_names[index] || ''}
-                          onChange={handleChange}
-                          required
-                        />
-                      ))}
-                    </>
-                  )}
-
-                  {neededItems.length > 0 && (
-                    <FormControl fullWidth>
-                      <InputLabel>What items are you bringing?</InputLabel>
-                      <Select
-                        multiple
-                        name="items_bringing"
-                        value={formData.items_bringing}
-                        onChange={handleItemsChange}
-                        input={<OutlinedInput label="What items are you bringing?" />}
-                        renderValue={(selected) => (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((value) => (
-                              <Chip key={value} label={value} />
-                            ))}
-                          </Box>
-                        )}
-                      >
-                        {neededItems.map((item) => (
-                          <MenuItem key={item} value={item}>
-                            <Checkbox checked={formData.items_bringing.includes(item)} />
-                            <ListItemText primary={item} />
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
-
-                  <TextField
-                    label="Any other item(s)?"
-                    name="other_items"
-                    value={formData.other_items}
-                    onChange={handleChange}
-                    fullWidth
-                    variant="outlined"
-                    multiline
-                    rows={2}
-                    placeholder="Enter any additional items you'd like to bring"
-                  />
-                </>
-              )}
-
               <FormControl fullWidth required disabled={isEventClosed}> {/* Disable if event is closed */}
                 <InputLabel>Are you attending?</InputLabel>
                 <Select
@@ -651,7 +512,6 @@ const RSVPEditForm: React.FC = () => {
                           value={formData.guest_names[index] || ''}
                           onChange={handleChange}
                           required
-                          disabled={isEventClosed} // Disable if event is closed
                         />
                       ))}
                     </>
