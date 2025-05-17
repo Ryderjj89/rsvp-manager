@@ -63,7 +63,7 @@ There are 2 branches, latest & dev.
 | Branch | Description |
 | ------------- | ------------- |
 | Latest | The most recent stable build. Use this if you don't like to get changes early. |
-| Dev | Use this if you want to be on the cutting edge, can be unstable. |
+| Dev | Use this if you want to be on the cutting edge. This can be unstable or even broken. |
 
 #### Environment Variables
 
