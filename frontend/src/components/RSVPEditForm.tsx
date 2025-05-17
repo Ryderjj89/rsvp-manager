@@ -401,6 +401,12 @@ const RSVPEditForm: React.FC = () => {
               Edit Your RSVP
             </Typography>
 
+            {event?.rsvp_cutoff_date && (
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
+                <strong>Note:</strong> Submissions cannot be edited after {new Date(event.rsvp_cutoff_date).toLocaleString()}
+              </Typography>
+            )}
+
             {isEventClosed && (
               <Typography color="error" align="center" sx={{ mb: 2 }}>
                 Event registration is closed. Changes are not allowed. Please contact the event organizer for assistance.
