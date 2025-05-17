@@ -9,8 +9,16 @@ services:
       - uploads:/app/uploads
     environment:
       - NODE_ENV=production
+      - EMAIL_HOST=smtp.example.com
+      - EMAIL_PORT=587
+      - EMAIL_USER=your@email.com
+      - EMAIL_PASS=yourpassword
+      - EMAIL_FROM_NAME=RSVP Manager
+      - EMAIL_FROM_ADDRESS=your@email.com
+      - EMAIL_SECURE=false
+      - FRONTEND_BASE_URL=https://your-frontend-domain.com
     restart: unless-stopped
 
 volumes:
   data:
-  uploads: 
+  uploads:

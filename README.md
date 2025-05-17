@@ -2,7 +2,7 @@
 
 A modern event RSVP management system with customizable backgrounds and item coordination.
 
-This project was created completely by the [Cursor AI Code Editor](https://www.cursor.com/)!
+This project was created completely by the [Cursor AI Code Editor](https://www.cursor.com/) & Visual Studio Code with [Cline](https://cline.bot/)!
 
 ## Features
 
@@ -12,6 +12,8 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
   - Upload custom wallpapers to personalize event pages
   - Track RSVPs and guest counts
   - Comprehensive admin interface for event management
+  - Email notifications for submitted RSVPs
+  - Individual submission links so users can edit their submissions
 
 - Item Coordination
   - Create and manage lists of needed items for events
@@ -62,6 +64,20 @@ There are 2 branches, latest & dev.
 | ------------- | ------------- |
 | Latest | The most recent stable build. Use this if you don't like to get changes early. |
 | Dev | Use this if you want to be on the cutting edge, can be unstable, or even broken. |
+
+#### Environment Variables
+
+These variables below are all for the email notifications. If you want to be able to send email notifications, each of these needs to be provided and filled out.
+
+| Variable | Description |
+| ------------- | ------------- |
+| EMAIL_HOST | Your email provider's host name |
+| EMAIL_PORT | Your email provider's SMTP port |
+| EMAIL_USER | Login username for your email provider |
+| EMAIL_PASS | Login password for your email provider |
+| EMAIL_FROM_NAME | Name displayed in the "from" on email notifications |
+| EMAIL_FROM_ADDRESS | Email displayed in the "from" on email notifications |
+| FRONTEND_BASE_URL | The main URL for your instance. This will be used in the links that are sent in the email notificiations, eg. https://rsvp.example.com |
 
 #### Environment Variables
 
@@ -133,6 +149,10 @@ docker run -d --name rsvp-manager \
    cd ../frontend
    npm start
    ```
+
+## Email Notifications (Currently in dev branch!)
+
+By setting up the environment variables in the `docker-compose.yml`, you can have notifications sent to the recipients of your choice when someone submits an RSVP to an event. The notification will include the details of their submission and links to view or manage the RSVPs for that event.
 
 ## Authentication with Authentik
 

@@ -60,6 +60,9 @@ interface Event {
   needed_items?: string[] | string;
   wallpaper?: string;
   rsvp_cutoff_date?: string;
+  max_guests_per_rsvp?: number;
+  email_notifications_enabled?: boolean;
+  email_recipients?: string;
 }
 
 interface EditFormData {
@@ -105,7 +108,9 @@ const EventAdmin: React.FC = () => {
     location: '',
     date: '',
     rsvp_cutoff_date: '',
-    wallpaper: null as File | null
+    wallpaper: null as File | null,
+    email_notifications_enabled: false,
+    email_recipients: ''
   });
 
   useEffect(() => {
@@ -567,7 +572,9 @@ const EventAdmin: React.FC = () => {
       location: event.location,
       date: event.date.slice(0, 16), // Format date for datetime-local input
       rsvp_cutoff_date: event.rsvp_cutoff_date ? event.rsvp_cutoff_date.slice(0, 16) : '',
-      wallpaper: null
+      wallpaper: null,
+      email_notifications_enabled: event.email_notifications_enabled || false,
+      email_recipients: event.email_recipients || ''
     });
     setUpdateInfoDialogOpen(true);
   };
@@ -584,6 +591,8 @@ const EventAdmin: React.FC = () => {
       formData.append('rsvp_cutoff_date', updateForm.rsvp_cutoff_date);
       formData.append('title', event.title); // Keep existing title
       formData.append('needed_items', JSON.stringify(event.needed_items)); // Keep existing needed items
+      formData.append('email_notifications_enabled', updateForm.email_notifications_enabled.toString());
+      formData.append('email_recipients', updateForm.email_recipients);
       
       // Append wallpaper if a new one was selected
       if (updateForm.wallpaper) {
@@ -602,7 +611,9 @@ const EventAdmin: React.FC = () => {
         location: updateForm.location,
         date: updateForm.date,
         rsvp_cutoff_date: updateForm.rsvp_cutoff_date,
-        wallpaper: response.data.wallpaper || prev.wallpaper
+        wallpaper: response.data.wallpaper || prev.wallpaper,
+        email_notifications_enabled: updateForm.email_notifications_enabled,
+        email_recipients: updateForm.email_recipients
       } : null);
       
       setUpdateInfoDialogOpen(false);
@@ -850,6 +861,7 @@ const EventAdmin: React.FC = () => {
                             <Chip 
                               key={index} 
                               label={item} 
+                              color="success" // Change color to success
                               sx={{ m: 0.5 }} 
                             />
                           )) : 
@@ -858,6 +870,7 @@ const EventAdmin: React.FC = () => {
                               <Chip 
                                 key={index} 
                                 label={item} 
+                                color="success" // Change color to success
                                 sx={{ m: 0.5 }} 
                               />
                             )) :
@@ -1125,6 +1138,40 @@ const EventAdmin: React.FC = () => {
                     shrink: true,
                   }}
                 />
+                <Box sx={{ mt: 1, mb: 2 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Email Notifications
+                  </Typography>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={updateForm.email_notifications_enabled}
+                        onChange={(e) => setUpdateForm(prev => ({
+                          ...prev,
+                          email_notifications_enabled: e.target.checked
+                        }))}
+                      />
+                    }
+                    label="Enable Email Notifications"
+                  />
+                  
+                  {updateForm.email_notifications_enabled && (
+                    <TextField
+                      fullWidth
+                      label="Email Recipients (comma separated)"
+                      value={updateForm.email_recipients}
+                      onChange={(e) => setUpdateForm(prev => ({
+                        ...prev,
+                        email_recipients: e.target.value
+                      }))}
+                      variant="outlined"
+                      placeholder="email1@example.com, email2@example.com"
+                      helperText="Enter email addresses separated by commas"
+                      sx={{ mt: 2 }}
+                    />
+                  )}
+                </Box>
+                
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Wallpaper
@@ -1181,4 +1228,4 @@ const EventAdmin: React.FC = () => {
   );
 };
 
-export default EventAdmin; 
+export default EventAdmin;

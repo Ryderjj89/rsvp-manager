@@ -6,8 +6,20 @@ import dotenv from 'dotenv';
 import path from 'path';
 import multer from 'multer';
 import fs from 'fs';
+import { sendRSVPEmail, sendRSVPEditLinkEmail } from './email'; // Import the new email function
 
 dotenv.config();
+
+// Function to generate a random alphanumeric string
+function generateAlphanumericId(length: number): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -151,7 +163,17 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
 
 app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
-    const { title, description, date, location, needed_items, rsvp_cutoff_date } = req.body;
+    const { 
+      title, 
+      description, 
+      date, 
+      location, 
+      needed_items, 
+      rsvp_cutoff_date, 
+      max_guests_per_rsvp,
+      email_notifications_enabled,
+      email_recipients
+    } = req.body;
     const wallpaperPath = req.file ? `${req.file.filename}` : null;
     
     // Generate a slug from the title
@@ -169,9 +191,15 @@ app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, r
       console.error('Error parsing needed_items:', e);
     }
     
+    // Parse max_guests_per_rsvp to ensure it's a number
+    const maxGuests = parseInt(max_guests_per_rsvp as string) || 0;
+    
+    // Parse email_notifications_enabled to ensure it's a boolean
+    const emailNotificationsEnabled = email_notifications_enabled === 'true' || email_notifications_enabled === true;
+    
     const result = await db.run(
-      'INSERT INTO events (title, description, date, location, slug, needed_items, wallpaper, rsvp_cutoff_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [title, description, date, location, slug, JSON.stringify(parsedNeededItems), wallpaperPath, rsvp_cutoff_date]
+      'INSERT INTO events (title, description, date, location, slug, needed_items, wallpaper, rsvp_cutoff_date, max_guests_per_rsvp, email_notifications_enabled, email_recipients) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [title, description, date, location, slug, JSON.stringify(parsedNeededItems), wallpaperPath, rsvp_cutoff_date, maxGuests, emailNotificationsEnabled ? 1 : 0, email_recipients || '']
     );
     
     res.status(201).json({ 
@@ -179,7 +207,10 @@ app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, r
       slug,
       wallpaper: wallpaperPath ? `/uploads/wallpapers/${wallpaperPath}` : null,
       needed_items: parsedNeededItems,
-      rsvp_cutoff_date
+      rsvp_cutoff_date,
+      max_guests_per_rsvp: maxGuests,
+      email_notifications_enabled: emailNotificationsEnabled,
+      email_recipients: email_recipients || ''
     });
   } catch (error) {
     console.error('Error creating event:', error);
@@ -255,15 +286,31 @@ app.get('/api/events/:slug/rsvps', async (req: Request, res: Response) => {
 app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items } = req.body;
+    const { 
+      name, 
+      attending, 
+      bringing_guests, 
+      guest_count, 
+      guest_names, 
+      items_bringing, 
+      other_items,
+      send_email_confirmation, // New field for email opt-in
+      email_address // New field for recipient email
+    } = req.body;
     
-    const eventRows = await db.all('SELECT id FROM events WHERE slug = ?', [slug]);
+    // Get the event with email notification settings
+    const eventRows = await db.all('SELECT id, title, slug, email_notifications_enabled, email_recipients FROM events WHERE slug = ?', [slug]);
     
     if (eventRows.length === 0) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
-    const eventId = eventRows[0].id;
+    const event = eventRows[0];
+    const eventId = event.id;
+    const eventTitle = event.title;
+    const eventSlug = event.slug;
+    const emailNotificationsEnabled = event.email_notifications_enabled;
+    const eventEmailRecipients = event.email_recipients;
     
     // Parse items_bringing if it's a string
     let parsedItemsBringing: string[] = [];
@@ -289,12 +336,91 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       console.error('Error parsing guest_names:', e);
     }
     
+    // Generate a unique edit ID
+    let editId = '';
+    let isUnique = false;
+    while (!isUnique) {
+      editId = generateAlphanumericId(16);
+      const existingRsvp = await db.get('SELECT id FROM rsvps WHERE edit_id = ?', [editId]);
+      if (!existingRsvp) {
+        isUnique = true;
+      }
+    }
+
     const result = await db.run(
-      'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '']
+      'INSERT INTO rsvps (event_id, name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items, edit_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [eventId, name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '', editId]
     );
 
-    // Return the complete RSVP data including the parsed arrays
+    // Send email notifications to event recipients if enabled for this event
+    if (emailNotificationsEnabled) {
+      // Get recipients from event settings
+      let recipients: string[] = [];
+      
+      // Use the event's email recipients
+      if (eventEmailRecipients) {
+        recipients = eventEmailRecipients.split(',').map((addr: string) => addr.trim()).filter(Boolean);
+      }
+      
+      // If no recipients are set for the event, use the sender email as a fallback
+      if (recipients.length === 0 && process.env.EMAIL_USER) {
+        recipients = [process.env.EMAIL_USER];
+      }
+      
+      if (recipients.length > 0) {
+        try {
+          for (const to of recipients) {
+            await sendRSVPEmail({
+              eventTitle,
+              eventSlug,
+              name,
+              attending,
+              bringingGuests: bringing_guests,
+              guestCount: guest_count,
+              guestNames: parsedGuestNames,
+              itemsBringing: parsedItemsBringing,
+              otherItems: other_items || '',
+              to,
+            });
+          }
+        } catch (emailErr) {
+          console.error('Error sending RSVP email to event recipients:', emailErr);
+        }
+      } else {
+        console.warn('No event email recipients set. Skipping RSVP email notification to event recipients.');
+      }
+    } else {
+      console.log('Email notifications disabled for this event. Skipping RSVP email notification to event recipients.');
+    }
+
+    // Send email confirmation with edit link to the submitter if requested
+    const sendEmailConfirmationBool = send_email_confirmation === 'true' || send_email_confirmation === true;
+    const submitterEmail = email_address?.trim();
+
+    if (sendEmailConfirmationBool && submitterEmail && process.env.EMAIL_USER) {
+      try {
+        const editLink = `${process.env.FRONTEND_BASE_URL}/events/${eventSlug}/rsvp/edit/${editId}`;
+        await sendRSVPEditLinkEmail({
+          eventTitle,
+          eventSlug,
+          name,
+          to: submitterEmail,
+          editLink,
+        });
+        console.log(`Sent RSVP edit link email to ${submitterEmail}`);
+      } catch (emailErr) {
+        console.error('Error sending RSVP edit link email:', emailErr);
+      }
+    } else if (sendEmailConfirmationBool && !submitterEmail) {
+      console.warn('Email confirmation requested but no email address provided. Skipping edit link email.');
+    } else if (sendEmailConfirmationBool && !process.env.EMAIL_USER) {
+       console.warn('Email confirmation requested but EMAIL_USER environment variable is not set. Cannot send edit link email.');
+    } else {
+      console.log('Email confirmation not requested. Skipping edit link email.');
+    }
+
+
+    // Return the complete RSVP data including the parsed arrays and edit_id
     res.status(201).json({
       id: result.lastID,
       event_id: eventId,
@@ -305,6 +431,7 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
       guest_names: parsedGuestNames,
       items_bringing: parsedItemsBringing,
       other_items: other_items || '',
+      edit_id: editId,
       created_at: new Date().toISOString()
     });
   } catch (error) {
@@ -312,6 +439,34 @@ app.post('/api/events/:slug/rsvp', async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Get RSVP by edit ID
+app.get('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
+  try {
+    const { editId } = req.params;
+    const rsvp = await db.get('SELECT * FROM rsvps WHERE edit_id = ?', [editId]);
+
+    if (!rsvp) {
+      return res.status(404).json({ error: 'RSVP not found' });
+    }
+
+    // Parse arrays for response
+    try {
+      rsvp.items_bringing = rsvp.items_bringing ? JSON.parse(rsvp.items_bringing) : [];
+      rsvp.guest_names = rsvp.guest_names ? JSON.parse(rsvp.guest_names) : [];
+    } catch (e) {
+      console.error('Error parsing arrays in response:', e);
+      rsvp.items_bringing = [];
+      rsvp.guest_names = [];
+    }
+
+    res.json(rsvp);
+  } catch (error) {
+    console.error('Error fetching RSVP by edit ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
   try {
@@ -332,6 +487,83 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Update RSVP by edit ID
+app.put('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
+  try {
+    const { editId } = req.params;
+    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items } = req.body;
+
+    // Find the RSVP by edit_id
+    const rsvp = await db.get('SELECT id, event_id FROM rsvps WHERE edit_id = ?', [editId]);
+
+    if (!rsvp) {
+      return res.status(404).json({ error: 'RSVP not found' });
+    }
+
+    const rsvpId = rsvp.id;
+    const eventId = rsvp.event_id;
+
+    // Parse items_bringing if it's a string
+    let parsedItemsBringing: string[] = [];
+    try {
+      if (typeof items_bringing === 'string') {
+        parsedItemsBringing = JSON.parse(items_bringing);
+      } else if (Array.isArray(items_bringing)) {
+        parsedItemsBringing = items_bringing;
+      }
+    } catch (e) {
+      console.error('Error parsing items_bringing:', e);
+    }
+
+    // Parse guest_names if it's a string
+    let parsedGuestNames: string[] = [];
+    try {
+      if (typeof guest_names === 'string' && guest_names.includes('[')) {
+        // If it's a JSON string array
+        parsedGuestNames = JSON.parse(guest_names);
+      } else if (typeof guest_names === 'string') {
+        // If it's a comma-separated string
+        parsedGuestNames = guest_names.split(',').map(name => name.trim()).filter(name => name);
+      } else if (Array.isArray(guest_names)) {
+        // If it's already an array
+        parsedGuestNames = guest_names.filter(name => name && name.trim());
+      }
+    } catch (e) {
+      console.error('Error parsing guest_names:', e);
+      parsedGuestNames = [];
+    }
+
+    // Update the RSVP
+    await db.run(
+      'UPDATE rsvps SET name = ?, attending = ?, bringing_guests = ?, guest_count = ?, guest_names = ?, items_bringing = ?, other_items = ? WHERE id = ?',
+      [name, attending, bringing_guests, guest_count, JSON.stringify(parsedGuestNames), JSON.stringify(parsedItemsBringing), other_items || '', rsvpId]
+    );
+
+    // Get the updated RSVP to verify and return
+    const updatedRsvp = await db.get('SELECT * FROM rsvps WHERE id = ?', [rsvpId]);
+
+    if (!updatedRsvp) {
+      return res.status(404).json({ error: 'RSVP not found after update' });
+    }
+
+    // Parse arrays for response
+    try {
+      updatedRsvp.items_bringing = updatedRsvp.items_bringing ? JSON.parse(updatedRsvp.items_bringing) : [];
+      updatedRsvp.guest_names = updatedRsvp.guest_names ? JSON.parse(updatedRsvp.guest_names) : [];
+    } catch (e) {
+      console.error('Error parsing arrays in response:', e);
+      updatedRsvp.items_bringing = [];
+      updatedRsvp.guest_names = [];
+    }
+
+    res.json(updatedRsvp);
+  } catch (error) {
+    console.error('Error updating RSVP by edit ID:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 // Update RSVP
 app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
@@ -412,7 +644,17 @@ app.put('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
 app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterRequest, res: Response) => {
   try {
     const { slug } = req.params;
-    const { title, description, date, location, needed_items, rsvp_cutoff_date } = req.body;
+    const { 
+      title, 
+      description, 
+      date, 
+      location, 
+      needed_items, 
+      rsvp_cutoff_date, 
+      max_guests_per_rsvp,
+      email_notifications_enabled,
+      email_recipients
+    } = req.body;
     
     // Verify the event exists
     const eventRows = await db.all('SELECT * FROM events WHERE slug = ?', [slug]);
@@ -433,6 +675,21 @@ app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterReque
       console.error('Error parsing needed_items:', e);
     }
 
+    // Parse max_guests_per_rsvp to ensure it's a number
+    const maxGuests = max_guests_per_rsvp !== undefined ? 
+      (parseInt(max_guests_per_rsvp as string) || 0) : 
+      eventRows[0].max_guests_per_rsvp || 0;
+      
+    // Parse email_notifications_enabled to ensure it's a boolean
+    const emailNotificationsEnabled = email_notifications_enabled !== undefined ?
+      (email_notifications_enabled === 'true' || email_notifications_enabled === true) :
+      eventRows[0].email_notifications_enabled;
+      
+    // Get email recipients
+    const emailRecipients = email_recipients !== undefined ?
+      email_recipients :
+      eventRows[0].email_recipients || '';
+
     // Handle wallpaper update
     let wallpaperPath = eventRows[0].wallpaper;
     if (req.file) {
@@ -450,7 +707,7 @@ app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterReque
     
     // Update the event
     await db.run(
-      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ?, wallpaper = ? WHERE slug = ?',
+      'UPDATE events SET title = ?, description = ?, date = ?, location = ?, needed_items = ?, rsvp_cutoff_date = ?, wallpaper = ?, max_guests_per_rsvp = ?, email_notifications_enabled = ?, email_recipients = ? WHERE slug = ?',
       [
         title ?? eventRows[0].title,
         description === undefined ? eventRows[0].description : description,
@@ -459,6 +716,9 @@ app.put('/api/events/:slug', upload.single('wallpaper'), async (req: MulterReque
         JSON.stringify(parsedNeededItems),
         rsvp_cutoff_date !== undefined ? rsvp_cutoff_date : eventRows[0].rsvp_cutoff_date,
         wallpaperPath,
+        maxGuests,
+        emailNotificationsEnabled ? 1 : 0,
+        emailRecipients,
         slug
       ]
     );
@@ -507,6 +767,9 @@ async function initializeDatabase() {
         needed_items TEXT,
         wallpaper TEXT,
         rsvp_cutoff_date TEXT,
+        max_guests_per_rsvp INTEGER DEFAULT 0,
+        email_notifications_enabled BOOLEAN DEFAULT 0,
+        email_recipients TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -523,6 +786,7 @@ async function initializeDatabase() {
         guest_names TEXT,
         items_bringing TEXT,
         other_items TEXT,
+        edit_id TEXT UNIQUE, -- Add a column for the unique edit ID
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
       )
@@ -543,4 +807,4 @@ app.get('*', (req: Request, res: Response) => {
 app.listen(port, async () => {
   console.log(`Server running on port ${port}`);
   await connectToDatabase();
-}); 
+});

@@ -17,6 +17,7 @@ import {
   ListItemText,
   OutlinedInput,
   Chip,
+  FormControlLabel, // Import FormControlLabel
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Event } from '../types';
@@ -29,6 +30,8 @@ interface RSVPFormData {
   guest_names: string[];
   items_bringing: string[];
   other_items: string;
+  send_email_confirmation: boolean; // New field for email opt-in
+  email_address: string; // New field for recipient email
 }
 
 const RSVPForm: React.FC = () => {
@@ -40,7 +43,9 @@ const RSVPForm: React.FC = () => {
     guest_count: 1,
     guest_names: [],
     items_bringing: [],
-    other_items: ''
+    other_items: '',
+    send_email_confirmation: false, // Initialize to false
+    email_address: '' // Initialize to empty
   });
   const [neededItems, setNeededItems] = useState<string[]>([]);
   const [claimedItems, setClaimedItems] = useState<string[]>([]);
@@ -184,6 +189,14 @@ const RSVPForm: React.FC = () => {
     }));
   };
 
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
+
   const handleSelectChange = (e: SelectChangeEvent<string>) => {
     const { name, value } = e.target;
     
@@ -196,18 +209,40 @@ const RSVPForm: React.FC = () => {
         guest_count: 0,
         guest_names: [],
         items_bringing: [], // Clear items when not attending
-        other_items: ''
+        other_items: '',
+        send_email_confirmation: false, // Also reset email opt-in
+        email_address: '' // And email address
       }));
     } else if (name === 'bringing_guests') {
-      // When bringing guests is changed
-      setFormData(prev => ({
-        ...prev,
-        bringing_guests: value as 'yes' | 'no',
-        // If changing to 'yes', set guest count to 1 and initialize one empty name field
-        guest_count: value === 'yes' ? 1 : 0,
-        // Clear guest names if changing to 'no', otherwise initialize with empty string
-        guest_names: value === 'no' ? [] : ['']
-      }));
+          // When bringing guests is changed
+          setFormData(prev => {
+            const maxGuests = event?.max_guests_per_rsvp;
+            let initialGuestCount = 1;
+            
+            // If max_guests_per_rsvp is 0, don't allow guests
+            if (maxGuests === 0 && value === 'yes') {
+              return {
+                ...prev,
+                bringing_guests: 'no',
+                guest_count: 0,
+                guest_names: []
+              };
+            }
+            
+            // If max_guests_per_rsvp is set and not -1 (unlimited), limit initial count
+            if (maxGuests !== undefined && maxGuests !== -1 && maxGuests < initialGuestCount) {
+              initialGuestCount = maxGuests;
+            }
+            
+            return {
+              ...prev,
+              bringing_guests: value as 'yes' | 'no',
+              // If changing to 'yes', set guest count to appropriate value
+              guest_count: value === 'yes' ? initialGuestCount : 0,
+              // Clear guest names if changing to 'no', otherwise initialize with empty strings
+              guest_names: value === 'no' ? [] : Array(initialGuestCount).fill('')
+            };
+          });
     } else {
       setFormData(prev => ({
         ...prev,
@@ -260,7 +295,9 @@ const RSVPForm: React.FC = () => {
       const submissionData = {
         ...formData,
         items_bringing: formData.items_bringing,
-        other_items: splitOtherItems
+        other_items: splitOtherItems,
+        send_email_confirmation: formData.send_email_confirmation,
+        email_address: formData.email_address.trim()
       };
       const response = await axios.post(`/api/events/${slug}/rsvp`, submissionData);
       
@@ -269,6 +306,14 @@ const RSVPForm: React.FC = () => {
         axios.get(`/api/events/${slug}`),
         axios.get(`/api/events/${slug}/rsvps`)
       ]);
+      
+      // Optionally display success message with edit link if email was sent
+      if (formData.send_email_confirmation && formData.email_address.trim()) {
+        // The backend sends the email, we just need to confirm success here
+        setSuccess(true);
+      } else {
+        setSuccess(true); // Still show success even if email wasn't sent
+      }
       
       // Process needed items
       let items: string[] = [];
@@ -465,19 +510,51 @@ const RSVPForm: React.FC = () => {
 
                   {formData.bringing_guests === 'yes' && (
                     <>
-                      <TextField
-                        label="Number of Guests"
-                        name="guest_count"
-                        type="number"
-                        value={formData.guest_count}
-                        onChange={handleChange}
-                        fullWidth
-                        variant="outlined"
-                        required
-                        inputProps={{ min: 1 }}
-                        error={formData.guest_count < 1}
-                        helperText={formData.guest_count < 1 ? "Number of guests must be at least 1" : ""}
-                      />
+      <TextField
+        label="Number of Guests"
+        name="guest_count"
+        type="number"
+        value={formData.guest_count}
+        onChange={(e) => {
+          const value = parseInt(e.target.value);
+          if (isNaN(value)) return;
+          
+          // Check if there's a maximum guest limit
+          const maxGuests = event?.max_guests_per_rsvp;
+          let newCount = value;
+          
+          // If max_guests_per_rsvp is set and not -1 (unlimited), enforce the limit
+          if (maxGuests !== undefined && maxGuests !== -1 && value > maxGuests) {
+            newCount = maxGuests;
+          }
+          
+          // Ensure count is at least 1
+          if (newCount < 1) newCount = 1;
+          
+          setFormData(prev => ({
+            ...prev,
+            guest_count: newCount,
+            guest_names: Array(newCount).fill('').map((_, i) => prev.guest_names[i] || '')
+          }));
+        }}
+        fullWidth
+        variant="outlined"
+        required
+        inputProps={{ 
+          min: 1,
+          max: event?.max_guests_per_rsvp === -1 ? undefined : event?.max_guests_per_rsvp
+        }}
+        error={formData.guest_count < 1}
+        helperText={
+          formData.guest_count < 1 
+            ? "Number of guests must be at least 1" 
+            : event?.max_guests_per_rsvp === 0 
+              ? "No additional guests allowed for this event"
+              : event?.max_guests_per_rsvp === -1
+                ? "No limit on number of guests"
+                : `Maximum ${event?.max_guests_per_rsvp} additional guests allowed`
+        }
+      />
 
                       {Array.from({ length: formData.guest_count }).map((_, index) => (
                         <TextField
@@ -534,6 +611,37 @@ const RSVPForm: React.FC = () => {
                 </>
               )}
 
+              {/* Email Notification Section */}
+              <Box sx={{ mt: 3, borderTop: '1px solid rgba(0, 0, 0, 0.12)', pt: 3 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  To receive a link to edit your submission later, please enable email notifications below.
+                </Typography>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.send_email_confirmation}
+                      onChange={handleCheckboxChange}
+                      name="send_email_confirmation"
+                    />
+                  }
+                  label="Send me an email confirmation with an edit link"
+                />
+                
+                {formData.send_email_confirmation && (
+                  <TextField
+                    fullWidth
+                    label="Your Email Address"
+                    name="email_address"
+                    type="email"
+                    value={formData.email_address}
+                    onChange={handleChange}
+                    variant="outlined"
+                    required // Make email required if checkbox is checked
+                    sx={{ mt: 2 }}
+                  />
+                )}
+              </Box>
+
               <Button
                 type="submit"
                 variant="contained"
@@ -543,7 +651,9 @@ const RSVPForm: React.FC = () => {
                   !formData.name.trim() || 
                   !formData.attending ||
                   (formData.attending === 'yes' && !formData.bringing_guests) ||
-                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))}
+                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim()))) ||
+                  (formData.send_email_confirmation && !formData.email_address.trim()) // Disable if email confirmation is checked but email is empty
+                }
                 sx={{ mt: 2 }}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
@@ -556,4 +666,4 @@ const RSVPForm: React.FC = () => {
   );
 };
 
-export default RSVPForm; 
+export default RSVPForm;
