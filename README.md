@@ -79,6 +79,20 @@ These variables below are all for the email notifications. If you want to be abl
 | EMAIL_FROM_ADDRESS | Email displayed in the "from" on email notifications |
 | FRONTEND_BASE_URL | The main URL for your instance. This will be used in the links that are sent in the email notificiations, eg. https://rsvp.example.com |
 
+#### Environment Variables
+
+These variables below are all for the email notifications. If you want to be able to send email notifications, each of these needs to be provided and filled out.
+
+| Variable | Description |
+| ------------- | ------------- |
+| EMAIL_HOST | Your email provider's host name |
+| EMAIL_PORT | Your email provider's SMTP port |
+| EMAIL_USER | Login username for your email provider |
+| EMAIL_PASS | Login password for your email provider |
+| EMAIL_FROM_NAME | Name displayed in the "from" on email notifications |
+| EMAIL_FROM_ADDRESS | Email displayed in the "from" on email notifications |
+| FRONTEND_BASE_URL | The main URL for your instance. This will be used in the links that are sent in the email notificiations, eg. https://rsvp.example.com |
+
 #### Docker Compose
 
 1. Clone the repository.
