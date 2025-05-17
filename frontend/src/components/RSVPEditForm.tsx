@@ -51,6 +51,7 @@ const RSVPEditForm: React.FC = () => {
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [rsvpId, setRsvpId] = useState<number | null>(null);
+  const [isEventClosed, setIsEventClosed] = useState(false); // New state to track if event is closed
 
   useEffect(() => {
     const fetchRsvpDetails = async () => {
@@ -60,6 +61,21 @@ const RSVPEditForm: React.FC = () => {
           axios.get(`/api/rsvps/edit/${editId}`), // New endpoint to fetch by editId
           axios.get(`/api/events/${slug}/rsvps`) // To get all RSVPs for claimed items
         ]);
+
+        if (!eventResponse.data || !rsvpResponse.data || !rsvpsResponse.data) {
+          throw new Error('Failed to fetch data from server');
+        }
+
+        // Check if event is closed for RSVPs
+        if (eventResponse.data.rsvp_cutoff_date) {
+          const cutoffDate = new Date(eventResponse.data.rsvp_cutoff_date);
+          if (new Date() > cutoffDate) {
+            setIsEventClosed(true); // Set state if closed
+          }
+        }
+
+        setEvent(eventResponse.data);
+        setRsvpId(rsvpResponse.data.id);
 
         if (!eventResponse.data || !rsvpResponse.data || !rsvpsResponse.data) {
           throw new Error('Failed to fetch data from server');
@@ -253,6 +269,13 @@ const RSVPEditForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent submission if the event is closed
+    if (isEventClosed) {
+      setError('Event registration is closed. Changes are not allowed.');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -385,6 +408,12 @@ const RSVPEditForm: React.FC = () => {
               Edit Your RSVP
             </Typography>
 
+            {isEventClosed && (
+              <Typography color="error" align="center" sx={{ mb: 2 }}>
+                Event registration is closed. Changes are not allowed. Please contact the event organizer for assistance.
+              </Typography>
+            )}
+
             {error && (
               <Typography color="error" align="center" sx={{ mb: 2 }}>
                 {error}
@@ -400,6 +429,7 @@ const RSVPEditForm: React.FC = () => {
                 required
                 fullWidth
                 variant="outlined"
+                disabled={isEventClosed} // Disable if event is closed
               />
 
               <FormControl fullWidth required>
@@ -534,20 +564,157 @@ const RSVPEditForm: React.FC = () => {
                 </>
               )}
 
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-                disabled={isSubmitting ||
-                  !formData.name.trim() ||
-                  !formData.attending ||
-                  (formData.attending === 'yes' && !formData.bringing_guests) ||
-                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))}
-                sx={{ mt: 2 }}
-              >
-                {isSubmitting ? 'Saving Changes...' : 'Save Changes'}
-              </Button>
+              <FormControl fullWidth required disabled={isEventClosed}> {/* Disable if event is closed */}
+                <InputLabel>Are you attending?</InputLabel>
+                <Select
+                  name="attending"
+                  value={formData.attending}
+                  onChange={handleSelectChange}
+                  label="Are you attending?"
+                  required
+                >
+                  <MenuItem value="">Select an option</MenuItem>
+                  <MenuItem value="yes">Yes</MenuItem>
+                  <MenuItem value="no">No</MenuItem>
+                </Select>
+              </FormControl>
+
+              {formData.attending === 'yes' && (
+                <>
+                  <FormControl fullWidth required disabled={isEventClosed}> {/* Disable if event is closed */}
+                    <InputLabel>Are you bringing any guests?</InputLabel>
+                    <Select
+                      name="bringing_guests"
+                      value={formData.bringing_guests}
+                      onChange={handleSelectChange}
+                      label="Are you bringing any guests?"
+                      required
+                    >
+                      <MenuItem value="">Select an option</MenuItem>
+                      <MenuItem value="yes">Yes</MenuItem>
+                      <MenuItem value="no">No</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {formData.bringing_guests === 'yes' && (
+                    <>
+                      <TextField
+                        label="Number of Guests"
+                        name="guest_count"
+                        type="number"
+                        value={formData.guest_count}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (isNaN(value)) return;
+
+                          const maxGuests = event?.max_guests_per_rsvp;
+                          let newCount = value;
+
+                          if (maxGuests !== undefined && maxGuests !== -1 && value > maxGuests) {
+                            newCount = maxGuests;
+                          }
+
+                          if (newCount < 1) newCount = 1;
+
+                          setFormData(prev => ({
+                            ...prev,
+                            guest_count: newCount,
+                            guest_names: Array(newCount).fill('').map((_, i) => prev.guest_names[i] || '')
+                          }));
+                        }}
+                        fullWidth
+                        variant="outlined"
+                        required
+                        inputProps={{
+                          min: 1,
+                          max: event?.max_guests_per_rsvp === -1 ? undefined : event?.max_guests_per_rsvp
+                        }}
+                        error={formData.guest_count < 1}
+                        helperText={
+                          formData.guest_count < 1
+                            ? "Number of guests must be at least 1"
+                            : event?.max_guests_per_rsvp === 0
+                              ? "No additional guests allowed for this event"
+                              : event?.max_guests_per_rsvp === -1
+                                ? "No limit on number of guests"
+                                : `Maximum ${event?.max_guests_per_rsvp} additional guests allowed`
+                        }
+                        disabled={isEventClosed} // Disable if event is closed
+                      />
+
+                      {Array.from({ length: formData.guest_count }).map((_, index) => (
+                        <TextField
+                          key={index}
+                          fullWidth
+                          label={`Guest ${index + 1} Name`}
+                          name={`guest_name_${index}`}
+                          value={formData.guest_names[index] || ''}
+                          onChange={handleChange}
+                          required
+                          disabled={isEventClosed} // Disable if event is closed
+                        />
+                      ))}
+                    </>
+                  )}
+
+                  {neededItems.length > 0 && (
+                    <FormControl fullWidth disabled={isEventClosed}> {/* Disable if event is closed */}
+                      <InputLabel>What items are you bringing?</InputLabel>
+                      <Select
+                        multiple
+                        name="items_bringing"
+                        value={formData.items_bringing}
+                        onChange={handleItemsChange}
+                        input={<OutlinedInput label="What items are you bringing?" />}
+                        renderValue={(selected) => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => (
+                              <Chip key={value} label={value} />
+                            ))}
+                          </Box>
+                        )}
+                      >
+                        {neededItems.map((item) => (
+                          <MenuItem key={item} value={item}>
+                            <Checkbox checked={formData.items_bringing.includes(item)} />
+                            <ListItemText primary={item} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+
+                  <TextField
+                    label="Any other item(s)?"
+                    name="other_items"
+                    value={formData.other_items}
+                    onChange={handleChange}
+                    fullWidth
+                    variant="outlined"
+                    multiline
+                    rows={2}
+                    placeholder="Enter any additional items you'd like to bring"
+                    disabled={isEventClosed} // Disable if event is closed
+                  />
+                </>
+              )}
+
+              {!isEventClosed && ( // Hide submit button if event is closed
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  size="large"
+                  disabled={isSubmitting ||
+                    !formData.name.trim() ||
+                    !formData.attending ||
+                    (formData.attending === 'yes' && !formData.bringing_guests) ||
+                    (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))}
+                  sx={{ mt: 2 }}
+                >
+                  {isSubmitting ? 'Saving Changes...' : 'Save Changes'}
+                </Button>
+              )}
             </Box>
           </Paper>
         </Container>
