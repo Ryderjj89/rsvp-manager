@@ -2,7 +2,7 @@
 
 A modern event RSVP management system with customizable backgrounds and item coordination.
 
-This project was created completely by the [Cursor AI Code Editor](https://www.cursor.com/)!
+This project was created completely by the [Cursor AI Code Editor](https://www.cursor.com/) & Visual Studio Code with [Cline](https://cline.bot/)!
 
 ## Features
 
@@ -13,6 +13,7 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
   - Track RSVPs and guest counts
   - Comprehensive admin interface for event management
   - Email notifications for submitted RSVPs
+  - Individual submission links so users can edit their submissions
 
 - Item Coordination
   - Create and manage lists of needed items for events
