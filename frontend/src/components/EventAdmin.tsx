@@ -861,6 +861,7 @@ const EventAdmin: React.FC = () => {
                             <Chip 
                               key={index} 
                               label={item} 
+                              color="success" // Change color to success
                               sx={{ m: 0.5 }} 
                             />
                           )) : 
@@ -869,6 +870,7 @@ const EventAdmin: React.FC = () => {
                               <Chip 
                                 key={index} 
                                 label={item} 
+                                color="success" // Change color to success
                                 sx={{ m: 0.5 }} 
                               />
                             )) :
