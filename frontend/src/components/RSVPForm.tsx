@@ -17,6 +17,7 @@ import {
   ListItemText,
   OutlinedInput,
   Chip,
+  FormControlLabel, // Import FormControlLabel
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Event } from '../types';
