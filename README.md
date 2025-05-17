@@ -61,12 +61,26 @@ There are 2 branches, latest & dev.
 | Branch | Description |
 | ------------- | ------------- |
 | Latest | The most recent stable build. Use this if you don't like to get changes early. |
-| Dev | Use this if you want to be on the cutting edge, can be unstable. |
+| Dev | Use this if you want to be on the cutting edge, can be unstable, or even broken. |
+
+#### Environment Variables
+
+These variables below are all for the email notifications. If you want to be able to send email notifications, each of these needs to be provided and filled out.
+
+| Variable | Description |
+| ------------- | ------------- |
+| EMAIL_HOST | Your email provider's host name |
+| EMAIL_PORT | Your email provider's SMTP port |
+| EMAIL_USER | Login username for your email provider |
+| EMAIL_PASS | Login password for your email provider |
+| EMAIL_FROM_NAME | Name displayed in the "from" on email notifications |
+| EMAIL_FROM_ADDRESS | Email displayed in the "from" on email notifications |
+| FRONTEND_BASE_URL | The main URL for your instance. This will be used in the links that are sent in the email notificiations, eg. https://rsvp.example.com |
 
 #### Docker Compose
 
 1. Clone the repository.
-2. Edit the `docker-compose.yml` for the tag you'd like to use, then save it.
+2. Edit the `docker-compose.yml` for the tag you'd like to use & environment variables (described above), then save it.
 3. Run `docker compose up -d` to start the application.
 4. Access the application at `http://localhost:3000`.
 
@@ -81,6 +95,14 @@ docker run -d --name rsvp-manager \
   -v rsvp-manager_data:/app \
   -v rsvp-manager_uploads:/app/uploads \
   -e NODE_ENV=production \
+  -e EMAIL_HOST=smtp.host.com \
+  -e EMAIL_PORT=### \
+  -e EMAIL_USER=username \
+  -e EMAIL_PASS=password \
+  -e EMAIL_FROM_NAME=name \
+  -e EMAIL_FROM_ADDRESS=name@example.com \
+  -e EMAIL_SECURE=true or false \
+  -e FRONTEND_BASE_URL=https://rsvp.example.com \
   --restart unless-stopped \
   ryderjj89/rsvp-manager:<CHANGE THIS TAG!>
 ```
