@@ -96,10 +96,9 @@ export async function sendRSVPEditLinkEmail(data: RSVPEditLinkEmailData) {
     editLink,
   } = data;
 
-  const subject = `Edit Your RSVP for ${eventTitle}`;
+  const subject = `Confirming your RSVP for ${eventTitle}`; // Update the subject line
 
   const html = `
-    <h2>Edit Your RSVP</h2>
     <p>Hello ${name},</p>
     <p>You have successfully RSVP'd for the event "${eventTitle}".</p>
     <p>You can edit your RSVP at any time by clicking the link below:</p>
