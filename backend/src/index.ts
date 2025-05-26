@@ -967,10 +967,15 @@ async function sendConclusionEmails() {
 }
 
 
-// Schedule the task to run daily (e.g., at 1:00 AM)
-cron.schedule('0 1 * * *', () => {
+// Schedule the task to run daily (e.g., at 8:00 AM)
+const scheduledTask = cron.schedule('0 8 * * *', () => {
   sendConclusionEmails();
+}, {
+  scheduled: true,
+  timezone: process.env.TZ || 'UTC' // Use TZ environment variable, default to UTC
 });
+
+console.log(`Event conclusion email scheduled task scheduled for ${scheduledTask.options.timezone} at ${scheduledTask.options.recoverMissedExecutions ? 'a time based on missed executions' : 'the specified cron pattern'}.`);
 
 
 // Handle client-side routing
