@@ -1065,7 +1065,8 @@ app.get('/api/events/:slug/calendar.ics', async (req: Request, res: Response) =>
       description: event.description || '',
       location: event.location || '',
       date: event.date,
-      slug: event.slug
+      slug: event.slug,
+      rsvp_cutoff_date: event.rsvp_cutoff_date
     });
 
     // Set appropriate headers for ICS file download

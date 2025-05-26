@@ -7,8 +7,9 @@ export function generateICSContent(eventData: {
   location: string;
   date: string; // ISO date string
   slug: string;
+  rsvp_cutoff_date?: string; // Optional RSVP cutoff date
 }): string {
-  const { title, description, location, date, slug } = eventData;
+  const { title, description, location, date, slug, rsvp_cutoff_date } = eventData;
   
   // Convert date to ICS format (YYYYMMDDTHHMMSSZ)
   const eventDate = new Date(date);
@@ -24,8 +25,27 @@ export function generateICSContent(eventData: {
   // Current timestamp for DTSTAMP
   const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   
+  // Build description with RSVP cutoff note
+  let fullDescription = description || '';
+  
+  if (rsvp_cutoff_date) {
+    const cutoffDate = new Date(rsvp_cutoff_date);
+    const formattedCutoff = cutoffDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+    
+    const rsvpNote = `\\n\\n**Note:** The RSVP cut-off for this event is ${formattedCutoff}. Make sure you get your reservation in before then!`;
+    fullDescription += rsvpNote;
+  }
+  
   // Clean description for ICS format (remove HTML, escape special chars)
-  const cleanDescription = description
+  const cleanDescription = fullDescription
     .replace(/<[^>]*>/g, '') // Remove HTML tags
     .replace(/\n/g, '\\n') // Escape newlines
     .replace(/,/g, '\\,') // Escape commas
