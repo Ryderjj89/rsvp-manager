@@ -139,7 +139,7 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
 
     // Parse needed_items from JSON string to array and boolean fields
     const event = rows[0];
-    console.log('Raw event_conclusion_message from DB:', event.event_conclusion_message); // Add logging
+    console.log('Raw event_conclusion_message from DB:', event.event_conclusion_message); // Keep this line for now, it's helpful for debugging
     try {
       event.needed_items = event.needed_items ? JSON.parse(event.needed_items) : [];
       event.email_notifications_enabled = Boolean(event.email_notifications_enabled);
@@ -156,7 +156,11 @@ app.get('/api/events/:slug', async (req: Request, res: Response) => {
       event.wallpaper = `/uploads/wallpapers/${event.wallpaper}`;
     }
 
+    // Explicitly ensure event_conclusion_message is a string or null before sending
+    event.event_conclusion_message = typeof event.event_conclusion_message === 'string' ? event.event_conclusion_message : null;
+
     res.json(event);
+
   } catch (error) {
     console.error('Error fetching event:', error);
     res.status(500).json({ error: 'Internal server error' });
