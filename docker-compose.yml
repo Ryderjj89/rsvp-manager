@@ -17,6 +17,7 @@ services:
       - EMAIL_FROM_ADDRESS=your@email.com
       - EMAIL_SECURE=false
       - FRONTEND_BASE_URL=https://your-frontend-domain.com
+      - TZ=America/New_York # Set your desired timezone here
     restart: unless-stopped
 
 volumes:
