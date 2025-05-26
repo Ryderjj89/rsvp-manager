@@ -441,8 +441,8 @@ const EventForm: React.FC = () => {
                 <DarkTextField
                   fullWidth
                   label="Event conclusion message"
-                  name="thank_you_message"
-                  value={formData.thank_you_message}
+                  name="event_conclusion_message" // Corrected name prop
+                  value={formData.event_conclusion_message} // Corrected value prop
                   onChange={handleChange}
                   variant="outlined"
                   multiline
