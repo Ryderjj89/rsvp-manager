@@ -50,6 +50,7 @@ interface FormData {
   email_notifications_enabled: boolean;
   email_recipients: string;
   thank_you_message: string; // Added thank you message field
+  event_conclusion_email_enabled: boolean; // Added state for event conclusion email toggle
 }
 
 const EventForm: React.FC = () => {
@@ -65,6 +66,7 @@ const EventForm: React.FC = () => {
     email_notifications_enabled: false,
     email_recipients: '',
     thank_you_message: '', // Added thank you message state
+    event_conclusion_email_enabled: false, // Initialize new state
   });
   const [wallpaper, setWallpaper] = useState<File | null>(null);
   const [currentItem, setCurrentItem] = useState('');
@@ -116,7 +118,7 @@ const EventForm: React.FC = () => {
     setError(null);
     try {
       const submitData = new FormData();
-      
+
       // Append all form fields
       Object.entries(formData).forEach(([key, value]) => {
         if (key === 'needed_items') {
@@ -128,6 +130,9 @@ const EventForm: React.FC = () => {
 
       // Append thank you message
       submitData.append('thank_you_message', formData.thank_you_message);
+      // Append event conclusion email enabled state
+      submitData.append('event_conclusion_email_enabled', String(formData.event_conclusion_email_enabled));
+
 
       // Append wallpaper if selected
       if (wallpaper) {
@@ -148,11 +153,11 @@ const EventForm: React.FC = () => {
 
   return (
     <Container maxWidth="sm">
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 4, 
-          mt: 4, 
+      <Paper
+        elevation={3}
+        sx={{
+          p: 4,
+          mt: 4,
           bgcolor: 'rgba(22, 28, 36, 0.95)',
           backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05))'
         }}
@@ -403,20 +408,49 @@ const EventForm: React.FC = () => {
                   variant="outlined"
                   placeholder="email1@example.com, email2@example.com"
                   helperText="Enter email addresses separated by commas"
+                  sx={{ mt: 2 }} // Added margin top for spacing
                 />
               )}
 
-              <DarkTextField
-                fullWidth
-                label="Thank You Message (for email notifications)"
-                name="thank_you_message"
-                value={formData.thank_you_message}
-                onChange={handleChange}
-                variant="outlined"
-                multiline
-                rows={4}
-                helperText="This message will be sent to attendees who opted for email notifications the day after the event."
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.event_conclusion_email_enabled}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        event_conclusion_email_enabled: e.target.checked,
+                      }));
+                    }}
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      '&.Mui-checked': {
+                        color: '#90caf9',
+                      },
+                    }}
+                  />
+                }
+                label="Enable Event Conclusion Email"
+                sx={{
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  mt: 2, // Added margin top for spacing
+                }}
               />
+
+              {formData.event_conclusion_email_enabled && (
+                <DarkTextField
+                  fullWidth
+                  label="Event conclusion message"
+                  name="thank_you_message"
+                  value={formData.thank_you_message}
+                  onChange={handleChange}
+                  variant="outlined"
+                  multiline
+                  rows={4}
+                  helperText="This message will be sent to attendees who opted for email notifications the day after the event."
+                  sx={{ mt: 2 }} // Added margin top for spacing
+                />
+              )}
             </Box>
           </Box>
 
