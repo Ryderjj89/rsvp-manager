@@ -49,7 +49,7 @@ interface FormData {
   max_guests_per_rsvp: number;
   email_notifications_enabled: boolean;
   email_recipients: string;
-  thank_you_message: string; // Added thank you message field
+  event_conclusion_message: string; // Renamed from thank_you_message
   event_conclusion_email_enabled: boolean; // Added state for event conclusion email toggle
 }
 
@@ -65,7 +65,7 @@ const EventForm: React.FC = () => {
     max_guests_per_rsvp: 0,
     email_notifications_enabled: false,
     email_recipients: '',
-    thank_you_message: '', // Added thank you message state
+    event_conclusion_message: '', // Renamed state
     event_conclusion_email_enabled: false, // Initialize new state
   });
   const [wallpaper, setWallpaper] = useState<File | null>(null);
@@ -128,16 +128,16 @@ const EventForm: React.FC = () => {
         }
       });
 
-      // Append thank you message
-      submitData.append('thank_you_message', formData.thank_you_message);
-      // Append event conclusion email enabled state
-      submitData.append('event_conclusion_email_enabled', String(formData.event_conclusion_email_enabled));
+      // Append event conclusion message
+      submitData.append('event_conclusion_message', formData.event_conclusion_message); // Use correct key and state variable
 
 
       // Append wallpaper if selected
       if (wallpaper) {
         submitData.append('wallpaper', wallpaper);
       }
+
+      console.log('Submitting event creation data:', Object.fromEntries(submitData.entries())); // Add logging
 
       await axios.post('/api/events', submitData, {
         headers: {
