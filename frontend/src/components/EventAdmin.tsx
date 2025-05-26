@@ -75,6 +75,19 @@ interface EditFormData {
   other_items: string;
 }
 
+interface UpdateFormData {
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  rsvp_cutoff_date: string;
+  wallpaper: File | null;
+  email_notifications_enabled: boolean;
+  email_recipients: string;
+  event_conclusion_email_enabled: boolean;
+  event_conclusion_message: string;
+}
+
 const EventAdmin: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -103,14 +116,17 @@ const EventAdmin: React.FC = () => {
   const [newItem, setNewItem] = useState('');
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [updateInfoDialogOpen, setUpdateInfoDialogOpen] = useState(false);
-  const [updateForm, setUpdateForm] = useState({
+  const [updateForm, setUpdateForm] = useState<UpdateFormData>({
+    title: '',
     description: '',
     location: '',
     date: '',
     rsvp_cutoff_date: '',
-    wallpaper: null as File | null,
+    wallpaper: null,
     email_notifications_enabled: false,
-    email_recipients: ''
+    email_recipients: '',
+    event_conclusion_email_enabled: false,
+    event_conclusion_message: ''
   });
 
   useEffect(() => {
