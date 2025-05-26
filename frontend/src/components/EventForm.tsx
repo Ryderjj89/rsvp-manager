@@ -128,9 +128,6 @@ const EventForm: React.FC = () => {
         }
       });
 
-      // Append event conclusion message
-      submitData.append('event_conclusion_message', String(formData.event_conclusion_message)); // Ensure it's a string
-
 
       // Append wallpaper if selected
       if (wallpaper) {
