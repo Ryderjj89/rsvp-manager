@@ -249,6 +249,58 @@ const EventForm: React.FC = () => {
                 helperText="Set to 0 for no additional guests, -1 for unlimited"
                 inputProps={{ min: -1 }}
               />
+              {/* Needed Items moved here */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  Needed Items
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <DarkTextField
+                    fullWidth
+                    label="Add Item"
+                    value={currentItem}
+                    onChange={handleItemChange}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleAddItem}
+                    disabled={!currentItem.trim()}
+                    startIcon={<AddIcon />}
+                    sx={{
+                      bgcolor: '#90caf9',
+                      '&:hover': {
+                        bgcolor: '#42a5f5',
+                      },
+                      '&.Mui-disabled': {
+                        bgcolor: 'rgba(144, 202, 249, 0.3)',
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formData.needed_items.map((item, index) => (
+                    <Chip
+                      key={index}
+                      label={item}
+                      onDelete={() => handleRemoveItem(index)}
+                      sx={{
+                        bgcolor: 'rgba(144, 202, 249, 0.2)',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        '& .MuiChip-deleteIcon': {
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          '&:hover': {
+                            color: 'rgba(255, 255, 255, 0.9)',
+                          }
+                        }
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
             </Box>
           </Box>
 
@@ -310,58 +362,6 @@ const EventForm: React.FC = () => {
                   accept="image/jpeg,image/png,image/gif"
                   style={{ display: 'none' }}
                 />
-              </Box>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Needed Items
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <DarkTextField
-                    fullWidth
-                    label="Add Item"
-                    value={currentItem}
-                    onChange={handleItemChange}
-                    variant="outlined"
-                    size="small"
-                  />
-                  <Button
-                    variant="contained"
-                    onClick={handleAddItem}
-                    disabled={!currentItem.trim()}
-                    startIcon={<AddIcon />}
-                    sx={{
-                      bgcolor: '#90caf9',
-                      '&:hover': {
-                        bgcolor: '#42a5f5',
-                      },
-                      '&.Mui-disabled': {
-                        bgcolor: 'rgba(144, 202, 249, 0.3)',
-                      }
-                    }}
-                  >
-                    Add
-                  </Button>
-                </Box>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {formData.needed_items.map((item, index) => (
-                    <Chip
-                      key={index}
-                      label={item}
-                      onDelete={() => handleRemoveItem(index)}
-                      sx={{
-                        bgcolor: 'rgba(144, 202, 249, 0.2)',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        '& .MuiChip-deleteIcon': {
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          '&:hover': {
-                            color: 'rgba(255, 255, 255, 0.9)',
-                          }
-                        }
-                      }}
-                    />
-                  ))}
-                </Box>
               </Box>
             </Box>
           </Box>
