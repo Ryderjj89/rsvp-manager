@@ -82,7 +82,7 @@ const RSVPEditForm: React.FC = () => {
         // Pre-fill the form with existing RSVP data
         setFormData({
           name: rsvpResponse.data.name,
-          email_address: rsvpResponse.data.email_address || '',
+          email_address: rsvpResponse.data.attendee_email || '',
           attending: rsvpResponse.data.attending,
           bringing_guests: rsvpResponse.data.bringing_guests,
           guest_count: rsvpResponse.data.guest_count,
