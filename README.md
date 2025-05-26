@@ -14,6 +14,9 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
   - Comprehensive admin interface for event management
   - Email notifications for submitted RSVPs
   - Individual submission links so users can edit their submissions
+  - ICS calendar event so users can add your event to their calendar
+  - Customizable thank you/event conclusion message that can be automatically sent to your guests at 8 AM the following day
+    - This time is based on your local time zone that you specify with the TZ environment variable
 
 - Item Coordination
   - Create and manage lists of needed items for events
@@ -25,8 +28,10 @@ This project was created completely by the [Cursor AI Code Editor](https://www.c
 - Guest Management
   - Track attendance status (yes/no)
   - Support for bringing additional guests
-  - Keep track of guest names
+  - Keep track of guest names and email addresses
   - View all RSVPs and items being brought
+  - Edit any part of a user's submission
+  - Re-send confirmation emails or just copy the unique submission link to send to the user in a message
 
 - Modern, Responsive UI
   - Clean, intuitive interface
@@ -67,7 +72,7 @@ There are 2 branches, latest & dev.
 
 #### Environment Variables
 
-These variables below are all for the email notifications. If you want to be able to send email notifications, each of these needs to be provided and filled out.
+These variables below are all for the email notifications. If you want to be able to send email notifications correctly, each of these needs to be provided and filled out.
 
 | Variable | Description |
 | ------------- | ------------- |
@@ -78,6 +83,7 @@ These variables below are all for the email notifications. If you want to be abl
 | EMAIL_FROM_NAME | Name displayed in the "from" on email notifications |
 | EMAIL_FROM_ADDRESS | Email displayed in the "from" on email notifications |
 | FRONTEND_BASE_URL | The main URL for your instance. This will be used in the links that are sent in the email notificiations, eg. https://rsvp.example.com |
+| TZ | Your [time zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) to use for scheduling the event conclusion/thank you messages |
 
 #### Docker Compose
 
@@ -105,6 +111,7 @@ docker run -d --name rsvp-manager \
   -e EMAIL_FROM_ADDRESS=name@example.com \
   -e EMAIL_SECURE=true or false \
   -e FRONTEND_BASE_URL=https://rsvp.example.com \
+  -e TZ=<CHANGE THIS!>
   --restart unless-stopped \
   ryderjj89/rsvp-manager:<CHANGE THIS TAG!>
 ```
