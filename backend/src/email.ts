@@ -14,8 +14,8 @@ export function generateICSContent(eventData: {
   const eventDate = new Date(date);
   const startDate = eventDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   
-  // Set end time to 2 hours after start time (default duration)
-  const endDate = new Date(eventDate.getTime() + 2 * 60 * 60 * 1000);
+  // Set end time to 4 hours after start time (default duration)
+  const endDate = new Date(eventDate.getTime() + 4 * 60 * 60 * 1000);
   const endDateFormatted = endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
   
   // Generate unique ID for the event
@@ -35,8 +35,7 @@ export function generateICSContent(eventData: {
   // Clean location for ICS format
   const cleanLocation = location
     .replace(/,/g, '\\,')
-    .replace(/;/g, '\\;')
-    .replace(/\\/g, '\\\\');
+    .replace(/;/g, '\\;');
   
   // Clean title for ICS format
   const cleanTitle = title
@@ -176,7 +175,7 @@ export async function sendRSVPEditLinkEmail(data: RSVPEditLinkEmailData) {
     <p><a href="${editLink}">${editLink}</a></p>
     <p style="margin: 20px 0;">
       <a href="${calendarLink}" 
-         style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+         style="color: #0066cc; padding: 12px 24px; text-decoration: none; border: 2px solid #0066cc; border-radius: 4px; display: inline-block; font-weight: bold;">
         📅 Add to Calendar!
       </a>
     </p>
