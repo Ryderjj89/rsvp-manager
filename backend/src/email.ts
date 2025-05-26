@@ -40,17 +40,16 @@ export function generateICSContent(eventData: {
       timeZoneName: 'short'
     });
     
-    const rsvpNote = `\\n\\n**Note:** The RSVP cut-off for this event is ${formattedCutoff}. Make sure you get your reservation in before then!`;
+    const rsvpNote = `\n\nNote: The RSVP cut-off for this event is ${formattedCutoff}. Make sure you get your reservation in before then!`;
     fullDescription += rsvpNote;
   }
   
   // Clean description for ICS format (remove HTML, escape special chars)
   const cleanDescription = fullDescription
     .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .replace(/\n/g, '\\n') // Escape newlines
     .replace(/,/g, '\\,') // Escape commas
     .replace(/;/g, '\\;') // Escape semicolons
-    .replace(/\\/g, '\\\\'); // Escape backslashes
+    .replace(/\n/g, '\\n'); // Escape newlines (do this last to avoid double escaping)
   
   // Clean location for ICS format
   const cleanLocation = location
