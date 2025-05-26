@@ -117,3 +117,37 @@ export async function sendRSVPEditLinkEmail(data: RSVPEditLinkEmailData) {
     html,
   });
 }
+
+export interface EventConclusionEmailData {
+  eventTitle: string;
+  attendeeName: string;
+  message: string;
+  to: string;
+}
+
+export async function sendEventConclusionEmail(data: EventConclusionEmailData) {
+  const {
+    eventTitle,
+    attendeeName,
+    message,
+    to,
+  } = data;
+
+  const subject = `Thank You for Attending ${eventTitle}!`; // Subject for the conclusion email
+
+  const html = `
+    <p>Hello ${attendeeName},</p>
+    <p>${message}</p>
+    <p>Thank you for attending!</p>
+  `;
+
+  await transporter.sendMail({
+    from: {
+      name: process.env.EMAIL_FROM_NAME || '',
+      address: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || '',
+    },
+    to,
+    subject,
+    html,
+  });
+}
