@@ -616,7 +616,7 @@ const EventAdmin: React.FC = () => {
       formData.append('email_notifications_enabled', updateForm.email_notifications_enabled.toString());
       formData.append('email_recipients', updateForm.email_recipients);
       formData.append('event_conclusion_email_enabled', updateForm.event_conclusion_email_enabled.toString()); // Append new field
-      formData.append('event_conclusion_message', updateForm.event_conclusion_message); // Append new field
+      formData.append('event_conclusion_message', String(updateForm.event_conclusion_message)); // Ensure it's a string
 
       // Append wallpaper if a new one was selected
       if (updateForm.wallpaper) {
