@@ -12,6 +12,7 @@ import {
   styled,
   Checkbox,
   FormControlLabel,
+  Divider, // Added Divider for visual separation
 } from '@mui/material';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -48,6 +49,7 @@ interface FormData {
   max_guests_per_rsvp: number;
   email_notifications_enabled: boolean;
   email_recipients: string;
+  thank_you_message: string; // Added thank you message field
 }
 
 const EventForm: React.FC = () => {
@@ -62,6 +64,7 @@ const EventForm: React.FC = () => {
     max_guests_per_rsvp: 0,
     email_notifications_enabled: false,
     email_recipients: '',
+    thank_you_message: '', // Added thank you message state
   });
   const [wallpaper, setWallpaper] = useState<File | null>(null);
   const [currentItem, setCurrentItem] = useState('');
@@ -123,6 +126,9 @@ const EventForm: React.FC = () => {
         }
       });
 
+      // Append thank you message
+      submitData.append('thank_you_message', formData.thank_you_message);
+
       // Append wallpaper if selected
       if (wallpaper) {
         submitData.append('wallpaper', wallpaper);
@@ -154,196 +160,215 @@ const EventForm: React.FC = () => {
         <Typography variant="h4" component="h2" gutterBottom color="primary" align="center" sx={{ color: '#90caf9' }}>
           Create New Event
         </Typography>
-        
+
         {error && (
           <Typography color="error" align="center" sx={{ mb: 2 }}>
             {error}
           </Typography>
         )}
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <DarkTextField
-            fullWidth
-            label="Title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            variant="outlined"
-            required
-          />
-          <DarkTextField
-            fullWidth
-            label="Description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            variant="outlined"
-            multiline
-            rows={4}
-          />
-          <DarkTextField
-            fullWidth
-            label="Date and Time"
-            name="date"
-            type="datetime-local"
-            value={formData.date}
-            onChange={handleChange}
-            variant="outlined"
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-          <DarkTextField
-            fullWidth
-            label="RSVP Cut-off Date"
-            name="rsvp_cutoff_date"
-            type="datetime-local"
-            value={formData.rsvp_cutoff_date}
-            onChange={handleChange}
-            variant="outlined"
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
-          
-          <DarkTextField
-            fullWidth
-            label="Maximum Additional Guests Per RSVP"
-            name="max_guests_per_rsvp"
-            type="number"
-            value={formData.max_guests_per_rsvp}
-            onChange={(e) => {
-              const value = parseInt(e.target.value);
-              setFormData((prev) => ({
-                ...prev,
-                max_guests_per_rsvp: isNaN(value) ? 0 : value,
-              }));
-            }}
-            variant="outlined"
-            helperText="Set to 0 for no additional guests, -1 for unlimited"
-            inputProps={{ min: -1 }}
-          />
-          <DarkTextField
-            fullWidth
-            label="Location"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            variant="outlined"
-            required
-          />
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography variant="subtitle1" gutterBottom sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              Event Wallpaper
+        <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {/* Part 1: Basic Event Details */}
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+              Basic Event Details
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                variant="outlined"
-                component="span"
-                startIcon={<WallpaperIcon />}
-                onClick={handleWallpaperClick}
-                sx={{ 
-                  flexGrow: 1,
-                  borderColor: '#64b5f6',
-                  color: '#64b5f6',
-                  '&:hover': {
-                    borderColor: '#90caf9',
-                    backgroundColor: 'rgba(100, 181, 246, 0.08)',
-                  }
-                }}
-              >
-                {wallpaper ? 'Change Wallpaper' : 'Upload Wallpaper'}
-              </Button>
-              {wallpaper && (
-                <IconButton 
-                  color="error" 
-                  onClick={() => setWallpaper(null)}
-                  size="small"
-                  sx={{ 
-                    color: '#f44336',
-                    '&:hover': {
-                      backgroundColor: 'rgba(244, 67, 54, 0.08)',
-                    }
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              )}
-            </Box>
-            {wallpaper && (
-              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mt: 1 }}>
-                Selected: {wallpaper.name}
-              </Typography>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleWallpaperChange}
-              accept="image/jpeg,image/png,image/gif"
-              style={{ display: 'none' }}
-            />
-          </Box>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              Needed Items
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <DarkTextField
                 fullWidth
-                label="Add Item"
-                value={currentItem}
-                onChange={handleItemChange}
+                label="Title"
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
                 variant="outlined"
-                size="small"
+                required
               />
-              <Button
-                variant="contained"
-                onClick={handleAddItem}
-                disabled={!currentItem.trim()}
-                startIcon={<AddIcon />}
-                sx={{ 
-                  bgcolor: '#90caf9',
-                  '&:hover': {
-                    bgcolor: '#42a5f5',
-                  },
-                  '&.Mui-disabled': {
-                    bgcolor: 'rgba(144, 202, 249, 0.3)',
-                  }
+              <DarkTextField
+                fullWidth
+                label="Description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                variant="outlined"
+                multiline
+                rows={4}
+              />
+              <DarkTextField
+                fullWidth
+                label="Location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                variant="outlined"
+                required
+              />
+              <DarkTextField
+                fullWidth
+                label="Date and Time"
+                name="date"
+                type="datetime-local"
+                value={formData.date}
+                onChange={handleChange}
+                variant="outlined"
+                required
+                InputLabelProps={{
+                  shrink: true,
                 }}
-              >
-                Add
-              </Button>
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {formData.needed_items.map((item, index) => (
-                <Chip
-                  key={index}
-                  label={item}
-                  onDelete={() => handleRemoveItem(index)}
-                  sx={{
-                    bgcolor: 'rgba(144, 202, 249, 0.2)',
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    '& .MuiChip-deleteIcon': {
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      '&:hover': {
-                        color: 'rgba(255, 255, 255, 0.9)',
-                      }
-                    }
-                  }}
-                />
-              ))}
+              />
+              <DarkTextField
+                fullWidth
+                label="RSVP Cut-off Date"
+                name="rsvp_cutoff_date"
+                type="datetime-local"
+                value={formData.rsvp_cutoff_date}
+                onChange={handleChange}
+                variant="outlined"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
+              <DarkTextField
+                fullWidth
+                label="Maximum Additional Guests Per RSVP"
+                name="max_guests_per_rsvp"
+                type="number"
+                value={formData.max_guests_per_rsvp}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setFormData((prev) => ({
+                    ...prev,
+                    max_guests_per_rsvp: isNaN(value) ? 0 : value,
+                  }));
+                }}
+                variant="outlined"
+                helperText="Set to 0 for no additional guests, -1 for unlimited"
+                inputProps={{ min: -1 }}
+              />
             </Box>
           </Box>
 
-          <Box sx={{ mt: 4, mb: 3, borderTop: '1px solid rgba(255, 255, 255, 0.12)', pt: 3 }}>
-            <Typography variant="h6" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.9)' }}>
-              Email Notifications
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.12)' }} />
+
+          {/* Part 2: Customization */}
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+              Customization
             </Typography>
-            
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography variant="subtitle1" gutterBottom sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  Event Wallpaper
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<WallpaperIcon />}
+                    onClick={handleWallpaperClick}
+                    sx={{
+                      flexGrow: 1,
+                      borderColor: '#64b5f6',
+                      color: '#64b5f6',
+                      '&:hover': {
+                        borderColor: '#90caf9',
+                        backgroundColor: 'rgba(100, 181, 246, 0.08)',
+                      }
+                    }}
+                  >
+                    {wallpaper ? 'Change Wallpaper' : 'Upload Wallpaper'}
+                  </Button>
+                  {wallpaper && (
+                    <IconButton
+                      color="error"
+                      onClick={() => setWallpaper(null)}
+                      size="small"
+                      sx={{
+                        color: '#f44336',
+                        '&:hover': {
+                          backgroundColor: 'rgba(244, 67, 54, 0.08)',
+                        }
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  )}
+                </Box>
+                {wallpaper && (
+                  <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mt: 1 }}>
+                    Selected: {wallpaper.name}
+                  </Typography>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleWallpaperChange}
+                  accept="image/jpeg,image/png,image/gif"
+                  style={{ display: 'none' }}
+                />
+              </Box>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Typography variant="subtitle1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  Needed Items
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <DarkTextField
+                    fullWidth
+                    label="Add Item"
+                    value={currentItem}
+                    onChange={handleItemChange}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleAddItem}
+                    disabled={!currentItem.trim()}
+                    startIcon={<AddIcon />}
+                    sx={{
+                      bgcolor: '#90caf9',
+                      '&:hover': {
+                        bgcolor: '#42a5f5',
+                      },
+                      '&.Mui-disabled': {
+                        bgcolor: 'rgba(144, 202, 249, 0.3)',
+                      }
+                    }}
+                  >
+                    Add
+                  </Button>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formData.needed_items.map((item, index) => (
+                    <Chip
+                      key={index}
+                      label={item}
+                      onDelete={() => handleRemoveItem(index)}
+                      sx={{
+                        bgcolor: 'rgba(144, 202, 249, 0.2)',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        '& .MuiChip-deleteIcon': {
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          '&:hover': {
+                            color: 'rgba(255, 255, 255, 0.9)',
+                          }
+                        }
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+
+          <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.12)' }} />
+
+          {/* Part 3: Notifications and Messaging */}
+          <Box>
+            <Typography variant="h6" gutterBottom sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+              Notifications and Messaging
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -367,21 +392,32 @@ const EventForm: React.FC = () => {
                   color: 'rgba(255, 255, 255, 0.9)',
                 }}
               />
-            </Box>
-            
-            {formData.email_notifications_enabled && (
+
+              {formData.email_notifications_enabled && (
+                <DarkTextField
+                  fullWidth
+                  label="Email Recipients (comma separated)"
+                  name="email_recipients"
+                  value={formData.email_recipients}
+                  onChange={handleChange}
+                  variant="outlined"
+                  placeholder="email1@example.com, email2@example.com"
+                  helperText="Enter email addresses separated by commas"
+                />
+              )}
+
               <DarkTextField
                 fullWidth
-                label="Email Recipients (comma separated)"
-                name="email_recipients"
-                value={formData.email_recipients}
+                label="Thank You Message (for email notifications)"
+                name="thank_you_message"
+                value={formData.thank_you_message}
                 onChange={handleChange}
                 variant="outlined"
-                placeholder="email1@example.com, email2@example.com"
-                helperText="Enter email addresses separated by commas"
-                sx={{ mt: 2 }}
+                multiline
+                rows={4}
+                helperText="This message will be sent to attendees who opted for email notifications the day after the event."
               />
-            )}
+            </Box>
           </Box>
 
           <Button
@@ -389,7 +425,7 @@ const EventForm: React.FC = () => {
             variant="contained"
             color="primary"
             size="large"
-            sx={{ 
+            sx={{
               mt: 2,
               bgcolor: '#90caf9',
               '&:hover': {
