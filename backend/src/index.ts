@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import multer from 'multer';
 import fs from 'fs';
-import { sendRSVPEmail, sendRSVPEditLinkEmail, sendEventConclusionEmail } from './email'; // Import the new email function
+import { sendRSVPEmail, sendRSVPEditLinkEmail, sendEventConclusionEmail, generateICSContent } from './email'; // Import the new email function and ICS generator
 import cron from 'node-cron'; // Import node-cron for scheduling
 
 dotenv.config();
@@ -1048,6 +1048,35 @@ const scheduledTask = cron.schedule('0 8 * * *', () => {
 
 console.log(`Event conclusion email scheduled task scheduled for timezone ${process.env.TZ || 'UTC'} at 8:00 AM.`);
 
+
+// ICS Calendar file endpoint
+app.get('/api/events/:slug/calendar.ics', async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const event = await db.get('SELECT * FROM events WHERE slug = ?', [slug]);
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    // Generate ICS content
+    const icsContent = generateICSContent({
+      title: event.title,
+      description: event.description || '',
+      location: event.location || '',
+      date: event.date,
+      slug: event.slug
+    });
+
+    // Set appropriate headers for ICS file download
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${event.slug}-calendar.ics"`);
+    res.send(icsContent);
+  } catch (error) {
+    console.error('Error generating ICS file:', error);
+    res.status(500).json({ error: 'Failed to generate calendar file' });
+  }
+});
 
 // Handle client-side routing
 app.get('*', (req: Request, res: Response) => {

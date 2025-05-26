@@ -1,5 +1,72 @@
 import nodemailer from 'nodemailer';
 
+// Function to generate ICS calendar content
+export function generateICSContent(eventData: {
+  title: string;
+  description: string;
+  location: string;
+  date: string; // ISO date string
+  slug: string;
+}): string {
+  const { title, description, location, date, slug } = eventData;
+  
+  // Convert date to ICS format (YYYYMMDDTHHMMSSZ)
+  const eventDate = new Date(date);
+  const startDate = eventDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  
+  // Set end time to 2 hours after start time (default duration)
+  const endDate = new Date(eventDate.getTime() + 2 * 60 * 60 * 1000);
+  const endDateFormatted = endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  
+  // Generate unique ID for the event
+  const uid = `${slug}-${Date.now()}@rsvp-manager`;
+  
+  // Current timestamp for DTSTAMP
+  const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  
+  // Clean description for ICS format (remove HTML, escape special chars)
+  const cleanDescription = description
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/\n/g, '\\n') // Escape newlines
+    .replace(/,/g, '\\,') // Escape commas
+    .replace(/;/g, '\\;') // Escape semicolons
+    .replace(/\\/g, '\\\\'); // Escape backslashes
+  
+  // Clean location for ICS format
+  const cleanLocation = location
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;')
+    .replace(/\\/g, '\\\\');
+  
+  // Clean title for ICS format
+  const cleanTitle = title
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;')
+    .replace(/\\/g, '\\\\');
+
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//RSVP Manager//Event Calendar//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${startDate}`,
+    `DTEND:${endDateFormatted}`,
+    `SUMMARY:${cleanTitle}`,
+    `DESCRIPTION:${cleanDescription}`,
+    `LOCATION:${cleanLocation}`,
+    'STATUS:CONFIRMED',
+    'TRANSP:OPAQUE',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  return icsContent;
+}
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT),
@@ -98,11 +165,21 @@ export async function sendRSVPEditLinkEmail(data: RSVPEditLinkEmailData) {
 
   const subject = `Confirming your RSVP for ${eventTitle}`; // Update the subject line
 
+  // Generate calendar download link
+  const baseUrl = process.env.FRONTEND_BASE_URL || '';
+  const calendarLink = `${baseUrl}/api/events/${eventSlug}/calendar.ics`;
+
   const html = `
     <p>Hello ${name},</p>
     <p>You have successfully RSVP'd for the event "${eventTitle}".</p>
     <p>You can edit your RSVP at any time by clicking the link below:</p>
     <p><a href="${editLink}">${editLink}</a></p>
+    <p style="margin: 20px 0;">
+      <a href="${calendarLink}" 
+         style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: bold;">
+        📅 Add to Calendar!
+      </a>
+    </p>
     <p>Please save this email if you think you might need to edit your submission later.</p>
     <p>Thank you!</p>
   `;
