@@ -1104,6 +1104,13 @@ const EventAdmin: React.FC = () => {
             <DialogTitle>Update Event Information</DialogTitle>
             <DialogContent>
               <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* Event Title Field */}
+                <TextField
+                  label="Title"
+                  value={updateForm.title}
+                  onChange={(e) => setUpdateForm(prev => ({ ...prev, title: e.target.value }))}
+                  fullWidth
+                />
                 <TextField
                   label="Description"
                   value={updateForm.description}
@@ -1171,7 +1178,43 @@ const EventAdmin: React.FC = () => {
                     />
                   )}
                 </Box>
-                
+
+                {/* Event Conclusion Email Settings */}
+                <Box sx={{ mt: 1, mb: 2 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Event Conclusion Email
+                  </Typography>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={updateForm.event_conclusion_email_enabled}
+                        onChange={(e) => setUpdateForm(prev => ({
+                          ...prev,
+                          event_conclusion_email_enabled: e.target.checked
+                        }))}
+                      />
+                    }
+                    label="Enable Event Conclusion Email"
+                  />
+
+                  {updateForm.event_conclusion_email_enabled && (
+                    <TextField
+                      fullWidth
+                      label="Event conclusion message"
+                      value={updateForm.event_conclusion_message}
+                      onChange={(e) => setUpdateForm(prev => ({
+                        ...prev,
+                        event_conclusion_message: e.target.value
+                      }))}
+                      variant="outlined"
+                      multiline
+                      rows={4}
+                      helperText="This message will be sent to attendees who opted for email notifications the day after the event."
+                      sx={{ mt: 2 }}
+                    />
+                  )}
+                </Box>
+
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Wallpaper
@@ -1187,8 +1230,8 @@ const EventAdmin: React.FC = () => {
                         alt="Current wallpaper"
                         sx={{
                           width: '100%',
-                          height: 120,
-                          objectFit: 'cover',
+                          maxHeight: 200, // Increased max height for better viewing
+                          objectFit: 'contain', // Changed to contain to show the whole image
                           borderRadius: 1,
                         }}
                       />
