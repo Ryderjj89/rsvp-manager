@@ -222,7 +222,7 @@ app.post('/api/events', upload.single('wallpaper'), async (req: MulterRequest, r
         emailNotificationsEnabled ? 1 : 0,
         email_recipients || '',
         eventConclusionEmailEnabled ? 1 : 0, // Save new field
-        event_conclusion_message || '' // Save new field
+    event_conclusion_message === undefined ? null : event_conclusion_message // Save new field
       ]
     );
 
