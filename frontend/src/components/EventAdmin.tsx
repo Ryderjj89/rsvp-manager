@@ -34,6 +34,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
+import EmailIcon from '@mui/icons-material/Email';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import axios from 'axios';
 
 interface RSVP {
@@ -45,6 +47,8 @@ interface RSVP {
   guest_names: string[] | string;
   items_bringing: string[] | string;
   other_items?: string;
+  attendee_email?: string;
+  edit_id?: string;
   event_id?: number;
   created_at?: string;
   updated_at?: string;
@@ -658,6 +662,48 @@ const EventAdmin: React.FC = () => {
     }
   };
 
+  const handleSendEmail = async (rsvp: RSVP) => {
+    if (!rsvp.attendee_email || !rsvp.edit_id || !event) {
+      setError('Cannot send email: missing email address or edit ID');
+      return;
+    }
+
+    try {
+      // Create a backend endpoint to resend the edit link email
+      await axios.post(`/api/rsvps/resend-email/${rsvp.edit_id}`);
+      // Show success message (you could add a snackbar or toast here)
+      console.log(`Email sent to ${rsvp.attendee_email}`);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setError('Failed to send email');
+    }
+  };
+
+  const handleCopyLink = async (rsvp: RSVP) => {
+    if (!rsvp.edit_id || !event) {
+      setError('Cannot copy link: missing edit ID');
+      return;
+    }
+
+    const editLink = `${window.location.origin}/events/${event.slug}/rsvp/edit/${rsvp.edit_id}`;
+    
+    try {
+      await navigator.clipboard.writeText(editLink);
+      // Show success message (you could add a snackbar or toast here)
+      console.log('Link copied to clipboard');
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = editLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      console.log('Link copied to clipboard (fallback method)');
+    }
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -854,6 +900,7 @@ const EventAdmin: React.FC = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Name</TableCell>
+                    <TableCell>Email</TableCell>
                     <TableCell>Attending</TableCell>
                     <TableCell>Guests</TableCell>
                     <TableCell>Needed Items</TableCell>
@@ -865,6 +912,7 @@ const EventAdmin: React.FC = () => {
                   {rsvps.map((rsvp: RSVP) => (
                     <TableRow key={rsvp.id}>
                       <TableCell>{rsvp.name || 'No name provided'}</TableCell>
+                      <TableCell>{rsvp.attendee_email || 'No email provided'}</TableCell>
                       <TableCell>
                         {rsvp.attending ? 
                           rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1) : 
@@ -917,8 +965,24 @@ const EventAdmin: React.FC = () => {
                         <IconButton
                           color="error"
                           onClick={() => handleDeleteRsvp(rsvp)}
+                          sx={{ mr: 1 }}
                         >
                           <DeleteIcon />
+                        </IconButton>
+                        <IconButton
+                          color="info"
+                          onClick={() => handleSendEmail(rsvp)}
+                          sx={{ mr: 1 }}
+                          disabled={!rsvp.attendee_email}
+                        >
+                          <EmailIcon />
+                        </IconButton>
+                        <IconButton
+                          color="secondary"
+                          onClick={() => handleCopyLink(rsvp)}
+                          disabled={!rsvp.edit_id}
+                        >
+                          <ContentCopyIcon />
                         </IconButton>
                       </TableCell>
                     </TableRow>

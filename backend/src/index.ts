@@ -522,6 +522,48 @@ app.get('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
   }
 });
 
+// Resend RSVP edit link email
+app.post('/api/rsvps/resend-email/:editId', async (req: Request, res: Response) => {
+  try {
+    const { editId } = req.params;
+    
+    // Get RSVP and event details
+    const rsvp = await db.get(`
+      SELECT r.*, e.title, e.slug 
+      FROM rsvps r 
+      JOIN events e ON r.event_id = e.id 
+      WHERE r.edit_id = ?
+    `, [editId]);
+
+    if (!rsvp) {
+      return res.status(404).json({ error: 'RSVP not found' });
+    }
+
+    if (!rsvp.attendee_email) {
+      return res.status(400).json({ error: 'No email address associated with this RSVP' });
+    }
+
+    if (!process.env.EMAIL_USER) {
+      return res.status(500).json({ error: 'Email service not configured' });
+    }
+
+    // Send the edit link email
+    const editLink = `${process.env.FRONTEND_BASE_URL}/events/${rsvp.slug}/rsvp/edit/${editId}`;
+    await sendRSVPEditLinkEmail({
+      eventTitle: rsvp.title,
+      eventSlug: rsvp.slug,
+      name: rsvp.name,
+      to: rsvp.attendee_email,
+      editLink,
+    });
+
+    res.json({ message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error resending RSVP edit link email:', error);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
+});
+
 
 app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) => {
   try {
