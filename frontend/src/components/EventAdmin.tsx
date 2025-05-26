@@ -154,7 +154,8 @@ const EventAdmin: React.FC = () => {
       }
 
       setEvent(eventResponse.data);
-      
+      console.log('Fetched event data:', eventResponse.data); // Add logging
+
       // Process needed items
       let items: string[] = [];
       if (eventResponse.data.needed_items) {
