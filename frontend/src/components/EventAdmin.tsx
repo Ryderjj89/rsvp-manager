@@ -596,7 +596,7 @@ const EventAdmin: React.FC = () => {
       email_notifications_enabled: event.email_notifications_enabled || false,
       email_recipients: event.email_recipients || '',
       event_conclusion_email_enabled: event.event_conclusion_email_enabled || false, // Include new field
-      event_conclusion_message: event.event_conclusion_message || '' // Include new field
+      event_conclusion_message: String(event.event_conclusion_message || '') // Ensure it's a string
     });
     setUpdateInfoDialogOpen(true);
   };
