@@ -584,13 +584,16 @@ const EventAdmin: React.FC = () => {
     if (!event) return;
     
     setUpdateForm({
+      title: event.title, // Include title
       description: event.description,
       location: event.location,
       date: event.date.slice(0, 16), // Format date for datetime-local input
       rsvp_cutoff_date: event.rsvp_cutoff_date ? event.rsvp_cutoff_date.slice(0, 16) : '',
       wallpaper: null,
       email_notifications_enabled: event.email_notifications_enabled || false,
-      email_recipients: event.email_recipients || ''
+      email_recipients: event.email_recipients || '',
+      event_conclusion_email_enabled: event.event_conclusion_email_enabled || false, // Include new field
+      event_conclusion_message: event.event_conclusion_message || '' // Include new field
     });
     setUpdateInfoDialogOpen(true);
   };
