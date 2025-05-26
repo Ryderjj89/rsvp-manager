@@ -615,12 +615,16 @@ const EventAdmin: React.FC = () => {
       formData.append('needed_items', JSON.stringify(event.needed_items)); // Keep existing needed items
       formData.append('email_notifications_enabled', updateForm.email_notifications_enabled.toString());
       formData.append('email_recipients', updateForm.email_recipients);
-      
+      formData.append('event_conclusion_email_enabled', updateForm.event_conclusion_email_enabled.toString()); // Append new field
+      formData.append('event_conclusion_message', updateForm.event_conclusion_message); // Append new field
+
       // Append wallpaper if a new one was selected
       if (updateForm.wallpaper) {
         formData.append('wallpaper', updateForm.wallpaper);
       }
-      
+
+      console.log('Submitting event update data:', Object.fromEntries(formData.entries())); // Add logging
+
       const response = await axios.put(`/api/events/${slug}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
