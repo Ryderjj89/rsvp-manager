@@ -547,10 +547,10 @@ app.delete('/api/events/:slug/rsvps/:id', async (req: Request, res: Response) =>
 app.put('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
   try {
     const { editId } = req.params;
-    const { name, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items, send_event_conclusion_email, attendee_email } = req.body; // Receive new fields
+    const { name, email_address, attending, bringing_guests, guest_count, guest_names, items_bringing, other_items, send_event_conclusion_email } = req.body; // Updated to use email_address
 
-    // Find the RSVP by edit_id
-    const rsvp = await db.get('SELECT id, event_id FROM rsvps WHERE edit_id = ?', [editId]);
+    // Find the RSVP by edit_id and get current email
+    const rsvp = await db.get('SELECT id, event_id, attendee_email, name FROM rsvps WHERE edit_id = ?', [editId]);
 
     if (!rsvp) {
       return res.status(404).json({ error: 'RSVP not found' });
@@ -558,6 +558,8 @@ app.put('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
 
     const rsvpId = rsvp.id;
     const eventId = rsvp.event_id;
+    const currentEmail = rsvp.attendee_email;
+    const newEmail = email_address?.trim() || null;
 
     // Parse items_bringing if it's a string
     let parsedItemsBringing: string[] = [];
@@ -594,8 +596,30 @@ app.put('/api/rsvps/edit/:editId', async (req: Request, res: Response) => {
       (send_event_conclusion_email === 'true' || send_event_conclusion_email === true) :
       Boolean(rsvp.send_event_conclusion_email); // Use existing value if not provided
 
-    const attendeeEmailToSave = attendee_email !== undefined ? attendee_email?.trim() || null : rsvp.attendee_email;
+    const attendeeEmailToSave = newEmail;
 
+    // Check if email address changed and send new confirmation if needed
+    const emailChanged = currentEmail !== newEmail && newEmail && process.env.EMAIL_USER;
+    
+    if (emailChanged) {
+      try {
+        // Get event details for the email
+        const event = await db.get('SELECT title, slug FROM events WHERE id = ?', [eventId]);
+        if (event) {
+          const editLink = `${process.env.FRONTEND_BASE_URL}/events/${event.slug}/rsvp/edit/${editId}`;
+          await sendRSVPEditLinkEmail({
+            eventTitle: event.title,
+            eventSlug: event.slug,
+            name: name ?? rsvp.name,
+            to: newEmail,
+            editLink,
+          });
+          console.log(`Sent new RSVP edit link email to updated address: ${newEmail}`);
+        }
+      } catch (emailErr) {
+        console.error('Error sending RSVP edit link email to new address:', emailErr);
+      }
+    }
 
     // Update the RSVP
     await db.run(
