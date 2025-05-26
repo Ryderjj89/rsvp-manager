@@ -387,7 +387,7 @@ const EventAdmin: React.FC = () => {
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
         name: editForm.name,
-        email_address: editForm.email_address,
+        attendee_email: editForm.email_address,
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
         guest_count: editForm.bringing_guests === 'yes' ? Math.max(1, parseInt(editForm.guest_count.toString(), 10)) : 0,
