@@ -63,6 +63,8 @@ interface Event {
   max_guests_per_rsvp?: number;
   email_notifications_enabled?: boolean;
   email_recipients?: string;
+  event_conclusion_email_enabled?: boolean; // Added event conclusion email toggle
+  event_conclusion_message?: string; // Added event conclusion message field
 }
 
 interface EditFormData {
