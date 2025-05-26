@@ -975,7 +975,7 @@ const scheduledTask = cron.schedule('0 8 * * *', () => {
   timezone: process.env.TZ || 'UTC' // Use TZ environment variable, default to UTC
 });
 
-console.log(`Event conclusion email scheduled task scheduled for ${scheduledTask.options.timezone} at ${scheduledTask.options.recoverMissedExecutions ? 'a time based on missed executions' : 'the specified cron pattern'}.`);
+console.log(`Event conclusion email scheduled task scheduled for timezone ${process.env.TZ || 'UTC'} at 8:00 AM.`);
 
 
 // Handle client-side routing
