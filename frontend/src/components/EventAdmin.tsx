@@ -1054,6 +1054,8 @@ const EventAdmin: React.FC = () => {
           <Dialog
             open={deleteEventDialogOpen}
             onClose={() => setDeleteEventDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
           >
             <DialogTitle>Delete Event</DialogTitle>
             <DialogContent>
