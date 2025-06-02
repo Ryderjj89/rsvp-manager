@@ -293,7 +293,8 @@ const RSVPForm: React.FC = () => {
         items_bringing: formData.items_bringing,
         other_items: splitOtherItems,
         send_email_confirmation: true, // Always send email confirmation now
-        email_address: formData.email_address.trim()
+        email_address: formData.email_address.trim(),
+        send_event_conclusion_email: true, // Always send true for conclusion email
       };
       const response = await axios.post(`/api/events/${slug}/rsvp`, submissionData);
       
