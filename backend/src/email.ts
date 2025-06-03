@@ -228,12 +228,11 @@ export async function sendEventConclusionEmail(data: EventConclusionEmailData) {
     to,
   } = data;
 
-  const subject = `Thank You for Attending ${eventTitle}!`; // Subject for the conclusion email
+  const subject = `Thank you for attending ${eventTitle}!`; // Subject for the conclusion email
 
   const html = `
     <p>Hello ${attendeeName},</p>
     <p>${message}</p>
-    <p>Thank you for attending!</p>
   `;
 
   await transporter.sendMail({
