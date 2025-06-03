@@ -29,11 +29,15 @@ import {
   ListItemText,
   Checkbox,
   Chip,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import WallpaperIcon from '@mui/icons-material/Wallpaper';
+import EmailIcon from '@mui/icons-material/Email';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import axios from 'axios';
 
 interface RSVP {
@@ -45,6 +49,8 @@ interface RSVP {
   guest_names: string[] | string;
   items_bringing: string[] | string;
   other_items?: string;
+  attendee_email?: string;
+  edit_id?: string;
   event_id?: number;
   created_at?: string;
   updated_at?: string;
@@ -63,16 +69,32 @@ interface Event {
   max_guests_per_rsvp?: number;
   email_notifications_enabled?: boolean;
   email_recipients?: string;
+  event_conclusion_email_enabled?: boolean; // Added event conclusion email toggle
+  event_conclusion_message?: string; // Added event conclusion message field
 }
 
 interface EditFormData {
   name: string;
+  email_address: string;
   attending: 'yes' | 'no' | 'maybe';
   bringing_guests: 'yes' | 'no';
   guest_count: number;
   guest_names: string[];
   items_bringing: string[];
   other_items: string;
+}
+
+interface UpdateFormData {
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  rsvp_cutoff_date: string;
+  wallpaper: File | null;
+  email_notifications_enabled: boolean;
+  email_recipients: string;
+  event_conclusion_email_enabled: boolean;
+  event_conclusion_message: string;
 }
 
 const EventAdmin: React.FC = () => {
@@ -91,6 +113,7 @@ const EventAdmin: React.FC = () => {
   const [rsvpToEdit, setRsvpToEdit] = useState<RSVP | null>(null);
   const [editForm, setEditForm] = useState<EditFormData>({
     name: '',
+    email_address: '',
     attending: 'yes',
     bringing_guests: 'no',
     guest_count: 0,
@@ -103,15 +126,21 @@ const EventAdmin: React.FC = () => {
   const [newItem, setNewItem] = useState('');
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [updateInfoDialogOpen, setUpdateInfoDialogOpen] = useState(false);
-  const [updateForm, setUpdateForm] = useState({
+  const [updateForm, setUpdateForm] = useState<UpdateFormData>({
+    title: '',
     description: '',
     location: '',
     date: '',
     rsvp_cutoff_date: '',
-    wallpaper: null as File | null,
+    wallpaper: null,
     email_notifications_enabled: false,
-    email_recipients: ''
+    email_recipients: '',
+    event_conclusion_email_enabled: false,
+    event_conclusion_message: ''
   });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
 
   useEffect(() => {
     fetchEventAndRsvps();
@@ -136,7 +165,8 @@ const EventAdmin: React.FC = () => {
       }
 
       setEvent(eventResponse.data);
-      
+      console.log('Fetched event data:', eventResponse.data); // Add logging
+
       // Process needed items
       let items: string[] = [];
       if (eventResponse.data.needed_items) {
@@ -243,6 +273,7 @@ const EventAdmin: React.FC = () => {
     setRsvpToEdit(rsvp);
     setEditForm({
       name: rsvp.name,
+      email_address: rsvp.attendee_email || '',
       attending: rsvp.attending || 'yes',
       bringing_guests: rsvp.bringing_guests || 'no',
       guest_count: typeof rsvp.guest_count === 'number' ? rsvp.guest_count : 0,
@@ -356,6 +387,7 @@ const EventAdmin: React.FC = () => {
       // Prepare submission data in the exact format the backend expects
       const submissionData = {
         name: editForm.name,
+        attendee_email: editForm.email_address,
         attending: editForm.attending,
         bringing_guests: editForm.bringing_guests,
         guest_count: editForm.bringing_guests === 'yes' ? Math.max(1, parseInt(editForm.guest_count.toString(), 10)) : 0,
@@ -394,6 +426,7 @@ const EventAdmin: React.FC = () => {
         const updatedRsvp: RSVP = {
           ...rsvpToEdit,
           ...submissionData,
+          attendee_email: editForm.email_address,
           guest_names: filteredGuestNames,
           items_bringing: editForm.items_bringing,
           other_items: splitOtherItems
@@ -568,13 +601,16 @@ const EventAdmin: React.FC = () => {
     if (!event) return;
     
     setUpdateForm({
+      title: event.title, // Include title
       description: event.description,
       location: event.location,
       date: event.date.slice(0, 16), // Format date for datetime-local input
       rsvp_cutoff_date: event.rsvp_cutoff_date ? event.rsvp_cutoff_date.slice(0, 16) : '',
       wallpaper: null,
       email_notifications_enabled: event.email_notifications_enabled || false,
-      email_recipients: event.email_recipients || ''
+      email_recipients: event.email_recipients || '',
+      event_conclusion_email_enabled: event.event_conclusion_email_enabled || false, // Include new field
+      event_conclusion_message: event.event_conclusion_message || '' // Handle null/undefined properly
     });
     setUpdateInfoDialogOpen(true);
   };
@@ -593,12 +629,16 @@ const EventAdmin: React.FC = () => {
       formData.append('needed_items', JSON.stringify(event.needed_items)); // Keep existing needed items
       formData.append('email_notifications_enabled', updateForm.email_notifications_enabled.toString());
       formData.append('email_recipients', updateForm.email_recipients);
-      
+      formData.append('event_conclusion_email_enabled', updateForm.event_conclusion_email_enabled.toString()); // Append new field
+      formData.append('event_conclusion_message', String(updateForm.event_conclusion_message)); // Ensure it's a string
+
       // Append wallpaper if a new one was selected
       if (updateForm.wallpaper) {
         formData.append('wallpaper', updateForm.wallpaper);
       }
-      
+
+      console.log('Submitting event update data:', Object.fromEntries(formData.entries())); // Add logging
+
       const response = await axios.put(`/api/events/${slug}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -630,6 +670,61 @@ const EventAdmin: React.FC = () => {
         wallpaper: e.target.files![0]
       }));
     }
+  };
+
+  const handleSendEmail = async (rsvp: RSVP) => {
+    if (!rsvp.attendee_email || !rsvp.edit_id || !event) {
+      setSnackbarMessage('Cannot send email: missing email address or edit ID');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      await axios.post(`/api/rsvps/resend-email/${rsvp.edit_id}`);
+      setSnackbarMessage(`Email sent successfully to ${rsvp.attendee_email}`);
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error sending email:', error);
+      setSnackbarMessage('Failed to send email');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleCopyLink = async (rsvp: RSVP) => {
+    if (!rsvp.edit_id || !event) {
+      setSnackbarMessage('Cannot copy link: missing edit ID');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    const editLink = `${window.location.origin}/events/${event.slug}/rsvp/edit/${rsvp.edit_id}`;
+    
+    try {
+      await navigator.clipboard.writeText(editLink);
+      setSnackbarMessage('Link copied to clipboard successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error copying to clipboard:', error);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = editLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setSnackbarMessage('Link copied to clipboard successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
   };
 
   if (loading) {
@@ -828,6 +923,7 @@ const EventAdmin: React.FC = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Name</TableCell>
+                    <TableCell>Email</TableCell>
                     <TableCell>Attending</TableCell>
                     <TableCell>Guests</TableCell>
                     <TableCell>Needed Items</TableCell>
@@ -839,6 +935,7 @@ const EventAdmin: React.FC = () => {
                   {rsvps.map((rsvp: RSVP) => (
                     <TableRow key={rsvp.id}>
                       <TableCell>{rsvp.name || 'No name provided'}</TableCell>
+                      <TableCell>{rsvp.attendee_email || 'No email provided'}</TableCell>
                       <TableCell>
                         {rsvp.attending ? 
                           rsvp.attending.charAt(0).toUpperCase() + rsvp.attending.slice(1) : 
@@ -891,8 +988,24 @@ const EventAdmin: React.FC = () => {
                         <IconButton
                           color="error"
                           onClick={() => handleDeleteRsvp(rsvp)}
+                          sx={{ mr: 1 }}
                         >
                           <DeleteIcon />
+                        </IconButton>
+                        <IconButton
+                          color="info"
+                          onClick={() => handleSendEmail(rsvp)}
+                          sx={{ mr: 1 }}
+                          disabled={!rsvp.attendee_email}
+                        >
+                          <EmailIcon />
+                        </IconButton>
+                        <IconButton
+                          color="secondary"
+                          onClick={() => handleCopyLink(rsvp)}
+                          disabled={!rsvp.edit_id}
+                        >
+                          <ContentCopyIcon />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -931,6 +1044,13 @@ const EventAdmin: React.FC = () => {
                   label="Name"
                   name="name"
                   value={editForm.name}
+                  onChange={handleTextInputChange}
+                  fullWidth
+                />
+                <TextField
+                  label="Email Address"
+                  name="email_address"
+                  value={editForm.email_address}
                   onChange={handleTextInputChange}
                   fullWidth
                 />
@@ -1033,6 +1153,8 @@ const EventAdmin: React.FC = () => {
           <Dialog
             open={deleteEventDialogOpen}
             onClose={() => setDeleteEventDialogOpen(false)}
+            maxWidth="sm"
+            fullWidth
           >
             <DialogTitle>Delete Event</DialogTitle>
             <DialogContent>
@@ -1104,6 +1226,13 @@ const EventAdmin: React.FC = () => {
             <DialogTitle>Update Event Information</DialogTitle>
             <DialogContent>
               <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {/* Event Title Field */}
+                <TextField
+                  label="Title"
+                  value={updateForm.title}
+                  onChange={(e) => setUpdateForm(prev => ({ ...prev, title: e.target.value }))}
+                  fullWidth
+                />
                 <TextField
                   label="Description"
                   value={updateForm.description}
@@ -1171,7 +1300,43 @@ const EventAdmin: React.FC = () => {
                     />
                   )}
                 </Box>
-                
+
+                {/* Event Conclusion Email Settings */}
+                <Box sx={{ mt: 1, mb: 2 }}>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Event Conclusion Email
+                  </Typography>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={updateForm.event_conclusion_email_enabled}
+                        onChange={(e) => setUpdateForm(prev => ({
+                          ...prev,
+                          event_conclusion_email_enabled: e.target.checked
+                        }))}
+                      />
+                    }
+                    label="Enable Event Conclusion Email"
+                  />
+
+                  {updateForm.event_conclusion_email_enabled && (
+                    <TextField
+                      fullWidth
+                      label="Event conclusion message"
+                      value={updateForm.event_conclusion_message}
+                      onChange={(e) => setUpdateForm(prev => ({
+                        ...prev,
+                        event_conclusion_message: e.target.value
+                      }))}
+                      variant="outlined"
+                      multiline
+                      rows={4}
+                      helperText="This message will be sent to attendees who opted for email notifications the day after the event."
+                      sx={{ mt: 2 }}
+                    />
+                  )}
+                </Box>
+
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Wallpaper
@@ -1187,8 +1352,8 @@ const EventAdmin: React.FC = () => {
                         alt="Current wallpaper"
                         sx={{
                           width: '100%',
-                          height: 120,
-                          objectFit: 'cover',
+                          maxHeight: 200, // Increased max height for better viewing
+                          objectFit: 'contain', // Changed to contain to show the whole image
                           borderRadius: 1,
                         }}
                       />
@@ -1222,6 +1387,16 @@ const EventAdmin: React.FC = () => {
               <Button onClick={handleUpdateInfoSubmit} color="primary">Save Changes</Button>
             </DialogActions>
           </Dialog>
+
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={6000}
+            onClose={handleSnackbarClose}
+          >
+            <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
         </Container>
       </Box>
     </Box>

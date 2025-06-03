@@ -24,28 +24,26 @@ import { Event } from '../types';
 
 interface RSVPFormData {
   name: string;
+  email_address: string; // Required email field
   attending: string;
   bringing_guests: string;
   guest_count: number;
   guest_names: string[];
   items_bringing: string[];
   other_items: string;
-  send_email_confirmation: boolean; // New field for email opt-in
-  email_address: string; // New field for recipient email
 }
 
 const RSVPForm: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [formData, setFormData] = useState<RSVPFormData>({
     name: '',
+    email_address: '', // Required email field
     attending: '',
     bringing_guests: '',
     guest_count: 1,
     guest_names: [],
     items_bringing: [],
-    other_items: '',
-    send_email_confirmation: false, // Initialize to false
-    email_address: '' // Initialize to empty
+    other_items: ''
   });
   const [neededItems, setNeededItems] = useState<string[]>([]);
   const [claimedItems, setClaimedItems] = useState<string[]>([]);
@@ -209,9 +207,7 @@ const RSVPForm: React.FC = () => {
         guest_count: 0,
         guest_names: [],
         items_bringing: [], // Clear items when not attending
-        other_items: '',
-        send_email_confirmation: false, // Also reset email opt-in
-        email_address: '' // And email address
+        other_items: ''
       }));
     } else if (name === 'bringing_guests') {
           // When bringing guests is changed
@@ -266,7 +262,7 @@ const RSVPForm: React.FC = () => {
     setError(null);
 
     // Validate required fields
-    if (!formData.name.trim() || !formData.attending) {
+    if (!formData.name.trim() || !formData.email_address.trim() || !formData.attending) {
       setError('Please fill in all required fields');
       setIsSubmitting(false);
       return;
@@ -296,8 +292,9 @@ const RSVPForm: React.FC = () => {
         ...formData,
         items_bringing: formData.items_bringing,
         other_items: splitOtherItems,
-        send_email_confirmation: formData.send_email_confirmation,
-        email_address: formData.email_address.trim()
+        send_email_confirmation: true, // Always send email confirmation now
+        email_address: formData.email_address.trim(),
+        send_event_conclusion_email: true, // Always send true for conclusion email
       };
       const response = await axios.post(`/api/events/${slug}/rsvp`, submissionData);
       
@@ -307,13 +304,8 @@ const RSVPForm: React.FC = () => {
         axios.get(`/api/events/${slug}/rsvps`)
       ]);
       
-      // Optionally display success message with edit link if email was sent
-      if (formData.send_email_confirmation && formData.email_address.trim()) {
-        // The backend sends the email, we just need to confirm success here
-        setSuccess(true);
-      } else {
-        setSuccess(true); // Still show success even if email wasn't sent
-      }
+      // Email confirmation is always sent now
+      setSuccess(true);
       
       // Process needed items
       let items: string[] = [];
@@ -476,6 +468,18 @@ const RSVPForm: React.FC = () => {
                 variant="outlined"
               />
 
+              <TextField
+                label="Email Address"
+                name="email_address"
+                type="email"
+                value={formData.email_address}
+                onChange={handleChange}
+                required
+                fullWidth
+                variant="outlined"
+                helperText="You will receive a confirmation email with an edit link"
+              />
+
               <FormControl fullWidth required>
                 <InputLabel>Are you attending?</InputLabel>
                 <Select
@@ -611,36 +615,6 @@ const RSVPForm: React.FC = () => {
                 </>
               )}
 
-              {/* Email Notification Section */}
-              <Box sx={{ mt: 3, borderTop: '1px solid rgba(0, 0, 0, 0.12)', pt: 3 }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  To receive a link to edit your submission later, please enable email notifications below.
-                </Typography>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.send_email_confirmation}
-                      onChange={handleCheckboxChange}
-                      name="send_email_confirmation"
-                    />
-                  }
-                  label="Send me an email confirmation with an edit link"
-                />
-                
-                {formData.send_email_confirmation && (
-                  <TextField
-                    fullWidth
-                    label="Your Email Address"
-                    name="email_address"
-                    type="email"
-                    value={formData.email_address}
-                    onChange={handleChange}
-                    variant="outlined"
-                    required // Make email required if checkbox is checked
-                    sx={{ mt: 2 }}
-                  />
-                )}
-              </Box>
 
               <Button
                 type="submit"
@@ -649,10 +623,10 @@ const RSVPForm: React.FC = () => {
                 size="large"
                 disabled={isSubmitting || 
                   !formData.name.trim() || 
+                  !formData.email_address.trim() ||
                   !formData.attending ||
                   (formData.attending === 'yes' && !formData.bringing_guests) ||
-                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim()))) ||
-                  (formData.send_email_confirmation && !formData.email_address.trim()) // Disable if email confirmation is checked but email is empty
+                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))
                 }
                 sx={{ mt: 2 }}
               >

@@ -23,6 +23,7 @@ import { Event } from '../types';
 
 interface RSVPFormData {
   name: string;
+  email_address: string;
   attending: string;
   bringing_guests: string;
   guest_count: number;
@@ -35,6 +36,7 @@ const RSVPEditForm: React.FC = () => {
   const { slug, editId } = useParams<{ slug: string; editId: string }>();
   const [formData, setFormData] = useState<RSVPFormData>({
     name: '',
+    email_address: '',
     attending: '',
     bringing_guests: '',
     guest_count: 1,
@@ -80,6 +82,7 @@ const RSVPEditForm: React.FC = () => {
         // Pre-fill the form with existing RSVP data
         setFormData({
           name: rsvpResponse.data.name,
+          email_address: rsvpResponse.data.attendee_email || '',
           attending: rsvpResponse.data.attending,
           bringing_guests: rsvpResponse.data.bringing_guests,
           guest_count: rsvpResponse.data.guest_count,
@@ -272,7 +275,7 @@ const RSVPEditForm: React.FC = () => {
     setIsSubmitting(true);
     setError(null);
 
-    if (!formData.name.trim() || !formData.attending) {
+    if (!formData.name.trim() || !formData.email_address.trim() || !formData.attending) {
       setError('Please fill in all required fields');
       setIsSubmitting(false);
       return;
@@ -431,6 +434,19 @@ const RSVPEditForm: React.FC = () => {
                 disabled={isEventClosed} // Disable if event is closed
               />
 
+              <TextField
+                label="Email Address"
+                name="email_address"
+                type="email"
+                value={formData.email_address}
+                onChange={handleChange}
+                required
+                fullWidth
+                variant="outlined"
+                disabled={isEventClosed} // Disable if event is closed
+                helperText="If you change your email, a new confirmation will be sent to the new address"
+              />
+
               <FormControl fullWidth required disabled={isEventClosed}> {/* Disable if event is closed */}
                 <InputLabel>Are you attending?</InputLabel>
                 <Select
@@ -574,6 +590,7 @@ const RSVPEditForm: React.FC = () => {
                   size="large"
                   disabled={isSubmitting ||
                     !formData.name.trim() ||
+                    !formData.email_address.trim() ||
                     !formData.attending ||
                     (formData.attending === 'yes' && !formData.bringing_guests) ||
                     (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))}

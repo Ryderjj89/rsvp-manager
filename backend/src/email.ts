@@ -1,5 +1,90 @@
 import nodemailer from 'nodemailer';
 
+// Function to generate ICS calendar content
+export function generateICSContent(eventData: {
+  title: string;
+  description: string;
+  location: string;
+  date: string; // ISO date string
+  slug: string;
+  rsvp_cutoff_date?: string; // Optional RSVP cutoff date
+}): string {
+  const { title, description, location, date, slug, rsvp_cutoff_date } = eventData;
+  
+  // Convert date to ICS format (YYYYMMDDTHHMMSSZ)
+  const eventDate = new Date(date);
+  const startDate = eventDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  
+  // Set end time to 4 hours after start time (default duration)
+  const endDate = new Date(eventDate.getTime() + 4 * 60 * 60 * 1000);
+  const endDateFormatted = endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  
+  // Generate unique ID for the event
+  const uid = `${slug}-${Date.now()}@rsvp-manager`;
+  
+  // Current timestamp for DTSTAMP
+  const now = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  
+  // Build description with RSVP cutoff note
+  let fullDescription = description || '';
+  
+  if (rsvp_cutoff_date) {
+    const cutoffDate = new Date(rsvp_cutoff_date);
+    const formattedCutoff = cutoffDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short'
+    });
+    
+    const rsvpNote = `\n\nNote: The RSVP cut-off for this event is ${formattedCutoff}. Make sure you get your reservation in before then!`;
+    fullDescription += rsvpNote;
+  }
+  
+  // Clean description for ICS format (remove HTML, escape special chars)
+  const cleanDescription = fullDescription
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
+    .replace(/,/g, '\\,') // Escape commas
+    .replace(/;/g, '\\;') // Escape semicolons
+    .replace(/\n/g, '\\n'); // Escape newlines (do this last to avoid double escaping)
+  
+  // Clean location for ICS format
+  const cleanLocation = location
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+  
+  // Clean title for ICS format
+  const cleanTitle = title
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;')
+    .replace(/\\/g, '\\\\');
+
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//RSVP Manager//Event Calendar//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${now}`,
+    `DTSTART:${startDate}`,
+    `DTEND:${endDateFormatted}`,
+    `SUMMARY:${cleanTitle}`,
+    `DESCRIPTION:${cleanDescription}`,
+    `LOCATION:${cleanLocation}`,
+    'STATUS:CONFIRMED',
+    'TRANSP:OPAQUE',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  return icsContent;
+}
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT),
@@ -98,13 +183,56 @@ export async function sendRSVPEditLinkEmail(data: RSVPEditLinkEmailData) {
 
   const subject = `Confirming your RSVP for ${eventTitle}`; // Update the subject line
 
+  // Generate calendar download link
+  const baseUrl = process.env.FRONTEND_BASE_URL || '';
+  const calendarLink = `${baseUrl}/api/events/${eventSlug}/calendar.ics`;
+
   const html = `
     <p>Hello ${name},</p>
     <p>You have successfully RSVP'd for the event "${eventTitle}".</p>
     <p>You can edit your RSVP at any time by clicking the link below:</p>
     <p><a href="${editLink}">${editLink}</a></p>
+    <p style="margin: 20px 0;">
+      <a href="${calendarLink}" 
+         style="color: #0066cc; padding: 12px 24px; text-decoration: none; border: 2px solid #0066cc; border-radius: 4px; display: inline-block; font-weight: bold;">
+        📅 Add to Calendar!
+      </a>
+    </p>
     <p>Please save this email if you think you might need to edit your submission later.</p>
     <p>Thank you!</p>
+  `;
+
+  await transporter.sendMail({
+    from: {
+      name: process.env.EMAIL_FROM_NAME || '',
+      address: process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || '',
+    },
+    to,
+    subject,
+    html,
+  });
+}
+
+export interface EventConclusionEmailData {
+  eventTitle: string;
+  attendeeName: string;
+  message: string;
+  to: string;
+}
+
+export async function sendEventConclusionEmail(data: EventConclusionEmailData) {
+  const {
+    eventTitle,
+    attendeeName,
+    message,
+    to,
+  } = data;
+
+  const subject = `Thank you for attending ${eventTitle}!`; // Subject for the conclusion email
+
+  const html = `
+    <p>Hello ${attendeeName},</p>
+    <p>${message}</p>
   `;
 
   await transporter.sendMail({
