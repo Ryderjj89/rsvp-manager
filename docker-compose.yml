@@ -5,7 +5,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - data:/app
+      - data:/app/database
       - uploads:/app/uploads
     environment:
       - NODE_ENV=production
