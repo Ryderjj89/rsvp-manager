@@ -945,9 +945,9 @@ const EventAdmin: React.FC = () => {
                       <TableCell>
                         {rsvp.bringing_guests === 'yes' ? 
                           `${rsvp.guest_count || 0} (${Array.isArray(rsvp.guest_names) ? 
-                            rsvp.guest_names.join(', ') : 
+                            rsvp.guest_names.map(name => name.trim()).join(', ') : 
                             typeof rsvp.guest_names === 'string' ? 
-                              rsvp.guest_names.replace(/\s+/g, ', ') : 
+                              rsvp.guest_names.replace(/\s+/g, ', ').trim() : 
                               'No names provided'})` : 
                           'No'
                         }
