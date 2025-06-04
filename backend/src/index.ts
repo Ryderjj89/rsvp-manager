@@ -57,7 +57,7 @@ interface RSVP {
 async function connectToDatabase() {
   try {
     // Database file will be in the app directory
-    const dbPath = path.join(__dirname, '../database.sqlite');
+    const dbPath = path.join(__dirname, '../database/database.sqlite');
 
     db = await open({
       filename: dbPath,

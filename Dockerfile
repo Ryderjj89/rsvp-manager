@@ -30,11 +30,12 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Create necessary directories and set permissions
-RUN mkdir -p /app/uploads/wallpapers && \
-    touch /app/database.sqlite && \
+RUN mkdir -p /app/uploads/wallpapers /app/database && \
+    touch /app/database/database.sqlite && \
     chown -R node:node /app && \
     chmod 755 /app/uploads && \
-    chmod 644 /app/database.sqlite
+    chmod 755 /app/database && \
+    chmod 644 /app/database/database.sqlite
 
 # Copy backend package files and install dependencies
 COPY backend/package*.json ./
@@ -51,4 +52,4 @@ USER node
 EXPOSE 3000
 
 # Start the application
-CMD ["node", "dist/index.js"] 
+CMD ["node", "dist/index.js"]
