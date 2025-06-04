@@ -445,6 +445,25 @@ const RSVPForm: React.FC = () => {
             <Typography variant="h4" component="h2" gutterBottom color="primary" align="center">
               RSVP Form
             </Typography>
+
+            {event && (
+              <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant="h5" component="h3" gutterBottom>
+                  {event.title}
+                </Typography>
+                {event.description && (
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Info:</strong> {event.description}
+                  </Typography>
+                )}
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Location:</strong> {event.location}
+                </Typography>
+              </Box>
+            )}
             
             {error && (
               <Typography color="error" align="center" sx={{ mb: 2 }}>
@@ -652,22 +671,31 @@ const RSVPForm: React.FC = () => {
               )}
 
 
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                size="large"
-                disabled={isSubmitting || 
-                  !formData.name.trim() || 
-                  !formData.email_address.trim() ||
-                  !formData.attending ||
-                  (formData.attending === 'yes' && !formData.bringing_guests) ||
-                  (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))
-                }
-                sx={{ mt: 2 }}
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
-              </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 2 }}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => navigate('/')}
+                  sx={{ flexGrow: 1 }}
+                >
+                  Back to Events
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  disabled={isSubmitting || 
+                    !formData.name.trim() || 
+                    !formData.email_address.trim() ||
+                    !formData.attending ||
+                    (formData.attending === 'yes' && !formData.bringing_guests) ||
+                    (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))
+                  }
+                  sx={{ flexGrow: 1 }}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
+                </Button>
+              </Box>
             </Box>
           </Paper>
         </Container>
