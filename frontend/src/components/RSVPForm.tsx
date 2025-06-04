@@ -18,6 +18,7 @@ import {
   OutlinedInput,
   Chip,
   FormControlLabel, // Import FormControlLabel
+  Divider, // Import Divider
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Event } from '../types';
@@ -405,12 +406,12 @@ const RSVPForm: React.FC = () => {
                   Back to Events
                 </Button>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   color="primary"
-                  startIcon={<VisibilityIcon />}
-                  onClick={() => navigate(`/view/events/${slug}`)}
+                  onClick={() => navigate('/')}
+                  sx={{ flexGrow: 1 }}
                 >
-                  View RSVPs
+                  Back to Events
                 </Button>
               </Box>
             </Paper>
@@ -447,7 +448,7 @@ const RSVPForm: React.FC = () => {
             </Typography>
 
             {event && (
-              <Box sx={{ mb: 3, textAlign: 'center' }}>
+              <Box sx={{ mb: 3, textAlign: 'left' }}> {/* Changed to left-align */}
                 <Typography variant="h5" component="h3" gutterBottom>
                   {event.title}
                 </Typography>
@@ -456,24 +457,27 @@ const RSVPForm: React.FC = () => {
                     <strong>Info:</strong> {event.description}
                   </Typography>
                 )}
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Date:</strong> {new Date(event.date).toLocaleString()}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Location:</strong> {event.location}
-                </Typography>
+                {event.description && <Divider sx={{ my: 2 }} />} {/* Separator after Info */}
+                <Box> {/* Grouping Date, Location, and Note */}
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Date:</strong> {new Date(event.date).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    <strong>Location:</strong> {event.location}
+                  </Typography>
+                  {event.rsvp_cutoff_date && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}> {/* Removed align="center" */}
+                      <strong>Note:</strong> RSVPs will close on {new Date(event.rsvp_cutoff_date).toLocaleString()}
+                    </Typography>
+                  )}
+                </Box>
+                {event.rsvp_cutoff_date && <Divider sx={{ my: 2 }} />} {/* Separator after Note */}
               </Box>
             )}
             
             {error && (
               <Typography color="error" align="center" sx={{ mb: 2 }}>
                 {error}
-              </Typography>
-            )}
-
-            {event?.rsvp_cutoff_date && (
-              <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 2 }}>
-                <strong>Note:</strong> RSVPs will close on {new Date(event.rsvp_cutoff_date).toLocaleString()}
               </Typography>
             )}
 
