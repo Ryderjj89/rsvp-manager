@@ -52,6 +52,7 @@ const RSVPForm: React.FC = () => {
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
+  const [isItemsSelectOpen, setIsItemsSelectOpen] = useState(false); // State to control select dropdown
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -590,6 +591,22 @@ const RSVPForm: React.FC = () => {
                             ))}
                           </Box>
                         )}
+                        open={isItemsSelectOpen} // Control open state
+                        onOpen={() => setIsItemsSelectOpen(true)} // Set open when opened
+                        onClose={() => setIsItemsSelectOpen(false)} // Set closed when closed
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              maxHeight: 300, // Limit height of the dropdown
+                              overflowY: 'auto',
+                            },
+                          },
+                          MenuListProps: {
+                            sx: {
+                              paddingBottom: '60px', // Make space for the button
+                            },
+                          },
+                        }}
                       >
                         {neededItems.map((item) => (
                           <MenuItem key={item} value={item}>
@@ -597,6 +614,26 @@ const RSVPForm: React.FC = () => {
                             <ListItemText primary={item} />
                           </MenuItem>
                         ))}
+                        <Box sx={{ 
+                          position: 'sticky', 
+                          bottom: 0, 
+                          left: 0, 
+                          right: 0, 
+                          backgroundColor: 'background.paper', 
+                          padding: 1, 
+                          zIndex: 1,
+                          borderTop: '1px solid',
+                          borderColor: 'divider',
+                          textAlign: 'center',
+                        }}>
+                          <Button 
+                            variant="contained" 
+                            onClick={() => setIsItemsSelectOpen(false)} 
+                            fullWidth
+                          >
+                            Done
+                          </Button>
+                        </Box>
                       </Select>
                     </FormControl>
                   )}
