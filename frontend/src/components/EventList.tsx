@@ -170,31 +170,37 @@ const EventList: React.FC = () => {
                     )}
                   </CardContent>
                   <CardActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="flex-start">
+                    <Grid container spacing={1} alignItems="flex-start">
                       {isEventOpen(event) && (
+                        <Grid item>
+                          <Button
+                            size="small"
+                            startIcon={<HowToRegIcon />}
+                            onClick={() => navigate(`/rsvp/events/${event.slug}`)}
+                          >
+                            Submit RSVP
+                          </Button>
+                        </Grid>
+                      )}
+                      <Grid item>
                         <Button
                           size="small"
-                          startIcon={<HowToRegIcon />}
-                          onClick={() => navigate(`/rsvp/events/${event.slug}`)}
+                          startIcon={<VisibilityIcon />}
+                          onClick={(e) => handleViewClick(event, e)}
                         >
-                          Submit RSVP
+                          View RSVPs
                         </Button>
-                      )}
-                      <Button
-                        size="small"
-                        startIcon={<VisibilityIcon />}
-                        onClick={(e) => handleViewClick(event, e)}
-                      >
-                        View RSVPs
-                      </Button>
-                      <Button
-                        size="small"
-                        startIcon={<ContentCopyIcon />}
-                        onClick={() => handleCopyLink(event)}
-                      >
-                        Copy RSVP Link
-                      </Button>
-                    </Stack>
+                      </Grid>
+                      <Grid item>
+                        <Button
+                          size="small"
+                          startIcon={<ContentCopyIcon />}
+                          onClick={() => handleCopyLink(event)}
+                        >
+                          Copy RSVP Link
+                        </Button>
+                      </Grid>
+                    </Grid>
                     <Button
                       size="small"
                       startIcon={<AdminPanelSettingsIcon />}
