@@ -170,7 +170,7 @@ const EventList: React.FC = () => {
                     )}
                   </CardContent>
                   <CardActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-                    <Stack direction="row" spacing={1}>
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
                       {isEventOpen(event) && (
                         <Button
                           size="small"
@@ -187,6 +187,13 @@ const EventList: React.FC = () => {
                       >
                         View RSVPs
                       </Button>
+                      <Button
+                        size="small"
+                        startIcon={<ContentCopyIcon />}
+                        onClick={() => handleCopyLink(event)}
+                      >
+                        Copy RSVP Link
+                      </Button>
                     </Stack>
                     <Button
                       size="small"
@@ -194,13 +201,6 @@ const EventList: React.FC = () => {
                       onClick={(e) => handleAdminClick(event, e)}
                     >
                       Manage
-                    </Button>
-                    <Button
-                      size="small"
-                      startIcon={<ContentCopyIcon />}
-                      onClick={() => handleCopyLink(event)}
-                    >
-                      Copy RSVP Link
                     </Button>
                   </CardActions>
                 </Card>
