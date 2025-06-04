@@ -603,7 +603,6 @@ const RSVPForm: React.FC = () => {
                           },
                           MenuListProps: {
                             sx: {
-                              paddingBottom: '60px', // Make space for the button
                             },
                           },
                         }}
