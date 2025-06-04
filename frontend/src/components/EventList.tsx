@@ -170,7 +170,7 @@ const EventList: React.FC = () => {
                     )}
                   </CardContent>
                   <CardActions sx={{ justifyContent: 'space-between', px: 3, pb: 2 }}>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="flex-start">
                       {isEventOpen(event) && (
                         <Button
                           size="small"
