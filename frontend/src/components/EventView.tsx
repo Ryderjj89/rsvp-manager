@@ -126,7 +126,7 @@ const EventView: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         <Typography>Loading...</Typography>
       </Container>
     );
@@ -134,7 +134,7 @@ const EventView: React.FC = () => {
 
   if (error || !event) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         <Typography color="error">{error || 'Event not found'}</Typography>
       </Container>
     );
@@ -160,7 +160,7 @@ const EventView: React.FC = () => {
       }}
     >
       <Box sx={{ py: 4 }}>
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, mt: 4 }}>
             <Box sx={{ mb: 4 }}>
               <Typography variant="h4" component="h2" color="primary" gutterBottom>
@@ -190,15 +190,15 @@ const EventView: React.FC = () => {
                 <strong>Info:</strong> {event.description || 'None'}
               </Typography>
               <Typography variant="subtitle1" gutterBottom>
-                <strong>Location:</strong> {event.location}
-              </Typography>
-              <Typography variant="subtitle1" gutterBottom>
                 <strong>Date:</strong> {new Date(event.date).toLocaleString()}
               </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>Location:</strong> {event.location}
+              </Typography>
               {event.rsvp_cutoff_date && (
-                <Typography variant="subtitle1" gutterBottom>
-                  <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
-                </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                <strong>RSVP cut-off date:</strong> {new Date(event.rsvp_cutoff_date).toLocaleString()}
+              </Typography>
               )}
             </Box>
 
@@ -350,4 +350,4 @@ const EventView: React.FC = () => {
   );
 };
 
-export default EventView; 
+export default EventView;
