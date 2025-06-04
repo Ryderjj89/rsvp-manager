@@ -678,7 +678,7 @@ const RSVPForm: React.FC = () => {
                   onClick={() => navigate('/')}
                   sx={{ flexGrow: 1 }}
                 >
-                  Back to Events List
+                  Back to Events
                 </Button>
                 <Button
                   type="submit"
