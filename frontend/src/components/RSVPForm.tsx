@@ -399,19 +399,19 @@ const RSVPForm: React.FC = () => {
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   color="primary"
                   onClick={() => navigate('/')}
                 >
                   Back to Events
                 </Button>
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="primary"
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate('/view/events/${slug}')}
                   sx={{ flexGrow: 1 }}
                 >
-                  Back to Events
+                  View RSVPs
                 </Button>
               </Box>
             </Paper>
