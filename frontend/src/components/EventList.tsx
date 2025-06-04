@@ -15,7 +15,9 @@ import {
   FormControlLabel,
   Snackbar,
   Alert,
+  SyntheticEvent, // Import SyntheticEvent
 } from '@mui/material';
+import { SnackbarCloseReason } from '@mui/material/Snackbar'; // Import SnackbarCloseReason
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
@@ -82,7 +84,7 @@ const EventList: React.FC = () => {
       });
   };
 
-  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+  const handleCloseSnackbar = (event: SyntheticEvent | Event, reason: SnackbarCloseReason) => {
     if (reason === 'clickaway') {
       return;
     }
