@@ -466,7 +466,7 @@ const RSVPForm: React.FC = () => {
                     <strong>Location:</strong> {event.location}
                   </Typography>
                   {event.rsvp_cutoff_date && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}> {/* Removed align="center" */}
+                    <Typography variant="body2" color="text.secondary">
                       <strong>Note:</strong> RSVPs will close on {new Date(event.rsvp_cutoff_date).toLocaleString()}
                     </Typography>
                   )}
@@ -680,7 +680,7 @@ const RSVPForm: React.FC = () => {
                   variant="outlined"
                   color="primary"
                   onClick={() => navigate('/')}
-                  sx={{ flexGrow: 1 }}
+                  sx={{ flexGrow: 1, flexBasis: 0 }}
                 >
                   Back to Events
                 </Button>
@@ -695,7 +695,7 @@ const RSVPForm: React.FC = () => {
                     (formData.attending === 'yes' && !formData.bringing_guests) ||
                     (formData.bringing_guests === 'yes' && (formData.guest_count < 1 || formData.guest_names.some(name => !name.trim())))
                   }
-                  sx={{ flexGrow: 1 }}
+                  sx={{ flexGrow: 1, flexBasis: 0 }}
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
                 </Button>
