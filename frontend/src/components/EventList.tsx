@@ -13,10 +13,13 @@ import {
   Stack,
   Switch,
   FormControlLabel,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import axios from 'axios';
 
 interface Event {
@@ -33,6 +36,8 @@ const EventList: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const navigate = useNavigate();
   const [hideClosed, setHideClosed] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
     fetchEvents();
@@ -61,6 +66,27 @@ const EventList: React.FC = () => {
   const handleViewClick = (event: Event, e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/view/events/${event.slug}`);
+  };
+
+  const handleCopyLink = (event: Event) => {
+    const rsvpLink = `${window.location.origin}/rsvp/events/${event.slug}`;
+    navigator.clipboard.writeText(rsvpLink)
+      .then(() => {
+        setSnackbarMessage('RSVP link copied to clipboard!');
+        setOpenSnackbar(true);
+      })
+      .catch(err => {
+        setSnackbarMessage('Failed to copy link.');
+        setOpenSnackbar(true);
+        console.error('Failed to copy: ', err);
+      });
+  };
+
+  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenSnackbar(false);
   };
 
   return (
@@ -92,7 +118,7 @@ const EventList: React.FC = () => {
             control={
               <Switch
                 checked={hideClosed}
-                onChange={(_, checked) => setHideClosed(checked)}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => setHideClosed(checked)}
                 color="primary"
               />
             }
@@ -106,7 +132,7 @@ const EventList: React.FC = () => {
           {events
             .filter(event => !hideClosed || isEventOpen(event))
             .map((event) => (
-              <Grid item xs={12} sm={6} md={6} key={event.id}>
+              <Grid item xs={12} sm={6} md={12} key={event.id}>
                 <Card 
                   sx={{ 
                     height: '100%', 
@@ -172,14 +198,26 @@ const EventList: React.FC = () => {
                     >
                       Manage
                     </Button>
+                    <Button
+                      size="small"
+                      startIcon={<ContentCopyIcon />}
+                      onClick={() => handleCopyLink(event)}
+                    >
+                      Copy RSVP Link
+                    </Button>
                   </CardActions>
                 </Card>
               </Grid>
             ))}
         </Grid>
       </Container>
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
 
-export default EventList; 
+export default EventList;
