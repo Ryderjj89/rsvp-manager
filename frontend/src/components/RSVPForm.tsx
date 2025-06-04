@@ -408,7 +408,7 @@ const RSVPForm: React.FC = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={() => navigate('/view/events/${slug}')}
+                  onClick={() => navigate(`/view/events/${slug}`)}
                   sx={{ flexGrow: 1 }}
                 >
                   View RSVPs
