@@ -1,7 +1,7 @@
 services:
   app:
     container_name: rsvp_manager
-    image: ryderjj89/rsvp-manager:latest
+    image: ryderjj89/rsvp-manager:dev
     ports:
       - "3000:3000"
     volumes:
