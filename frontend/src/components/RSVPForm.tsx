@@ -538,51 +538,69 @@ const RSVPForm: React.FC = () => {
 
                   {formData.bringing_guests === 'yes' && (
                     <>
-      <TextField
-        label="Number of Guests"
-        name="guest_count"
-        type="number"
-        value={formData.guest_count}
-        onChange={(e) => {
-          const value = parseInt(e.target.value);
-          if (isNaN(value)) return;
-          
-          // Check if there's a maximum guest limit
-          const maxGuests = event?.max_guests_per_rsvp;
-          let newCount = value;
-          
-          // If max_guests_per_rsvp is set and not -1 (unlimited), enforce the limit
-          if (maxGuests !== undefined && maxGuests !== -1 && value > maxGuests) {
-            newCount = maxGuests;
-          }
-          
-          // Ensure count is at least 1
-          if (newCount < 1) newCount = 1;
-          
-          setFormData(prev => ({
-            ...prev,
-            guest_count: newCount,
-            guest_names: Array(newCount).fill('').map((_, i) => prev.guest_names[i] || '')
-          }));
-        }}
-        fullWidth
-        variant="outlined"
-        required
-        inputProps={{ 
-          min: 1,
-          max: event?.max_guests_per_rsvp === -1 ? undefined : event?.max_guests_per_rsvp
-        }}
-        error={formData.guest_count < 1}
-        helperText={
-          formData.guest_count < 1 
-            ? "Number of guests must be at least 1" 
-            : event?.max_guests_per_rsvp === 0 
-              ? "No additional guests allowed for this event"
-              : event?.max_guests_per_rsvp === -1
-                ? "No limit on number of guests"
-                : `Maximum ${event?.max_guests_per_rsvp} additional guests allowed`
-        }
-      />
+                      {/* Render dropdown if there's a max limit, otherwise render number input */}
+                      {event?.max_guests_per_rsvp !== undefined && event?.max_guests_per_rsvp !== -1 ? (
+                        <FormControl fullWidth required>
+                          <InputLabel>Number of Guests</InputLabel>
+                          <Select
+                            name="guest_count"
+                            value={formData.guest_count.toString()}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value);
+                              setFormData(prev => ({
+                                ...prev,
+                                guest_count: value,
+                                guest_names: Array(value).fill('').map((_, i) => prev.guest_names[i] || '')
+                              }));
+                            }}
+                            label="Number of Guests"
+                            required
+                          >
+                            {Array.from({ length: event.max_guests_per_rsvp }, (_, i) => i + 1).map((num) => (
+                              <MenuItem key={num} value={num.toString()}>
+                                {num}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, ml: 1.75 }}>
+                            Maximum {event.max_guests_per_rsvp} additional guests allowed
+                          </Typography>
+                        </FormControl>
+                      ) : (
+                        <TextField
+                          label="Number of Guests"
+                          name="guest_count"
+                          value={formData.guest_count}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Only allow numbers
+                            if (!/^\d*$/.test(value)) return;
+                            
+                            const numValue = parseInt(value) || 0;
+                            // Ensure count is at least 1 when not empty
+                            const newCount = value === '' ? 0 : Math.max(1, numValue);
+                            
+                            setFormData(prev => ({
+                              ...prev,
+                              guest_count: newCount,
+                              guest_names: Array(newCount).fill('').map((_, i) => prev.guest_names[i] || '')
+                            }));
+                          }}
+                          fullWidth
+                          variant="outlined"
+                          required
+                          inputProps={{ 
+                            inputMode: 'numeric',
+                            pattern: '[0-9]*'
+                          }}
+                          error={formData.guest_count < 1}
+                          helperText={
+                            formData.guest_count < 1 
+                              ? "Number of guests must be at least 1" 
+                              : "No limit on number of guests"
+                          }
+                        />
+                      )}
 
                       {Array.from({ length: formData.guest_count }).map((_, index) => (
                         <TextField
